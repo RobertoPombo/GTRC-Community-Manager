@@ -5,11 +5,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
-using System.Xml;
 using GTRCLeagueManager.Database;
 using Newtonsoft.Json;
 

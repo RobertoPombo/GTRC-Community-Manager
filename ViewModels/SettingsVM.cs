@@ -7,10 +7,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Data.SqlClient;
 using System.IO;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Windows;
-using System.Xml;
 
 namespace GTRCLeagueManager
 {

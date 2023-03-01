@@ -1,19 +1,14 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
 namespace GTRCLeagueManager.Database
 {
     public class Car : DatabaseObject<Car>
     {
-        public static StaticDbField<Car> Statics = new StaticDbField<Car>(true)
-        {
-            Table = "Cars",
-            UniquePropertiesNames = new List<List<string>>() { new List<string>() { "AccCarID" } },
-            ToStringPropertiesNames = new List<string>() { "Name" },
-            ListSetter = () => ListSetter()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<Car> Statics { get; set; }
         public static readonly string PathLogos = MainWindow.dataDirectory + "logos\\";
 
         private int accCarID = 0;
@@ -23,6 +18,17 @@ namespace GTRCLeagueManager.Database
         private string category = "";
         private int year = DateTime.Now.Year;
         private string name_GTRC = "";
+
+        static Car()
+        {
+            Statics = new StaticDbField<Car>(true)
+            {
+                Table = "Cars",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "AccCarID" } },
+                ToStringPropertiesNames = new List<string>() { "Name" },
+                ListSetter = () => ListSetter()
+            };
+        }
 
         public Car() { This = this; Initialize(true, true); }
         public Car(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

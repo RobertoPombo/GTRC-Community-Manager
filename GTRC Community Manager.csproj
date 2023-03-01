@@ -9,17 +9,314 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Fonts\" />
-    <Folder Include="Icons\" />
-    <Folder Include="Logos\" />
-    <Folder Include="Styles\" />
-    <Folder Include="Scripts\" />
-    <Folder Include="Objects\" />
+    <None Remove="Fonts\Metropolis-Black.otf" />
+    <None Remove="Fonts\Metropolis-BlackItalic.otf" />
+    <None Remove="Fonts\Metropolis-Bold.otf" />
+    <None Remove="Fonts\Metropolis-BoldItalic.otf" />
+    <None Remove="Fonts\Metropolis-ExtraBold.otf" />
+    <None Remove="Fonts\Metropolis-ExtraBoldItalic.otf" />
+    <None Remove="Fonts\Metropolis-ExtraLight.otf" />
+    <None Remove="Fonts\Metropolis-ExtraLightItalic.otf" />
+    <None Remove="Fonts\Metropolis-Light.otf" />
+    <None Remove="Fonts\Metropolis-LightItalic.otf" />
+    <None Remove="Fonts\Metropolis-Medium.otf" />
+    <None Remove="Fonts\Metropolis-MediumItalic.otf" />
+    <None Remove="Fonts\Metropolis-Regular.otf" />
+    <None Remove="Fonts\Metropolis-RegularItalic.otf" />
+    <None Remove="Fonts\Metropolis-SemiBold.otf" />
+    <None Remove="Fonts\Metropolis-SemiBoldItalic.otf" />
+    <None Remove="Fonts\Metropolis-Thin.otf" />
+    <None Remove="Fonts\Metropolis-ThinItalic.otf" />
+    <None Remove="Icons\acc_weather_clear0.png" />
+    <None Remove="Icons\acc_weather_clear1.png" />
+    <None Remove="Icons\acc_weather_clear2.png" />
+    <None Remove="Icons\acc_weather_cloudy0.png" />
+    <None Remove="Icons\acc_weather_cloudy1.png" />
+    <None Remove="Icons\acc_weather_cloudy2.png" />
+    <None Remove="Icons\acc_weather_drizzle0.png" />
+    <None Remove="Icons\acc_weather_drizzle1.png" />
+    <None Remove="Icons\acc_weather_drizzle2.png" />
+    <None Remove="Icons\acc_weather_heavyrain0.png" />
+    <None Remove="Icons\acc_weather_heavyrain1.png" />
+    <None Remove="Icons\acc_weather_heavyrain2.png" />
+    <None Remove="Icons\acc_weather_heavyrain3.png" />
+    <None Remove="Icons\acc_weather_lightclouds0.png" />
+    <None Remove="Icons\acc_weather_lightclouds1.png" />
+    <None Remove="Icons\acc_weather_lightclouds2.png" />
+    <None Remove="Icons\acc_weather_lightrain0.png" />
+    <None Remove="Icons\acc_weather_lightrain1.png" />
+    <None Remove="Icons\acc_weather_lightrain2.png" />
+    <None Remove="Icons\acc_weather_rain0.png" />
+    <None Remove="Icons\acc_weather_rain1.png" />
+    <None Remove="Icons\acc_weather_rain2.png" />
+    <None Remove="Icons\acc_weather_sunny0.png" />
+    <None Remove="Icons\acc_weather_sunny1.png" />
+    <None Remove="Icons\acc_weather_sunny2.png" />
+    <None Remove="Icons\acc_weather_thunderstorm0.png" />
+    <None Remove="Icons\acc_weather_thunderstorm1.png" />
+    <None Remove="Icons\acc_weather_thunderstorm2.png" />
+    <None Remove="Icons\acc_weather_thunderstorm3.png" />
+    <None Remove="Icons\icon.png" />
+    <None Remove="Icons\icon_acc0.png" />
+    <None Remove="Icons\icon_acc1.png" />
+    <None Remove="Icons\icon_bin0.png" />
+    <None Remove="Icons\icon_bin1.png" />
+    <None Remove="Icons\icon_bin2.png" />
+    <None Remove="Icons\icon_exp0.png" />
+    <None Remove="Icons\icon_exp1.png" />
+    <None Remove="Icons\icon_exp2.png" />
+    <None Remove="Icons\icon_gtrc.ico" />
+    <None Remove="Icons\icon_gtrc.png" />
+    <None Remove="Icons\icon_gtrc2.png" />
+    <None Remove="Icons\icon_hid0.png" />
+    <None Remove="Icons\icon_hid1.png" />
+    <None Remove="Icons\icon_hid2.png" />
+    <None Remove="Icons\icon_imp0.png" />
+    <None Remove="Icons\icon_imp1.png" />
+    <None Remove="Icons\icon_imp2.png" />
+    <None Remove="Icons\icon_res0.png" />
+    <None Remove="Icons\icon_res1.png" />
+    <None Remove="Icons\icon_res2.png" />
+    <None Remove="Icons\icon_sav0.png" />
+    <None Remove="Icons\icon_sav1.png" />
+    <None Remove="Icons\icon_sav2.png" />
+    <None Remove="Icons\icon_sho0.png" />
+    <None Remove="Icons\icon_sho1.png" />
+    <None Remove="Icons\icon_sho2.png" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="Discord.Net" Version="3.9.0" />
+    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.60.0.2909" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Fonts\Metropolis-Black.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-BlackItalic.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-Bold.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-BoldItalic.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-ExtraBold.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-ExtraBoldItalic.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-ExtraLight.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-ExtraLightItalic.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-Light.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-LightItalic.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-Medium.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-MediumItalic.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-Regular.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-RegularItalic.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-SemiBold.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-SemiBoldItalic.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-Thin.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Metropolis-ThinItalic.otf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_clear0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_clear1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_clear2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_cloudy0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_cloudy1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_cloudy2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_drizzle0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_drizzle1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_drizzle2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_heavyrain0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_heavyrain1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_heavyrain2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_heavyrain3.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_lightclouds0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_lightclouds1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_lightclouds2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_lightrain0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_lightrain1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_lightrain2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_rain0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_rain1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_rain2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_sunny0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_sunny1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_sunny2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_thunderstorm0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_thunderstorm1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_thunderstorm2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\acc_weather_thunderstorm3.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_acc0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_acc1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_bin0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_bin1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_bin2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_exp0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_exp1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_exp2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_gtrc.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_gtrc.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_gtrc2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_hid0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_hid1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_hid2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_imp0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_imp1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_imp2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_res0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_res1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_res2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_sav0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_sav1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_sav2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_sho0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_sho1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_sho2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

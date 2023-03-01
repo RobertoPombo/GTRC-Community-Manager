@@ -7,14 +7,7 @@ namespace GTRCLeagueManager.Database
 {
     public class EventsEntries : DatabaseObject<EventsEntries>
     {
-        public static StaticDbField<EventsEntries> Statics = new StaticDbField<EventsEntries>(true)
-        {
-            Table = "EventsEntries",
-            UniquePropertiesNames = new List<List<string>>() { new List<string>() { "EntryID", "EventID" } },
-            ToStringPropertiesNames = new List<string>() { "EntryID", "EventID" },
-            ListSetter = () => ListSetter(),
-            DoSync = () => SyncDelete()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<EventsEntries> Statics { get; set; }
 
         private int entryID = 0;
         private int eventID = 0;
@@ -27,6 +20,18 @@ namespace GTRCLeagueManager.Database
         private bool scorepoints = new Entry(false).ScorePoints;
         private int carID = 0;
         private DateTime carchangedate = Event.DateTimeMinValue;
+
+        static EventsEntries()
+        {
+            Statics = new StaticDbField<EventsEntries>(true)
+            {
+                Table = "EventsEntries",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "EntryID", "EventID" } },
+                ToStringPropertiesNames = new List<string>() { "EntryID", "EventID" },
+                ListSetter = () => ListSetter(),
+                DoSync = () => SyncDelete()
+            };
+        }
 
         public EventsEntries() { This = this; Initialize(true, true); }
         public EventsEntries(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

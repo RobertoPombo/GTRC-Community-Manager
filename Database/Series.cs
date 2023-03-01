@@ -1,20 +1,27 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GTRCLeagueManager.Database
 {
     public class Series : DatabaseObject<Series>
     {
-        public static StaticDbField<Series> Statics = new StaticDbField<Series>(true)
-        {
-            Table = "Series",
-            UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Name" } },
-            ToStringPropertiesNames = new List<string>() { "Name" },
-            ListSetter = () => ListSetter()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<Series> Statics { get; set; }
         public static readonly string DefaultName = "Series #1";
 
         private string name = DefaultName;
+
+        static Series()
+        {
+            Statics = new StaticDbField<Series>(true)
+            {
+                Table = "Series",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Name" } },
+                ToStringPropertiesNames = new List<string>() { "Name" },
+                ListSetter = () => ListSetter()
+            };
+        }
 
         public Series() { This = this; Initialize(true, true); }
         public Series(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

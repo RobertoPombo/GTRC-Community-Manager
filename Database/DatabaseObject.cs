@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Microsoft.Windows.Themes;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -33,18 +32,18 @@ namespace GTRCLeagueManager.Database
 
     public static class StaticFieldList
     {
-        public static List<dynamic> List = new List<dynamic>();
+        public static List<dynamic> List = new();
 
         public static dynamic GetByType(Type _varDbType)
         {
             foreach (dynamic _obj in List) { if (_obj.VarDbType == _varDbType) { return _obj; } }
-            return new StaticDbField<ThemeColor>(false);
+            return null;
         }
 
         public static dynamic GetByType(string _varDbType)
         {
             foreach (dynamic _obj in List) { if (_obj.VarDbType.Name == _varDbType) { return _obj; } }
-            return new StaticDbField<ThemeColor>(false);
+            return null;
         }
 
         public static dynamic GetByIDProperty(string _idPropertyName)
@@ -54,7 +53,7 @@ namespace GTRCLeagueManager.Database
                 _idPropertyName = Basics.SubStr(_idPropertyName, 0, _idPropertyName.Length - 2);
                 if (_idPropertyName.Length > 0) { return GetByType(_idPropertyName); }
             }
-            return new StaticDbField<ThemeColor>(false);
+            return null;
         }
     }
 
@@ -64,11 +63,11 @@ namespace GTRCLeagueManager.Database
     {
         public StaticDbField(bool inList) { if (inList) { StaticFieldList.List.Add(this); } }
 
-        public string Table;
+        public string Table = "";
         public List<List<string>> UniquePropertiesNames = new List<List<string>>();
         public List<string> ToStringPropertiesNames = new List<string>();
-        public Action ListSetter;
-        public Action DoSync;
+        public Action ListSetter = () => Console.WriteLine("Error");
+        public Action DoSync = () => Console.WriteLine("Error");
 
         public Type VarDbType = typeof(DbType);
         public List<DbType> List = new List<DbType>();
@@ -81,13 +80,11 @@ namespace GTRCLeagueManager.Database
 
         public string Path { get { return MainWindow.dataDirectory + Table.ToLower() + ".json"; } }
 
-        [NotMapped]
-        [JsonIgnore]
-        public List<DbType> IDList
+        [NotMapped][JsonIgnore] public List<DbType> IDList
         {
             get
             {
-                List<DbType> _idList = new List<DbType>();
+                List<DbType> _idList = new();
                 foreach (DbType _obj in List) { if (_obj.ID > Basics.NoID) { _idList.Add(_obj); } }
                 return _idList;
             }
@@ -132,7 +129,7 @@ namespace GTRCLeagueManager.Database
             List<dynamic> objList = SQL.LoadSQL(Table);
             for (int objNr = 0; objNr < objList.Count; objNr++)
             {
-                DbType newObj = (DbType)Activator.CreateInstance(VarDbType, false, false);
+                DbType newObj = (DbType)Activator.CreateInstance(VarDbType, false, false)!;
                 currentListSQL.Add(newObj);
                 foreach (PropertyInfo property in AllProperties)
                 {
@@ -178,7 +175,7 @@ namespace GTRCLeagueManager.Database
         public DbType GetByID(int id)
         {
             if (id > Basics.NoID) { foreach (DbType _obj in List) { if (_obj.ID == id) { return _obj; } } }
-            return (DbType)Activator.CreateInstance(VarDbType, false, false);
+            return (DbType)Activator.CreateInstance(VarDbType, false, false)!;
         }
 
         public DbType GetByUniqueProp(List<dynamic> values, int index = 0)
@@ -199,7 +196,7 @@ namespace GTRCLeagueManager.Database
                     if (found) { return _obj; }
                 }
             }
-            return (DbType)Activator.CreateInstance(VarDbType, false, false);
+            return (DbType)Activator.CreateInstance(VarDbType, false, false)!;
         }
 
         public DbType GetByUniqueProp(dynamic _value, int index = 0)
@@ -208,7 +205,7 @@ namespace GTRCLeagueManager.Database
             {
                 return GetByUniqueProp(new List<dynamic>() { _value }, index);
             }
-            return (DbType)Activator.CreateInstance(VarDbType, false, false);
+            return (DbType)Activator.CreateInstance(VarDbType, false, false)!;
         }
 
         public List<DbType> GetBy(List<PropertyInfo> properties, List<dynamic> values)
@@ -316,9 +313,7 @@ namespace GTRCLeagueManager.Database
         private bool readyForList = false;
         private int id = Basics.NoID;
 
-        [NotMapped]
-        [JsonIgnore]
-        public DbType This
+        [NotMapped][JsonIgnore] public DbType This
         {
             get { return _this; }
             set { _this = value; }
@@ -326,16 +321,13 @@ namespace GTRCLeagueManager.Database
 
         [NotMapped][JsonIgnore] public List<DbType> List { get { return StaticFields.List; } }
 
-        [NotMapped]
-        [JsonIgnore]
-        public bool ReadyForList
+        [NotMapped][JsonIgnore] public bool ReadyForList
         {
             get { return readyForList; }
             set { if (value != readyForList) { if (value) { SetNextAvailable(); } if (!value || IsUnique()) { readyForList = value; } } }
         }
 
-        [JsonProperty(Order = int.MinValue)]
-        public int ID
+        [JsonProperty(Order = int.MinValue)] public int ID
         {
             get { return id; }
             set
@@ -347,8 +339,7 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        [JsonIgnore]
-        public int Nr
+        [JsonIgnore] public int Nr
         {
             get { if (StaticFields.List.Contains(This)) { return StaticFields.List.IndexOf(This) + 1; } else { return Basics.NoID; } }
         }
@@ -414,7 +405,7 @@ namespace GTRCLeagueManager.Database
                 else if (!retJsonIgnore && property.GetCustomAttributes(false).OfType<JsonIgnoreAttribute>().Any()) { ret = false; }
                 else if (!retCanNotWrite && !property.CanWrite) { ret = false; }
                 else if (!retNotUnique && !StaticFields.IsUniqueProperty(property.Name)) { ret = false; }
-                if (ret) { dict[property] = property.GetValue(this); }
+                if (ret) { dict[property] = property.GetValue(this)!; }
             }
             return dict;
         }
@@ -480,14 +471,18 @@ namespace GTRCLeagueManager.Database
             if (StaticFields.ToStringProperties.Count == 0) { return str; }
             foreach (PropertyInfo property in StaticFields.ToStringProperties)
             {
-                string strAdd = null;
+                string? strAdd = null;
                 if (property.PropertyType.ToString() == "System.Int32")
                 {
                     int _id = Basics.GetCastedValue(This, property);
-                    var _obj = StaticFieldList.GetByIDProperty(property.Name).GetByID(_id);
-                    if (_obj.ID != Basics.NoID) { strAdd = _obj.ToString(); }
+                    dynamic _statics = StaticFieldList.GetByIDProperty(property.Name);
+                    if (_statics != null)
+                    {
+                        var _obj = StaticFieldList.GetByIDProperty(property.Name).GetByID(_id);
+                        if (_obj.ID != Basics.NoID) { strAdd = _obj.ToString(); }
+                    }
                 }
-                if (strAdd == null) { strAdd = property.GetValue(This).ToString(); }
+                strAdd ??= property.GetValue(This).ToString();
                 str += " " + strAdd + " |";
             }
             return Basics.SubStr(str, 0, str.Length - 2);

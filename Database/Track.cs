@@ -1,19 +1,14 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
 namespace GTRCLeagueManager.Database
 {
     public class Track : DatabaseObject<Track>
     {
-        public static StaticDbField<Track> Statics = new StaticDbField<Track>(true)
-        {
-            Table = "Tracks",
-            UniquePropertiesNames = new List<List<string>>() { new List<string>() { "AccTrackID" } },
-            ToStringPropertiesNames = new List<string>() { "Name" },
-            ListSetter = () => ListSetter()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<Track> Statics { get; set; }
         public static readonly string DefaultAccTrackID = "TrackID";
 
         private string accTrackID = DefaultAccTrackID;
@@ -21,6 +16,17 @@ namespace GTRCLeagueManager.Database
         private int pitBoxesCount = 0;
         private int serverSlotsCount = 0;
         private string name_GTRC = "";
+
+        static Track()
+        {
+            Statics = new StaticDbField<Track>(true)
+            {
+                Table = "Tracks",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "AccTrackID" } },
+                ToStringPropertiesNames = new List<string>() { "Name" },
+                ListSetter = () => ListSetter()
+            };
+        }
 
         public Track() { This = this; Initialize(true, true); }
         public Track(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

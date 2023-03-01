@@ -7,16 +7,21 @@ namespace GTRCLeagueManager.Database
 {
     public class DriversTeams : DatabaseObject<DriversTeams>
     {
-        public static StaticDbField<DriversTeams> Statics = new StaticDbField<DriversTeams>(true)
-        {
-            Table = "DriversTeams",
-            UniquePropertiesNames = new List<List<string>>() { new List<string>() { "DriverID", "TeamID" } },
-            ToStringPropertiesNames = new List<string>() { "DriverID", "TeamID" },
-            ListSetter = () => ListSetter()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<DriversTeams> Statics { get; set; }
 
         private int driverID = 0;
         private int teamID = 0;
+
+        static DriversTeams()
+        {
+            Statics = new StaticDbField<DriversTeams>(true)
+            {
+                Table = "DriversTeams",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "DriverID", "TeamID" } },
+                ToStringPropertiesNames = new List<string>() { "DriverID", "TeamID" },
+                ListSetter = () => ListSetter()
+            };
+        }
 
         public DriversTeams() { This = this; Initialize(true, true); }
         public DriversTeams(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

@@ -1,24 +1,30 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Windows.Documents;
 using System.Windows.Media;
 
 namespace GTRCLeagueManager.Database
 {
     public class ThemeColor : DatabaseObject<ThemeColor>
     {
-        public static StaticDbField<ThemeColor> Statics = new StaticDbField<ThemeColor>(true)
-        {
-            Table = "Colors",
-            UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Alpha", "Red", "Green", "Blue" } },
-            ToStringPropertiesNames = new List<string>() { "Alpha", "Red", "Green", "Blue" },
-            ListSetter = () => ListSetter()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<ThemeColor> Statics { get ; set; }
 
         private Int16 alpha = 0;
         private Int16 red = 0;
         private Int16 green = 0;
         private Int16 blue = 0;
+
+        static ThemeColor() {
+            Statics = new(true)
+            {
+                Table = "Colors",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Alpha", "Red", "Green", "Blue" } },
+                ToStringPropertiesNames = new List<string>() { "Alpha", "Red", "Green", "Blue" },
+                ListSetter = () => ListSetter()
+            };
+        }
 
         public ThemeColor() { This = this; Initialize(true, true); }
         public ThemeColor(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

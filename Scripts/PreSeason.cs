@@ -1,0 +1,489 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
+using GTRCLeagueManager.Database;
+using Newtonsoft.Json.Linq;
+using System.Collections;
+using Newtonsoft.Json;
+using System.Text;
+using System.Threading;
+namespace GTRCLeagueManager
+{
+    public static class PreSeason
+    {
+
+        public static bool TryReadResultsJson(string path)
+        {
+            Thread.Sleep(10);
+            try
+            {
+                int tempLBLs = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(path, Encoding.Unicode)).sessionResult.leaderBoardLines.Count;
+                int tempLaps = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(path, Encoding.Unicode)).laps.Count;
+            }
+            catch { return false; }
+            return true;
+        }
+
+        public static void AddResultsJson(string path)
+        {
+            //Sollte dynamisch sein:
+            int attemptMax = 1000;
+            Dictionary<string, int> QualiTracks = new Dictionary<string, int> { { "nurburgring", 0 }, { "misano", 1 } };
+
+            for (int attemptNr = 0; attemptNr < attemptMax; attemptNr++)
+            {
+                if (TryReadResultsJson(path)) { break; }
+                else { Console.WriteLine("Versuch-Nr " + attemptNr.ToString() + ": Pre-Quali Results nicht einlesbar."); }
+            }
+            if (TryReadResultsJson(path))
+            {
+                var resultsJson = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(path, Encoding.Unicode));
+                var leaderBoardLines = resultsJson.sessionResult.leaderBoardLines;
+                var laps = resultsJson.laps;
+                int trackID = new Lap(false).Track;
+                if (resultsJson.trackName is JValue)
+                {
+                    string _trackName = resultsJson.trackName.ToString();
+                    if (QualiTracks.ContainsKey(_trackName)) { trackID = QualiTracks[_trackName]; }
+                }
+                for (int lapNr = 0; lapNr < laps.Count; lapNr++)
+                {
+                    Lap lap = new Lap { Track = trackID };
+                    var _time = laps[lapNr].laptime;
+                    if (_time is JValue) { if (Int32.TryParse(_time.ToString(), out int time)) { lap.Time = time; } }
+                    if (laps[lapNr].splits is IList && laps[lapNr].splits.Count > 2)
+                    {
+                        _time = laps[lapNr].splits[0];
+                        if (_time is JValue) { if (Int32.TryParse(_time.ToString(), out int time)) { lap.Sector1 = time; } }
+                        _time = laps[lapNr].splits[1];
+                        if (_time is JValue) { if (Int32.TryParse(_time.ToString(), out int time)) { lap.Sector2 = time; } }
+                        _time = laps[lapNr].splits[2];
+                        if (_time is JValue) { if (Int32.TryParse(_time.ToString(), out int time)) { lap.Sector3 = time; } }
+                    }
+                    var _valid = laps[lapNr].isValidForBest;
+                    if (_valid is JValue) { if (Boolean.TryParse(_valid.ToString(), out bool valid)) { lap.Valid = valid; } }
+                    int carID = -1;
+                    var _carID = laps[lapNr].carId;
+                    if (_carID is JValue) { Int32.TryParse(_carID.ToString(), out carID); }
+                    int driverNr = -1;
+                    var _driverNr = laps[lapNr].driverIndex;
+                    if (_driverNr is JValue) { Int32.TryParse(_driverNr.ToString(), out driverNr); }
+                    string steamID = Basics.NoID.ToString();
+                    if (carID > -1 && driverNr > -1)
+                    {
+                        for (int pos = 0; pos < leaderBoardLines.Count; pos++)
+                        {
+                            if (leaderBoardLines[pos].car is JObject)
+                            {
+                                int carID_lbl = -1;
+                                var _carID_lbl = leaderBoardLines[pos].car.carId;
+                                if (_carID_lbl is JValue && Int32.TryParse(_carID_lbl.ToString(), out carID_lbl) && carID == carID_lbl)
+                                {
+                                    if (leaderBoardLines[pos].car.drivers is IList && leaderBoardLines[pos].car.drivers.Count > driverNr)
+                                    {
+                                        if (leaderBoardLines[pos].car.drivers[driverNr] is JObject && leaderBoardLines[pos].car.drivers[driverNr].playerId is JValue)
+                                        {
+                                            steamID = leaderBoardLines[pos].car.drivers[driverNr].playerId.ToString();
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    int _entryID = DriverEntries.Statics.GetByUniqueProp(Driver.String2LongSteamID(steamID)).EntryID;
+                    if (_entryID != Basics.NoID) { lap.EntryID = _entryID; }
+                }
+            }
+        }
+
+        public static void ResetPreQResults()
+        {
+            PreQualiResultLine.Statics.ResetSQL();
+            PreQualiResultLine.Statics.LoadSQL();
+            foreach (Entry _entry in Entry.Statics.List) { new PreQualiResultLine { EntryID = _entry.RaceNumber }; }
+            PreQualiResultLine.Statics.WriteJson();
+            PreQualiResultLine.Statics.WriteSQL();
+        }
+
+        public static void UpdatePreQResults()
+        {
+            //Sollte dynamisch sein:
+            double timeFactorMax = 1.07;
+            int lapsCountStintMin = 10;
+            Dictionary<string, int> QualiTracks = new Dictionary<string, int> { { "nurburgring", 0 }, { "misano", 1 } };
+
+            ResetPreQResults();
+            foreach (PreQualiResultLine preQualiResultLine in PreQualiResultLine.Statics.List)
+            {
+                List<Lap> lapsEntry = new List<Lap>();
+                foreach (Lap _lap in Lap.Statics.List)
+                {
+                    if (_lap.EntryID == preQualiResultLine.EntryID)
+                    {
+                        lapsEntry.Add(_lap);
+                    }
+                }
+                foreach (int _trackID in QualiTracks.Values)
+                {
+                    List<Lap> lapsEntryTrack = new List<Lap>();
+                    foreach (Lap _lap in lapsEntry)
+                    {
+                        if (_lap.Track == _trackID)
+                        {
+                            lapsEntryTrack.Add(_lap);
+                            preQualiResultLine.LapsCount++;
+                            if (_lap.Valid) { preQualiResultLine.ValidLapsCount++; }
+                            switch (_trackID)
+                            {
+                                case 0:
+                                    preQualiResultLine.LapsCount1++;
+                                    if (_lap.Valid) { preQualiResultLine.ValidLapsCount1++; }
+                                    break;
+                                case 1:
+                                    preQualiResultLine.LapsCount2++;
+                                    if (_lap.Valid) { preQualiResultLine.ValidLapsCount2++; }
+                                    break;
+                            }
+                        }
+                    }
+                    for (int lapNr = 0; lapNr < lapsEntryTrack.Count; lapNr++)
+                    {
+                        if (lapsEntryTrack[lapNr].Valid)
+                        {
+                            switch (_trackID)
+                            {
+                                case 0: 
+                                    preQualiResultLine.BestLap1 = Math.Min(preQualiResultLine.BestLap1, lapsEntryTrack[lapNr].Time);
+                                    preQualiResultLine.BestSector1a = Math.Min(preQualiResultLine.BestSector1a, lapsEntryTrack[lapNr].Sector1);
+                                    preQualiResultLine.BestSector3a = Math.Min(preQualiResultLine.BestSector3a, lapsEntryTrack[lapNr].Sector3);
+                                    break;
+                                case 1:
+                                    preQualiResultLine.BestLap2 = Math.Min(preQualiResultLine.BestLap2, lapsEntryTrack[lapNr].Time);
+                                    preQualiResultLine.BestSector1b = Math.Min(preQualiResultLine.BestSector1b, lapsEntryTrack[lapNr].Sector1);
+                                    preQualiResultLine.BestSector3b = Math.Min(preQualiResultLine.BestSector3b, lapsEntryTrack[lapNr].Sector3);
+                                    break;
+                            }
+                        }
+                    }
+                    int time107 = int.MaxValue;
+                    int s1s3_107 = int.MaxValue;
+                    switch (_trackID)
+                    {
+                        case 0:
+                            time107 = (int)Math.Round(preQualiResultLine.BestLap1 * timeFactorMax, 0);
+                            s1s3_107 = (int)Math.Round((preQualiResultLine.BestSector1a + preQualiResultLine.BestSector3a) * timeFactorMax, 0);
+                            break;
+                        case 1:
+                            time107 = (int)Math.Round(preQualiResultLine.BestLap2 * timeFactorMax, 0);
+                            s1s3_107 = (int)Math.Round((preQualiResultLine.BestSector1b + preQualiResultLine.BestSector3b) * timeFactorMax, 0);
+                            break;
+                    }
+                    bool newStint = true;
+                    List<Lap> lapsEntryTrackStint = new List<Lap>();
+                    foreach (Lap _lap in lapsEntryTrack)
+                    {
+                        if (_lap.Time > time107 && _lap.Sector1 + _lap.Sector3 > s1s3_107) { lapsEntryTrackStint = new List<Lap>(); newStint = true; }
+                        else if (_lap.Valid) { lapsEntryTrackStint.Add(_lap); }
+                        if (lapsEntryTrackStint.Count >= lapsCountStintMin)
+                        {
+                            List<int> bestTimes = new List<int>();
+                            foreach (Lap _lapStint in lapsEntryTrackStint) { bestTimes.Add(_lapStint.Time); }
+                            for (int lapNr1 = 0; lapNr1 < lapsEntryTrackStint.Count - 1; lapNr1++)
+                            {
+                                for (int lapNr2 = lapNr1 + 1; lapNr2 < lapsEntryTrackStint.Count; lapNr2++)
+                                {
+                                    if (bestTimes[lapNr1] > bestTimes[lapNr2])
+                                    {
+                                        (bestTimes[lapNr2], bestTimes[lapNr1]) = (bestTimes[lapNr1], bestTimes[lapNr2]);
+                                    }
+                                }
+                            }
+                            if (newStint)
+                            {
+                                newStint = false;
+                                preQualiResultLine.ValidStintsCount++;
+                                switch (_trackID)
+                                {
+                                    case 0: preQualiResultLine.ValidStintsCount1++; break;
+                                    case 1: preQualiResultLine.ValidStintsCount2++; break;
+                                }
+                            }
+                            double totalTime = 0;
+                            for (int lapNr = 0; lapNr < lapsCountStintMin; lapNr++) { totalTime += bestTimes[lapNr]; }
+                            int newAverage = (int)Math.Round(totalTime / lapsCountStintMin, 0);
+                            switch (_trackID)
+                            {
+                                case 0: preQualiResultLine.Average1 = Math.Min(preQualiResultLine.Average1, newAverage); break;
+                                case 1: preQualiResultLine.Average2 = Math.Min(preQualiResultLine.Average2, newAverage); break;
+                            }
+                            if (preQualiResultLine.Average1 < int.MaxValue && preQualiResultLine.Average2 < int.MaxValue)
+                            {
+                                double _average = (preQualiResultLine.Average1 + preQualiResultLine.Average2) / 2;
+                                preQualiResultLine.Average = (int)Math.Round(_average, 0);
+                            }
+                        }
+                    }
+                }
+            }
+            if (PreQualiResultLine.Statics.List.Count > 1)
+            {
+                var linqSortList = from _resultsLine in PreQualiResultLine.Statics.List orderby _resultsLine.Average1 select _resultsLine;
+                PreQualiResultLine.Statics.List = linqSortList.Cast<PreQualiResultLine>().ToList();
+                int OverallBest = PreQualiResultLine.Statics.List[0].Average1;
+                if (OverallBest < int.MaxValue)
+                {
+                    foreach (PreQualiResultLine preQualiResultLine in PreQualiResultLine.Statics.List)
+                    {
+                        if (preQualiResultLine.Average1 < int.MaxValue)
+                        {
+                            double quotient = (double)preQualiResultLine.Average1 / (double)OverallBest;
+                            quotient *= 100; quotient -= 100; quotient *= 100000;
+                            preQualiResultLine.DiffAverage = Math.Min(preQualiResultLine.DiffAverage, (int)Math.Round(quotient));
+                        }
+                    }
+                }
+                linqSortList = from _resultsLine in PreQualiResultLine.Statics.List orderby _resultsLine.Average2 select _resultsLine;
+                PreQualiResultLine.Statics.List = linqSortList.Cast<PreQualiResultLine>().ToList();
+                OverallBest = PreQualiResultLine.Statics.List[0].Average2;
+                if (OverallBest < int.MaxValue)
+                {
+                    foreach (PreQualiResultLine preQualiResultLine in PreQualiResultLine.Statics.List)
+                    {
+                        if (preQualiResultLine.Average2 < int.MaxValue)
+                        {
+                            double quotient = (double)preQualiResultLine.Average2 / (double)OverallBest;
+                            quotient *= 100; quotient -= 100; quotient *= 100000;
+                            preQualiResultLine.DiffAverage = Math.Min(preQualiResultLine.DiffAverage, (int)Math.Round(quotient));
+                        }
+                    }
+                }
+                linqSortList = from _resultsLine in PreQualiResultLine.Statics.List orderby _resultsLine.BestLap1 select _resultsLine;
+                PreQualiResultLine.Statics.List = linqSortList.Cast<PreQualiResultLine>().ToList();
+                OverallBest = PreQualiResultLine.Statics.List[0].BestLap1;
+                if (OverallBest < int.MaxValue)
+                {
+                    foreach (PreQualiResultLine preQualiResultLine in PreQualiResultLine.Statics.List)
+                    {
+                        if (preQualiResultLine.BestLap1 < int.MaxValue)
+                        {
+                            double quotient = (double)preQualiResultLine.BestLap1 / (double)OverallBest;
+                            quotient *= 100; quotient -= 100; quotient *= 100000;
+                            preQualiResultLine.DiffBestLap = Math.Min(preQualiResultLine.DiffBestLap, (int)Math.Round(quotient));
+                        }
+                    }
+                }
+                linqSortList = from _resultsLine in PreQualiResultLine.Statics.List orderby _resultsLine.BestLap2 select _resultsLine;
+                PreQualiResultLine.Statics.List = linqSortList.Cast<PreQualiResultLine>().ToList();
+                OverallBest = PreQualiResultLine.Statics.List[0].BestLap2;
+                if (OverallBest < int.MaxValue)
+                {
+                    foreach (PreQualiResultLine preQualiResultLine in PreQualiResultLine.Statics.List)
+                    {
+                        if (preQualiResultLine.BestLap2 < int.MaxValue)
+                        {
+                            double quotient = (double)preQualiResultLine.BestLap2 / (double)OverallBest;
+                            quotient *= 100; quotient -= 100; quotient *= 100000;
+                            preQualiResultLine.DiffBestLap = Math.Min(preQualiResultLine.DiffBestLap, (int)Math.Round(quotient));
+                        }
+                    }
+                }
+            }
+            var linqList = from _resultsLine in PreQualiResultLine.Statics.List
+                           orderby _resultsLine.Average, _resultsLine.DiffAverage, _resultsLine.DiffBestLap, _resultsLine.ValidStintsCount descending,
+                           Entry.Statics.GetByID(_resultsLine.EntryID).RegisterDate
+                           select _resultsLine;
+            PreQualiResultLine.Statics.List = linqList.Cast<PreQualiResultLine>().ToList();
+            PreQualiResultLine.Statics.WriteJson();
+            PreQualiResultLine.Statics.WriteSQL();
+        }
+
+        public static void EntryAutoSignOut(DateTime currentEventDate, int SignOutLimit, int NoShowLimit)
+        {
+            foreach (Entry _entry in Entry.Statics.List)
+            {
+                int SignOutCount = 0;
+                int NoShowCount = 0;/*
+                foreach (Event _event in Event.List)
+                {
+                    if (_event.EventDate <= currentEventDate && _event.EventDate < DateTime.Now)
+                    {
+                        EventsEntries _eventsEntries = EventsEntries.GetEventsEntriesByEDRN(_entry.RaceNumber, _event.EventDate);
+                        bool candidate = _entry.SignOutDate > _event.EventDate && _entry.RegisterDate < _event.EventDate;
+                        if (candidate && !_eventsEntries.SignInState && _eventsEntries.ScorePoints) { SignOutCount++; }
+                        if (candidate && _eventsEntries.SignInState && _eventsEntries.IsOnEntrylist && !_eventsEntries.Attended) { NoShowCount++; }
+                    }
+                }*/
+                SignOutCount += NoShowCount;
+                //if (_entry.SignOutDate > DateTime.Now && (SignOutCount > SignOutLimit || NoShowCount > NoShowLimit)) { _entry.SignOutDate = DateTime.Now; } muss auskommentiert bleiben
+            }
+            //Entry.WriteSQL(); muss auskommentiert bleiben
+        }
+
+        public static void CountCars(DateTime currentEventDate, DateTime DateRegisterLimit, int CarLimitRegisterLimit, DateTime DateBoPFreeze, bool IsCheckedRegisterLimit, bool IsCheckedBoPFreeze)
+        {
+            if (!IsCheckedRegisterLimit) { DateRegisterLimit = Event.DateTimeMaxValue; }
+            if (!IsCheckedBoPFreeze) { DateBoPFreeze = Event.DateTimeMaxValue; }
+
+            var linqList = from _entry in Entry.Statics.List
+                           //orderby EventsEntries.GetEventsEntriesByEDRN(_entry.RaceNumber, currentEventDate).CarChangeDate
+                           select _entry;
+            List<Entry> Entrylist = linqList.Cast<Entry>().ToList();
+
+            foreach (CarBoP _carBoP in CarBoP.List) { _carBoP.Count = 0; _carBoP.CountBoP = 0; }
+            /*
+            foreach (Entry _entry in Entrylist)
+            {
+                EventsEntries _eventsEntries = EventsEntries.GetEventsEntriesByEDRN(_entry.RaceNumber, currentEventDate);
+                _eventsEntries.Category = _entry.Category;
+                _eventsEntries.ScorePoints = _entry.ScorePoints;
+                if (_entry.RegisterDate < currentEventDate && _entry.ScorePoints)
+                {
+                    DateTime carChangeDateMax = currentEventDate;
+                    if (DateBoPFreeze < currentEventDate) { carChangeDateMax = DateBoPFreeze; }
+                    int carID = EventsEntries.GetLatestCarIDByRNDate(_entry.RaceNumber, carChangeDateMax);
+                    DateTime carChangeDateBeforeFreeze = EventsEntries.GetLatestCarChangeDateByRNDate(_entry.RaceNumber, carChangeDateMax);
+                    CarBoP _carBoP = CarBoP.GetCarByCarID(_eventsEntries.CarID);
+                    CarBoP _carBoPAtFreeze = CarBoP.GetCarByCarID(carID);
+                    bool validCar = _carBoP.Car.ID != Basics.NoID;
+                    bool validCarAtFreeze = _carBoPAtFreeze.Car.ID != Basics.NoID;
+                    bool respectsRegLimit = _eventsEntries.CarChangeDate < DateRegisterLimit || _carBoP.Count < CarLimitRegisterLimit;
+                    bool respectsRegLimitAtFreeze = carChangeDateBeforeFreeze < DateRegisterLimit || _carBoPAtFreeze.CountBoP < CarLimitRegisterLimit;
+                    bool isRegistered = _entry.SignOutDate > currentEventDate;
+                    bool isRegisteredAtFreeze = _entry.RegisterDate < DateBoPFreeze && (_entry.SignOutDate > DateBoPFreeze || _entry.SignOutDate > currentEventDate);
+                    if (validCarAtFreeze && respectsRegLimitAtFreeze && isRegisteredAtFreeze) { _carBoPAtFreeze.CountBoP++; }
+                    if (validCar && isRegistered) { if (respectsRegLimit) { _carBoPAtFreeze.Count++; } else { _eventsEntries.Category = 1; _eventsEntries.ScorePoints = false; } }
+                }
+            }
+            */
+            EventsEntries.Statics.WriteSQL();
+        }
+
+        public static (List<Entry>, List<Entry>) DetermineEntrylist(DateTime currentEventDate, int SlotsAvailable, DateTime DateRegisterLimit)
+        {
+            List<Entry> EntriesSignedIn = new List<Entry>();
+            List<Entry> EntriesSignedOut = new List<Entry>();
+            List<Entry> EntriesSortPreQualiPos = new List<Entry>();
+            List<Entry> EntriesSortSignInDate = new List<Entry>();
+            PreQualiResultLine.Statics.LoadSQL();
+            /*
+            foreach (Entry _entry in Entry.Statics.List) { if (_entry.RegisterDate < currentEventDate && _entry.SignOutDate > currentEventDate) { EntriesSortPreQualiPos.Add(_entry); } }
+            var linqList = from _entry in EntriesSortPreQualiPos
+                           orderby PreQualiResultLine.List.IndexOf(PreQualiResultLine.getLineByRaceNumber(_entry.RaceNumber))
+                           select _entry;
+            EntriesSortPreQualiPos = linqList.Cast<Entry>().ToList();
+            linqList = from _entry in EntriesSortPreQualiPos
+                       orderby EventsEntries.GetEventsEntriesByEDRN(_entry.RaceNumber, currentEventDate).SignInDate
+                       select _entry;
+            EntriesSortSignInDate = linqList.Cast<Entry>().ToList();
+
+            foreach (Entry _entry in EntriesSortPreQualiPos)
+            {
+                EventsEntries _eventsEntries = EventsEntries.GetEventsEntriesByEDRN(_entry.RaceNumber, currentEventDate);
+                bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable && _eventsEntries.SignInState;
+                if (candidate && _entry.ScorePoints && _entry.RegisterDate < DateRegisterLimit) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
+            }
+            foreach (Entry _entry in EntriesSortPreQualiPos)
+            {
+                EventsEntries _eventsEntries = EventsEntries.GetEventsEntriesByEDRN(_entry.RaceNumber, currentEventDate);
+                bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable && _eventsEntries.SignInState;
+                if (candidate && _entry.ScorePoints) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
+            }
+            foreach (Entry _entry in EntriesSortSignInDate)
+            {
+                EventsEntries _eventsEntries = EventsEntries.GetEventsEntriesByEDRN(_entry.RaceNumber, currentEventDate);
+                bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable && _eventsEntries.SignInState;
+                if (candidate) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
+            }
+            foreach (Entry _entry in EntriesSortPreQualiPos)
+            {
+                if (!EntriesSignedIn.Contains(_entry) && !EntriesSignedOut.Contains(_entry)) { EntriesSignedOut.Add(_entry); }
+            }
+            foreach (Entry _entry in Entry.Statics.List)
+            {
+                EventsEntries _eventsEntries = EventsEntries.GetEventsEntriesByEDRN(_entry.RaceNumber, currentEventDate);
+                if (!EntriesSignedIn.Contains(_entry)) { _eventsEntries.IsOnEntrylist = false; }
+            }*/
+            EventsEntries.Statics.WriteSQL();
+            return (EntriesSignedIn, EntriesSignedOut);
+        }
+
+        public static (List<Entry>, List<Entry>) FillUpEntrylist(DateTime currentEventDate, int SlotsAvailable, List<Entry> EntriesSignedIn, List<Entry> EntriesSignedOut)
+        {
+            List<Entry> Entrylist = new List<Entry>();
+            foreach (Entry _entry in Entry.Statics.List) { if (_entry.RegisterDate < currentEventDate && _entry.SignOutDate > currentEventDate) { Entrylist.Add(_entry); } }
+            var linqList = from _entry in Entrylist
+                           //orderby PreQualiResultLine.Statics.List.IndexOf(PreQualiResultLine.getLineByRaceNumber(_entry.RaceNumber))
+                           select _entry;
+            Entrylist = linqList.Cast<Entry>().ToList();
+            foreach (Entry _entry in Entrylist)
+            {
+                //EventsEntries _eventsEntries = EventsEntries.GetEventsEntriesByEDRN(_entry.RaceNumber, currentEventDate);
+                bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable;
+                //if (candidate) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; if (EntriesSignedOut.Contains(_entry)) { EntriesSignedOut.Remove(_entry); } }
+            }
+            EventsEntries.Statics.WriteSQL();
+            return (EntriesSignedIn, EntriesSignedOut);
+        }
+
+        public static void CalcBoP(int CarLimitBallast, int CarLimitRestriktor, int GainBallast, int GainRestriktor, bool IsCheckedBallast, bool IsCheckedRestriktor)
+        {
+            if (!IsCheckedBallast) { GainBallast = 0; }
+            if (!IsCheckedRestriktor) { GainRestriktor = 0; }
+            foreach (CarBoP _carBoP in CarBoP.List)
+            {
+                _carBoP.Ballast = Math.Max(0, _carBoP.CountBoP - CarLimitBallast) * GainBallast;
+                _carBoP.Restrictor = Math.Max(0, _carBoP.CountBoP - CarLimitRestriktor) * GainRestriktor;
+            }
+        }
+
+        public static void UpdateName3Digits()
+        {/*
+            bool allUnique = false; int number = 0;
+            List<Driver> driverList = new List<Driver>();
+            foreach (Entry _entry in Entry.Statics.List) { foreach (Driver _driver in DriverEntries.GetDriversByRaceNumber(_entry.RaceNumber)) { driverList.Add(_driver); } }
+            foreach (Driver _driver in driverList) { DriverEntries.getDriverEntriesBySteamID(_driver.SteamID).Name3Digits = _driver.Name3DigitsOptions[0]; }
+            while (!allUnique)
+            {
+                allUnique = true;
+                foreach (Driver _driver in driverList)
+                {
+                    List<Driver> identicalN3D = new List<Driver>();
+                    string currentN3D = DriverEntries.getDriverEntriesBySteamID(_driver.SteamID).Name3Digits;
+                    foreach (Driver _driver2 in driverList)
+                    {
+                        if (currentN3D == DriverEntries.getDriverEntriesBySteamID(_driver2.SteamID).Name3Digits) { identicalN3D.Add(_driver2); }
+                    }
+                    if (identicalN3D.Count > 1)
+                    {
+                        int lvlsMax = -1;
+                        List<Driver> identicalN3D_0 = new List<Driver>();
+                        List<Driver> identicalN3D_1 = new List<Driver>();
+                        foreach (Driver _driver2 in identicalN3D)
+                        {
+                            if (_driver2.Name3DigitsOptions.IndexOf(currentN3D) == 0) { identicalN3D_0.Add(_driver2); }
+                            int lvlsMaxTemp = _driver2.Name3DigitsOptions.Count - _driver2.Name3DigitsOptions.IndexOf(currentN3D);
+                            if (lvlsMaxTemp > lvlsMax) { lvlsMax = lvlsMaxTemp; identicalN3D_1 = new List<Driver>() { _driver2 }; }
+                        }
+                        if (identicalN3D_0.Count > 0) { identicalN3D = identicalN3D_0; } else { identicalN3D = identicalN3D_1; }
+                        foreach (Driver _driver2 in identicalN3D)
+                        {
+                            int currentLvl = _driver2.Name3DigitsOptions.IndexOf(currentN3D) + 1;
+                            int lvlMax = _driver2.Name3DigitsOptions.Count;
+                            if (currentLvl == lvlMax) { DriverEntries.getDriverEntriesBySteamID(_driver2.SteamID).Name3Digits = number.ToString(); number++; }
+                            else { DriverEntries.getDriverEntriesBySteamID(_driver2.SteamID).Name3Digits = _driver2.Name3DigitsOptions[currentLvl]; }
+                        }
+                        allUnique = false;
+                        break;
+                    }
+                }
+            }
+            foreach (Driver _driver in driverList)
+            {
+                DriverEntries _driverEntries = DriverEntries.getDriverEntriesBySteamID(_driver.SteamID);
+                if (Int32.TryParse(_driverEntries.Name3Digits, out number)) { _driverEntries.Name3Digits = _driver.Name3DigitsOptions[0]; }
+            }*/
+        }
+    }
+}

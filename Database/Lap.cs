@@ -1,16 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GTRCLeagueManager.Database
 {
     public class Lap : DatabaseObject<Lap>
     {
-        public static StaticDbField<Lap> Statics = new StaticDbField<Lap>(true)
-        {
-            Table = "Laps",
-            ListSetter = () => ListSetter()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<Lap> Statics { get; set; }
 
         private int entryID = 0;
         private bool valid = false;
@@ -19,6 +16,15 @@ namespace GTRCLeagueManager.Database
         private int sector2 = int.MaxValue;
         private int sector3 = int.MaxValue;
         private int track = Basics.NoID;
+
+        static Lap()
+        {
+            Statics = new StaticDbField<Lap>(true)
+            {
+                Table = "Laps",
+                ListSetter = () => ListSetter()
+            };
+        }
 
         public Lap() { This = this; Initialize(true, true); }
         public Lap(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

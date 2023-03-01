@@ -4,18 +4,16 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.ConstrainedExecution;
-using System.Windows.Controls.Primitives;
 using GTRCLeagueManager.Database;
-using Microsoft.Windows.Themes;
 
 namespace GTRCLeagueManager
 {
     public class DatabaseVM : ObservableObject
     {
-        public static DatabaseVM Instance;
-        public static SortState CurrentSortState = new SortState();
+        public static DatabaseVM? Instance;
+        public static SortState CurrentSortState = new();
 
-        private static Type dataType;
+        private static Type dataType = typeof(ThemeColor);
         private static List<KeyValuePair<string, Type>> listDataTypes = new List<KeyValuePair<string, Type>>();
 
         private ObservableCollection<DataRowVM> list = new ObservableCollection<DataRowVM>();
@@ -64,7 +62,7 @@ namespace GTRCLeagueManager
         {
             Type backupDataType = dataType;
             foreach (KeyValuePair<string, Type> _dataType in listDataTypes) { dataType = _dataType.Value; if (saveSQL) { WriteSQL(); } }
-            dataType = backupDataType;
+            dataType = backupDataType ?? dataType;
         }
 
         public List<KeyValuePair<string, Type>> ListDataTypes
@@ -140,14 +138,14 @@ namespace GTRCLeagueManager
 
         public void ClearCurrent()
         {
-            Current = new DataRowVM(Activator.CreateInstance(DataType, true, false), false, false);
+            Current = new DataRowVM(Activator.CreateInstance(DataType, true, false)!, false, false);
         }
 
         public void Add()
         {
             if (Current.Object.List.Contains(Current.Object))
             {
-                Current.Object = Activator.CreateInstance(DataType, true, false);
+                Current.Object = Activator.CreateInstance(DataType, true, false)!;
                 DataRow2Object(Current.Object, Current);
                 Current = new DataRowVM(Current.Object, false, false);
             }
@@ -331,9 +329,13 @@ namespace GTRCLeagueManager
             Name = Property.Name;
             Value = item.Value;
             idList.Clear();
-            foreach (var _obj in StaticFieldList.GetByIDProperty(Name).IDList)
+            dynamic _statics = StaticFieldList.GetByIDProperty(Name);
+            if (_statics != null)
             {
-                idList.Add(new KeyValuePair<string, int>(_obj.ToString(), _obj.ID));
+                foreach (var _obj in _statics.IDList)
+                {
+                    idList.Add(new KeyValuePair<string, int>(_obj.ToString(), _obj.ID));
+                }
             }
             /*
             if (Basics.SubStr(Name, -2, 2) == "ID")

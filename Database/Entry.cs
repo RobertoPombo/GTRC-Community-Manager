@@ -8,13 +8,7 @@ namespace GTRCLeagueManager.Database
 {
     public class Entry : DatabaseObject<Entry>
     {
-        public static StaticDbField<Entry> Statics = new StaticDbField<Entry>(true)
-        {
-            Table = "Entries",
-            UniquePropertiesNames = new List<List<string>>() { new List<string>() { "RaceNumber" } },
-            ToStringPropertiesNames = new List<string>() { "RaceNumber", "TeamID" },
-            ListSetter = () => ListSetter()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<Entry> Statics { get; set; }
         public static readonly int DefaultRaceNumber = 2;
         public static readonly int RaceNumberMinValue = 1;
         public static readonly int RaceNumberMaxValue = 999;
@@ -28,6 +22,17 @@ namespace GTRCLeagueManager.Database
         private int restrictor = 0;
         private int category = 3;
         private bool scorepoints = true;
+
+        static Entry()
+        {
+            Statics = new StaticDbField<Entry>(true)
+            {
+                Table = "Entries",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "RaceNumber" } },
+                ToStringPropertiesNames = new List<string>() { "RaceNumber", "TeamID" },
+                ListSetter = () => ListSetter()
+            };
+        }
 
         public Entry() { This = this; Initialize(true, true); }
         public Entry(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

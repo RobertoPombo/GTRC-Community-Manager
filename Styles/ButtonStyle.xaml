@@ -1,0 +1,454 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style TargetType="{x:Type Button}" x:Key="ButtonStyle">
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="5" BorderThickness="0">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Setter Property="Background" Value="{StaticResource color1}"/>
+        <Setter Property="Foreground" Value="{StaticResource color2}"/>
+
+        <Style.Triggers>
+
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource color3}"/>
+                <Setter Property="Foreground" Value="{StaticResource color1}"/>
+            </Trigger>
+
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource color3}"/>
+                <Setter Property="Foreground" Value="{StaticResource color1}"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="5" BorderThickness="1" BorderBrush="Transparent">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+
+        </Style.Triggers>
+
+    </Style>
+    <Style TargetType="{x:Type Button}" x:Key="TransparentButtonStyle">
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="5" BorderThickness="0">
+                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="20"/>
+
+    </Style>
+
+    
+    
+    <Style TargetType="{x:Type Button}" x:Key="CloseButtonStyle" BasedOn="{StaticResource ButtonStyle}">
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="0,10,0,0" BorderThickness="0">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Style.Triggers>
+
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="0,4,0,0" BorderThickness="0">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+
+        </Style.Triggers>
+
+    </Style>
+
+    
+    
+    <Style TargetType="{x:Type Button}" x:Key="MinButtonStyle" BasedOn="{StaticResource ButtonStyle}">
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="0" BorderThickness="0">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="AddButtonStyle">
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border Background="Transparent" CornerRadius="0" BorderThickness="0">
+                        <Canvas Width="20" Height="20">
+                            <Path Name="PathAdd"
+                                  Data="M4,10 h12 M10,4 v12"
+                                  Stroke="{StaticResource color2}"
+                                  StrokeThickness="3"/>
+                        </Canvas>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="PathAdd" Property="Stroke" Value="{StaticResource color3}"/>
+                        </Trigger>
+
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="PathAdd" Property="Data" Value="M5,10 h10 M10,5 v10"/>
+                            <Setter TargetName="PathAdd" Property="StrokeThickness" Value="2"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0"/>
+
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="DelButtonStyle" BasedOn="{StaticResource AddButtonStyle}">
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border Background="Transparent" CornerRadius="0" BorderThickness="0">
+                        <Canvas Width="20" Height="20">
+                            <Path Name="PathDel"
+                                  Data="M4,10 h12"
+                                  Stroke="{StaticResource color2}"
+                                  StrokeThickness="3"/>
+                        </Canvas>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="PathDel" Property="Stroke" Value="{StaticResource color3}"/>
+                        </Trigger>
+
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="PathDel" Property="Data" Value="M5,10 h10"/>
+                            <Setter TargetName="PathDel" Property="StrokeThickness" Value="2"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="CheckButtonStyle" BasedOn="{StaticResource AddButtonStyle}">
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border Background="Transparent" CornerRadius="0" BorderThickness="0">
+                        <Canvas Width="25" Height="25">
+                            <Path Name="PathCheck"
+                                  Data="M5,13 l 5 5 l 10 -10"
+                                  Stroke="{StaticResource color2}"
+                                  StrokeThickness="3"/>
+                        </Canvas>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="PathCheck" Property="Stroke" Value="{StaticResource color3}"/>
+                        </Trigger>
+
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="PathCheck" Property="Data" Value="M6,13 l 4 4 l 9 -9"/>
+                            <Setter TargetName="PathCheck" Property="StrokeThickness" Value="2"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="ResButtonStyle" BasedOn="{StaticResource ButtonStyle}">
+        <Setter Property="Background">
+            <Setter.Value>
+                <ImageBrush ImageSource="/Icons/icon_res1.png" Stretch="Uniform" />
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <ImageBrush ImageSource="/Icons/icon_res2.png" Stretch="Uniform" />
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border Background="{TemplateBinding Background}" BorderThickness="0.5">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="9.5,0"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="SavButtonStyle" BasedOn="{StaticResource ResButtonStyle}">
+        <Setter Property="Background">
+            <Setter.Value>
+                <ImageBrush ImageSource="/Icons/icon_sav1.png" Stretch="Uniform" />
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <ImageBrush ImageSource="/Icons/icon_sav2.png" Stretch="Uniform" />
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="ImpButtonStyle" BasedOn="{StaticResource ResButtonStyle}">
+        <Setter Property="Background">
+            <Setter.Value>
+                <ImageBrush ImageSource="/Icons/icon_imp1.png" Stretch="Uniform"/>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <ImageBrush ImageSource="/Icons/icon_imp2.png" Stretch="Uniform"/>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="ImpButtonStyleList">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border Background="Transparent" CornerRadius="0" BorderThickness="0">
+                        <Image x:Name="ImageImpIcon" Source="/Icons/icon_imp1.png" Height="15" Margin="0"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ImageImpIcon" Property="Source" Value="/Icons/icon_imp2.png"/>
+                        </Trigger>
+
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="ImageImpIcon" Property="Height" Value="13"/>
+                            <Setter TargetName="ImageImpIcon" Property="Margin" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="ExpButtonStyle" BasedOn="{StaticResource ResButtonStyle}">
+        <Setter Property="Background">
+            <Setter.Value>
+                <ImageBrush ImageSource="/Icons/icon_exp1.png" Stretch="Uniform" />
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <ImageBrush ImageSource="/Icons/icon_exp2.png" Stretch="Uniform" />
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="BinButtonStyle" BasedOn="{StaticResource ResButtonStyle}">
+        <Setter Property="Background">
+            <Setter.Value>
+                <ImageBrush ImageSource="/Icons/icon_bin1.png" Stretch="Uniform" />
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <ImageBrush ImageSource="/Icons/icon_bin2.png" Stretch="Uniform" />
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="SavTextButtonStyle">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="border" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="5"
+                            BorderThickness="0" BorderBrush="Transparent">
+                        <StackPanel Orientation="Horizontal">
+                            <Image x:Name="icon" Source="/Icons/icon_sav1.png" Stretch="Uniform" Margin="0,0,5,0"/>
+                            <TextBlock x:Name="text" VerticalAlignment="Bottom" Foreground="{StaticResource color2}" Height="{TemplateBinding Height}"
+                                       Text="{Binding Path=Content, RelativeSource={RelativeSource AncestorType={x:Type Button}}}"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource color3}"/>
+                            <Setter TargetName="icon" Property="Source" Value="/Icons/icon_sav0.png"/>
+                            <Setter TargetName="text" Property="Foreground" Value="{StaticResource color1}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="text" Property="Margin" Value="0,0,0,-1"/>
+                            <Setter TargetName="border" Property="BorderThickness" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="ResTextButtonStyle" BasedOn="{StaticResource SavTextButtonStyle}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="border" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="5"
+                            BorderThickness="0" BorderBrush="Transparent">
+                        <StackPanel Orientation="Horizontal">
+                            <Image x:Name="icon" Source="/Icons/icon_res1.png" Stretch="Uniform" Margin="0,1,5,1"/>
+                            <TextBlock x:Name="text" VerticalAlignment="Bottom" Foreground="{StaticResource color2}" Height="{TemplateBinding Height}"
+                                       Text="{Binding Path=Content, RelativeSource={RelativeSource AncestorType={x:Type Button}}}"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource color3}"/>
+                            <Setter TargetName="icon" Property="Source" Value="/Icons/icon_res0.png"/>
+                            <Setter TargetName="text" Property="Foreground" Value="{StaticResource color1}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="text" Property="Margin" Value="0,0,0,-1"/>
+                            <Setter TargetName="border" Property="BorderThickness" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="ExpTextButtonStyle" BasedOn="{StaticResource SavTextButtonStyle}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="border" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="5"
+                            BorderThickness="0" BorderBrush="Transparent">
+                        <StackPanel Orientation="Horizontal">
+                            <Image x:Name="icon" Source="/Icons/icon_exp1.png" Stretch="Uniform" Margin="0,1,5,1"/>
+                            <TextBlock x:Name="text" VerticalAlignment="Bottom" Foreground="{StaticResource color2}" Height="{TemplateBinding Height}"
+                                       Text="{Binding Path=Content, RelativeSource={RelativeSource AncestorType={x:Type Button}}}"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource color3}"/>
+                            <Setter TargetName="icon" Property="Source" Value="/Icons/icon_exp0.png"/>
+                            <Setter TargetName="text" Property="Foreground" Value="{StaticResource color1}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="text" Property="Margin" Value="0,0,0,-1"/>
+                            <Setter TargetName="border" Property="BorderThickness" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="BinTextButtonStyle" BasedOn="{StaticResource SavTextButtonStyle}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="border" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="5"
+                            BorderThickness="0" BorderBrush="Transparent">
+                        <StackPanel Orientation="Horizontal">
+                            <Image x:Name="icon" Source="/Icons/icon_bin1.png" Stretch="Uniform" Margin="0,-2,5,-2"/>
+                            <TextBlock x:Name="text" VerticalAlignment="Bottom" Foreground="{StaticResource color2}" Height="{TemplateBinding Height}"
+                                       Text="{Binding Path=Content, RelativeSource={RelativeSource AncestorType={x:Type Button}}}"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource color3}"/>
+                            <Setter TargetName="icon" Property="Source" Value="/Icons/icon_bin0.png"/>
+                            <Setter TargetName="text" Property="Foreground" Value="{StaticResource color1}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="text" Property="Margin" Value="0,0,0,-1"/>
+                            <Setter TargetName="border" Property="BorderThickness" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

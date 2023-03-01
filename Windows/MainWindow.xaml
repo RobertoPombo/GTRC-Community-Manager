@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="GTRC Pre-Qualifying"
         Background="Transparent"
-        Icon="/icons/icon_gtrc.ico"
+        Icon="/Icons/icon_gtrc.ico"
         FontFamily="{StaticResource Metropolis}" FontStyle="Normal" FontWeight="Regular"
         FontSize="13"
         WindowStyle="None"

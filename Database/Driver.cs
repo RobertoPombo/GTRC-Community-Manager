@@ -9,13 +9,7 @@ namespace GTRCLeagueManager.Database
 {
     public class Driver : DatabaseObject<Driver>
     {
-        public static StaticDbField<Driver> Statics = new StaticDbField<Driver>(true)
-        {
-            Table = "Drivers",
-            UniquePropertiesNames = new List<List<string>>() { new List<string>() { "SteamID" }, new List<string>() { "DiscordID" } },
-            ToStringPropertiesNames = new List<string>() { "FullName" },
-            ListSetter = () => ListSetter()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<Driver> Statics { get; set; }
         public static readonly long DiscordIDNoValue = 0;
         public static readonly long SteamIDMinValue = 10000000000000000;
         public static readonly long DiscordIDMinValue = 100000000000000000;
@@ -31,6 +25,17 @@ namespace GTRCLeagueManager.Database
         private string name3Digits = "";
 
         [NotMapped][JsonIgnore] public List<string> Name3DigitsOptions = new List<string>() { "" };
+
+        static Driver()
+        {
+            Statics = new StaticDbField<Driver>(true)
+            {
+                Table = "Drivers",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "SteamID" }, new List<string>() { "DiscordID" } },
+                ToStringPropertiesNames = new List<string>() { "FullName" },
+                ListSetter = () => ListSetter()
+            };
+        }
 
         public Driver() { This = this; Initialize(true, true); }
         public Driver(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

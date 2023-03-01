@@ -1,18 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GTRCLeagueManager.Database
 {
     public class PreQualiResultLine : DatabaseObject<PreQualiResultLine>
     {
-        public static StaticDbField<PreQualiResultLine> Statics = new StaticDbField<PreQualiResultLine>(true)
-        {
-            Table = "PreQualiResultLines",
-            UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Position" }, new List<string>() { "EntryID" } },
-            ToStringPropertiesNames = new List<string>() { "Position", "EntryID" },
-            ListSetter = () => ListSetter()
-        };
+        [NotMapped][JsonIgnore] public static StaticDbField<PreQualiResultLine> Statics { get; set; }
 
         private int entryID = 0;
         private int average = int.MaxValue;
@@ -36,6 +31,17 @@ namespace GTRCLeagueManager.Database
         [JsonIgnore] public int BestSector3a = int.MaxValue;
         [JsonIgnore] public int BestSector1b = int.MaxValue;
         [JsonIgnore] public int BestSector3b = int.MaxValue;
+
+        static PreQualiResultLine()
+        {
+            Statics = new StaticDbField<PreQualiResultLine>(true)
+            {
+                Table = "PreQualiResultLines",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Position" }, new List<string>() { "EntryID" } },
+                ToStringPropertiesNames = new List<string>() { "Position", "EntryID" },
+                ListSetter = () => ListSetter()
+            };
+        }
 
         public PreQualiResultLine() { This = this; Initialize(true, true); }
         public PreQualiResultLine(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
