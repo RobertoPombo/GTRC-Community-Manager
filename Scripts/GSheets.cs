@@ -293,7 +293,7 @@ namespace GTRCLeagueManager
                     values.Add(_entry.RaceNumber.ToString());
                     Team _team = Team.Statics.GetByID(_entry.TeamID);
                     if (_team.ReadyForList) { values.Add(_team.Name); } else { values.Add("Gaststarter"); }
-                    values.Add(Car.Statics.GetByID(_entry.CarID).Name);
+                    values.Add(Car.Statics.GetByID(EventsEntries.GetLatestEventsEntries(_entry, DateTime.Now).CarID).Name);
                     if (average < int.MaxValue)
                     {
                         values.Add(Basics.ms2laptime(average));
