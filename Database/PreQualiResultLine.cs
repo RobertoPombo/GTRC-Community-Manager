@@ -8,6 +8,19 @@ namespace GTRCLeagueManager.Database
     public class PreQualiResultLine : DatabaseObject<PreQualiResultLine>
     {
         [NotMapped][JsonIgnore] public static StaticDbField<PreQualiResultLine> Statics { get; set; }
+        static PreQualiResultLine()
+        {
+            Statics = new StaticDbField<PreQualiResultLine>(true)
+            {
+                Table = "PreQualiResultLines",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Position" }, new List<string>() { "EntryID" } },
+                ToStringPropertiesNames = new List<string>() { "Position", "EntryID" },
+                ListSetter = () => ListSetter()
+            };
+        }
+        public PreQualiResultLine() { This = this; Initialize(true, true); }
+        public PreQualiResultLine(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
+        public PreQualiResultLine(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
         private int entryID = 0;
         private int average = int.MaxValue;
@@ -31,21 +44,6 @@ namespace GTRCLeagueManager.Database
         [JsonIgnore] public int BestSector3a = int.MaxValue;
         [JsonIgnore] public int BestSector1b = int.MaxValue;
         [JsonIgnore] public int BestSector3b = int.MaxValue;
-
-        static PreQualiResultLine()
-        {
-            Statics = new StaticDbField<PreQualiResultLine>(true)
-            {
-                Table = "PreQualiResultLines",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Position" }, new List<string>() { "EntryID" } },
-                ToStringPropertiesNames = new List<string>() { "Position", "EntryID" },
-                ListSetter = () => ListSetter()
-            };
-        }
-
-        public PreQualiResultLine() { This = this; Initialize(true, true); }
-        public PreQualiResultLine(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
-        public PreQualiResultLine(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
         public int Position
         {

@@ -8,17 +8,8 @@ namespace GTRCLeagueManager.Database
 {
     public class Car : DatabaseObject<Car>
     {
-        [NotMapped][JsonIgnore] public static StaticDbField<Car> Statics { get; set; }
         public static readonly string PathLogos = MainWindow.dataDirectory + "logos\\";
-
-        private int accCarID = 0;
-        private string name = "";
-        private string manufacturer = "";
-        private string model = "";
-        private string category = "";
-        private int year = DateTime.Now.Year;
-        private string name_GTRC = "";
-
+        [NotMapped][JsonIgnore] public static StaticDbField<Car> Statics { get; set; }
         static Car()
         {
             Statics = new StaticDbField<Car>(true)
@@ -29,10 +20,17 @@ namespace GTRCLeagueManager.Database
                 ListSetter = () => ListSetter()
             };
         }
-
         public Car() { This = this; Initialize(true, true); }
         public Car(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Car(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private int accCarID = 0;
+        private string name = "";
+        private string manufacturer = "";
+        private string model = "";
+        private string category = "";
+        private int year = DateTime.Now.Year;
+        private string name_GTRC = "";
 
         public int AccCarID
         {

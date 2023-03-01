@@ -7,11 +7,8 @@ namespace GTRCLeagueManager.Database
 {
     public class Team : DatabaseObject<Team>
     {
-        [NotMapped][JsonIgnore] public static StaticDbField<Team> Statics { get; set; }
         public static readonly string DefaultName = "Team #1";
-
-        private string name = DefaultName;
-
+        [NotMapped][JsonIgnore] public static StaticDbField<Team> Statics { get; set; }
         static Team()
         {
             Statics = new StaticDbField<Team>(true)
@@ -22,10 +19,11 @@ namespace GTRCLeagueManager.Database
                 ListSetter = () => ListSetter()
             };
         }
-
         public Team() { This = this; Initialize(true, true); }
         public Team(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Team(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private string name = DefaultName;
 
         public string Name
         {

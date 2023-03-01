@@ -9,23 +9,12 @@ namespace GTRCLeagueManager.Database
 {
     public class Driver : DatabaseObject<Driver>
     {
-        [NotMapped][JsonIgnore] public static StaticDbField<Driver> Statics { get; set; }
         public static readonly long DiscordIDNoValue = 0;
         public static readonly long SteamIDMinValue = 10000000000000000;
         public static readonly long DiscordIDMinValue = 100000000000000000;
         public static readonly long SteamIDMaxValue = SteamIDMinValue * 10 - 1;
         public static readonly long DiscordIDMaxValue = Int64.MaxValue;
-
-        private long steamID = SteamIDMinValue;
-        private long discordID = Basics.NoID;
-        private string firstName = "";
-        private string lastName = "";
-        private DateTime registerDate = DateTime.Now;
-        private DateTime banDate = Event.DateTimeMaxValue;
-        private string name3Digits = "";
-
-        [NotMapped][JsonIgnore] public List<string> Name3DigitsOptions = new List<string>() { "" };
-
+        [NotMapped][JsonIgnore] public static StaticDbField<Driver> Statics { get; set; }
         static Driver()
         {
             Statics = new StaticDbField<Driver>(true)
@@ -36,10 +25,19 @@ namespace GTRCLeagueManager.Database
                 ListSetter = () => ListSetter()
             };
         }
-
         public Driver() { This = this; Initialize(true, true); }
         public Driver(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Driver(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private long steamID = SteamIDMinValue;
+        private long discordID = Basics.NoID;
+        private string firstName = "";
+        private string lastName = "";
+        private DateTime registerDate = DateTime.Now;
+        private DateTime banDate = Event.DateTimeMaxValue;
+        private string name3Digits = "";
+
+        [NotMapped][JsonIgnore] public List<string> Name3DigitsOptions = new List<string>() { "" };
 
         public long SteamID
         {

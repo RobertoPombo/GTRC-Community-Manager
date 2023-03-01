@@ -145,7 +145,7 @@ namespace GTRCLeagueManager
             _server.WaitQueue--;
             Lap.Statics.LoadSQL();
             for (int pathNr = 0; pathNr < paths.Count; pathNr++) { PreSeason.AddResultsJson(paths[pathNr]); _server.WaitQueue--; }
-            Lap.Statics.WriteJson(); Lap.Statics.ResetSQL(); Lap.Statics.WriteSQL();
+            Lap.Statics.WriteSQL();
             PreSeason.UpdatePreQResults();
             GSheets.UpdatePreQStandings(GSheet.ListIDs[0].DocID, GSheet.ListIDs[0].SheetID);
             _server.IsRunning = false;
@@ -161,9 +161,9 @@ namespace GTRCLeagueManager
             Lap.Statics.ResetSQL();
             if (_server.Type == ServerTypeEnum.PreQuali)
             {
-                DirectoryInfo dirInfo = new DirectoryInfo(_server.PathResults);
+                DirectoryInfo dirInfo = new(_server.PathResults);
                 FileInfo[] listResultsJsonFiles = dirInfo.GetFiles(_server.ResultsWatcher.Filter);
-                List<string> listPaths = new List<string>();
+                List<string> listPaths = new();
                 foreach (FileInfo resultsJsonFile in listResultsJsonFiles)
                 {
                     listPaths.Add(_server.PathResults + resultsJsonFile.Name);
@@ -181,7 +181,7 @@ namespace GTRCLeagueManager
         {
             if (_server.PathExists)
             {
-                ACC_Entrylist Entrylist = new ACC_Entrylist();
+                ACC_Entrylist Entrylist = new();
                 if (_server.EntrylistType == Server.listEntrylistTypes[0])
                 {
                     Entrylist.CreateEmpty();
@@ -214,7 +214,7 @@ namespace GTRCLeagueManager
         {
             if (_server.PathExists)
             {
-                ACC_BoP BoP = new ACC_BoP();
+                ACC_BoP BoP = new();
                 if (_server.WriteBoP) { BoP.Create(); } else { BoP.CreateEmpty(); }
                 BoP.WriteJson(_server.PathCfg);
             }

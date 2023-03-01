@@ -8,11 +8,6 @@ namespace GTRCLeagueManager.Database
     public class RaceControl : DatabaseObject<RaceControl>
     {
         [NotMapped][JsonIgnore] public static StaticDbField<RaceControl> Statics { get; set; }
-
-        private int driverID = 0;
-        private string firstName = "";
-        private string lastName = "";
-
         static RaceControl()
         {
             Statics = new StaticDbField<RaceControl>(true)
@@ -23,10 +18,13 @@ namespace GTRCLeagueManager.Database
                 ListSetter = () => ListSetter()
             };
         }
-
         public RaceControl() { This = this; Initialize(true, true); }
         public RaceControl(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public RaceControl(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private int driverID = 0;
+        private string firstName = "";
+        private string lastName = "";
 
         public int DriverID
         {

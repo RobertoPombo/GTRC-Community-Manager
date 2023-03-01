@@ -7,15 +7,10 @@ namespace GTRCLeagueManager.Database
 {
     public class Event : DatabaseObject<Event>
     {
-        [NotMapped][JsonIgnore] public static StaticDbField<Event> Statics { get; set; }
         public static readonly DateTime DateTimeMinValue = DateTime.MinValue.AddYears(1800);
         public static readonly DateTime DateTimeMaxValue = DateTime.MaxValue.AddDays(-1);
         public static readonly string DefaultName = "Event #1";
-
-        private DateTime eventDate = DateTime.Now;
-        private int trackID = 0;
-        private string name = DefaultName;
-
+        [NotMapped][JsonIgnore] public static StaticDbField<Event> Statics { get; set; }
         static Event()
         {
             Statics = new StaticDbField<Event>(true)
@@ -26,10 +21,13 @@ namespace GTRCLeagueManager.Database
                 ListSetter = () => ListSetter()
             };
         }
-
         public Event() { This = this; Initialize(true, true); }
         public Event(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Event(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private DateTime eventDate = DateTime.Now;
+        private int trackID = 0;
+        private string name = DefaultName;
 
         [JsonIgnore] public int EventNr
         {

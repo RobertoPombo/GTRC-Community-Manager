@@ -8,15 +8,8 @@ namespace GTRCLeagueManager.Database
 {
     public class Track : DatabaseObject<Track>
     {
-        [NotMapped][JsonIgnore] public static StaticDbField<Track> Statics { get; set; }
         public static readonly string DefaultAccTrackID = "TrackID";
-
-        private string accTrackID = DefaultAccTrackID;
-        private string name = "";
-        private int pitBoxesCount = 0;
-        private int serverSlotsCount = 0;
-        private string name_GTRC = "";
-
+        [NotMapped][JsonIgnore] public static StaticDbField<Track> Statics { get; set; }
         static Track()
         {
             Statics = new StaticDbField<Track>(true)
@@ -27,10 +20,15 @@ namespace GTRCLeagueManager.Database
                 ListSetter = () => ListSetter()
             };
         }
-
         public Track() { This = this; Initialize(true, true); }
         public Track(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Track(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private string accTrackID = DefaultAccTrackID;
+        private string name = "";
+        private int pitBoxesCount = 0;
+        private int serverSlotsCount = 0;
+        private string name_GTRC = "";
 
         public string AccTrackID
         {

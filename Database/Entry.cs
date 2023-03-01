@@ -8,21 +8,10 @@ namespace GTRCLeagueManager.Database
 {
     public class Entry : DatabaseObject<Entry>
     {
-        [NotMapped][JsonIgnore] public static StaticDbField<Entry> Statics { get; set; }
         public static readonly int DefaultRaceNumber = 2;
         public static readonly int RaceNumberMinValue = 1;
         public static readonly int RaceNumberMaxValue = 999;
-
-        private int raceNumber = DefaultRaceNumber;
-        private int teamID = Basics.NoID;
-        private int carID = 0;
-        private DateTime registerdate = DateTime.Now;
-        private DateTime signoutdate = Event.DateTimeMaxValue;
-        private int ballast = 0;
-        private int restrictor = 0;
-        private int category = 3;
-        private bool scorepoints = true;
-
+        [NotMapped][JsonIgnore] public static StaticDbField<Entry> Statics { get; set; }
         static Entry()
         {
             Statics = new StaticDbField<Entry>(true)
@@ -33,10 +22,19 @@ namespace GTRCLeagueManager.Database
                 ListSetter = () => ListSetter()
             };
         }
-
         public Entry() { This = this; Initialize(true, true); }
         public Entry(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Entry(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private int raceNumber = DefaultRaceNumber;
+        private int teamID = Basics.NoID;
+        private int carID = 0;
+        private DateTime registerdate = DateTime.Now;
+        private DateTime signoutdate = Event.DateTimeMaxValue;
+        private int ballast = 0;
+        private int restrictor = 0;
+        private int category = 3;
+        private bool scorepoints = true;
 
         public int RaceNumber
         {

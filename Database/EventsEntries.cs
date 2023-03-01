@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GTRCLeagueManager.Database
@@ -8,6 +9,20 @@ namespace GTRCLeagueManager.Database
     public class EventsEntries : DatabaseObject<EventsEntries>
     {
         [NotMapped][JsonIgnore] public static StaticDbField<EventsEntries> Statics { get; set; }
+        static EventsEntries()
+        {
+            Statics = new StaticDbField<EventsEntries>(true)
+            {
+                Table = "EventsEntries",
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "EntryID", "EventID" } },
+                ToStringPropertiesNames = new List<string>() { "EntryID", "EventID" },
+                ListSetter = () => ListSetter(),
+                DoSync = () => SyncDelete()
+            };
+        }
+        public EventsEntries() { This = this; Initialize(true, true); }
+        public EventsEntries(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
+        public EventsEntries(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
         private int entryID = 0;
         private int eventID = 0;
@@ -20,22 +35,6 @@ namespace GTRCLeagueManager.Database
         private bool scorepoints = new Entry(false).ScorePoints;
         private int carID = 0;
         private DateTime carchangedate = Event.DateTimeMinValue;
-
-        static EventsEntries()
-        {
-            Statics = new StaticDbField<EventsEntries>(true)
-            {
-                Table = "EventsEntries",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "EntryID", "EventID" } },
-                ToStringPropertiesNames = new List<string>() { "EntryID", "EventID" },
-                ListSetter = () => ListSetter(),
-                DoSync = () => SyncDelete()
-            };
-        }
-
-        public EventsEntries() { This = this; Initialize(true, true); }
-        public EventsEntries(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
-        public EventsEntries(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
         public int EntryID
         {
@@ -227,6 +226,26 @@ namespace GTRCLeagueManager.Database
                     }
                 }
             }
+        }
+
+        public static EventsEntries GetLatestEventsEntries(Entry _entry, DateTime carChangeDateMax)
+        {
+            List<EventsEntries> eventsEntriesList = Statics.GetBy(nameof(EntryID), _entry.ID);
+            var linqList = from _eventsEntries in eventsEntriesList
+                           orderby Event.Statics.GetByID(_eventsEntries.ID).EventDate
+                           select _eventsEntries;
+            eventsEntriesList = linqList.Cast<EventsEntries>().ToList();
+            EventsEntries eventsEntries = new(false);
+            foreach (EventsEntries _eventsEntries in eventsEntriesList)
+            {
+                if (_eventsEntries.CarChangeDate < carChangeDateMax)
+                {
+                    eventsEntries = _eventsEntries;
+                    if (Event.Statics.GetByID(_eventsEntries.EventID).EventDate > carChangeDateMax) { break; }
+                }
+                else { break; }
+            }
+            return eventsEntries;
         }
 
         //TEMP: Converter

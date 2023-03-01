@@ -8,15 +8,6 @@ namespace GTRCLeagueManager.Database
     public class Lap : DatabaseObject<Lap>
     {
         [NotMapped][JsonIgnore] public static StaticDbField<Lap> Statics { get; set; }
-
-        private int entryID = 0;
-        private bool valid = false;
-        private int time = int.MaxValue;
-        private int sector1 = int.MaxValue;
-        private int sector2 = int.MaxValue;
-        private int sector3 = int.MaxValue;
-        private int track = Basics.NoID;
-
         static Lap()
         {
             Statics = new StaticDbField<Lap>(true)
@@ -25,10 +16,17 @@ namespace GTRCLeagueManager.Database
                 ListSetter = () => ListSetter()
             };
         }
-
         public Lap() { This = this; Initialize(true, true); }
         public Lap(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Lap(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private int entryID = 0;
+        private bool valid = false;
+        private int time = int.MaxValue;
+        private int sector1 = int.MaxValue;
+        private int sector2 = int.MaxValue;
+        private int sector3 = int.MaxValue;
+        private int track = Basics.NoID;
 
         public int EntryID
         {

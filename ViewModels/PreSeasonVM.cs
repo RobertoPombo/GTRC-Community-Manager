@@ -96,9 +96,9 @@ namespace GTRCLeagueManager
             get { return slotsavailable; }
             set
             {
-                if (currentevent != null)
+                if (currentevent is not null)
                 {
-                    slotsavailable = GetSlotsAvalable(Track.Statics.GetByUniqueProp(CurrentEvent.TrackID));
+                    slotsavailable = GetSlotsAvalable(Track.Statics.GetByID(CurrentEvent.TrackID));
                     SlotsTakenText = "?";
                 }
             }
@@ -312,7 +312,7 @@ namespace GTRCLeagueManager
             if (Instance != null)
             {
                 int backupCurrentSeasonID = Instance.CurrentSeasonID;
-                Instance.RaisePropertyChanged("ListSeasons");
+                Instance.RaisePropertyChanged(nameof(ListSeasons));
                 Instance.CurrentSeasonID = Basics.NoID;
                 Instance.CurrentSeasonID = backupCurrentSeasonID;
             }
@@ -360,7 +360,7 @@ namespace GTRCLeagueManager
             Lap.Statics.LoadSQL();
             ResetEntries();
             PreSeason.UpdatePreQResults();
-            PreSeason.CountCars(CurrentEvent.EventDate, DateRegisterLimit, CarLimitRegisterLimit, DateBoPFreeze, IsCheckedRegisterLimit, IsCheckedBoPFreeze);
+            PreSeason.CountCars(CurrentEvent, DateRegisterLimit, CarLimitRegisterLimit, DateBoPFreeze, IsCheckedRegisterLimit, IsCheckedBoPFreeze);
             PreSeason.CalcBoP(CarLimitBallast, CarLimitRestriktor, GainBallast, GainRestriktor, IsCheckedBallast, IsCheckedRestriktor);
             GSheets.UpdateBoPStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
             GSheets.UpdatePreQStandings(GSheet.ListIDs[0].DocID, GSheet.ListIDs[0].SheetID);
@@ -401,19 +401,19 @@ namespace GTRCLeagueManager
 
         public void UpdateEntrylistBoP()
         {
-            new Thread(() => ThreadUpdateEntrylistBoP(CurrentEvent.EventDate)).Start();
+            new Thread(() => ThreadUpdateEntrylistBoP(CurrentEvent)).Start();
             MainVM.List[0].LogCurrentText = "Export entrylists and BoPs...";
         }
 
-        public int ThreadUpdateEntrylistBoP(DateTime _eventDate)
+        public int ThreadUpdateEntrylistBoP(Event _event)
         {
             PreSeason.UpdateName3Digits();
-            PreSeason.EntryAutoSignOut(_eventDate, SignOutLimit, NoShowLimit);
-            UpdateBoPForEvent(_eventDate);
-            (List<Entry> EntriesSignedIn, List<Entry> EntriesSignedOut) = PreSeason.DetermineEntrylist(_eventDate, SlotsAvailable, DateRegisterLimit);
+            PreSeason.EntryAutoSignOut(_event, SignOutLimit, NoShowLimit);
+            UpdateBoPForEvent(_event);
+            (List<Entry> EntriesSignedIn, List<Entry> EntriesSignedOut) = PreSeason.DetermineEntrylist(_event, SlotsAvailable, DateRegisterLimit);
             int tempSlotsTaken = EntriesSignedIn.Count;
-            (EntriesSignedIn, EntriesSignedOut) = PreSeason.FillUpEntrylist(_eventDate, SlotsAvailable, EntriesSignedIn, EntriesSignedOut);
-            if (_eventDate == CurrentEvent.EventDate)
+            (EntriesSignedIn, EntriesSignedOut) = PreSeason.FillUpEntrylist(_event, SlotsAvailable, EntriesSignedIn, EntriesSignedOut);
+            if (_event.ID == CurrentEvent.ID)
             {
                 SlotsTaken = tempSlotsTaken;
                 GSheets.UpdateBoPStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
@@ -424,9 +424,9 @@ namespace GTRCLeagueManager
             return tempSlotsTaken;
         }
 
-        public void UpdateBoPForEvent(DateTime _eventDate)
+        public void UpdateBoPForEvent(Event _event)
         {
-            PreSeason.CountCars(_eventDate, DateRegisterLimit, CarLimitRegisterLimit, DateBoPFreeze, IsCheckedRegisterLimit, IsCheckedBoPFreeze);
+            PreSeason.CountCars(_event, DateRegisterLimit, CarLimitRegisterLimit, DateBoPFreeze, IsCheckedRegisterLimit, IsCheckedBoPFreeze);
             PreSeason.CalcBoP(CarLimitBallast, CarLimitRestriktor, GainBallast, GainRestriktor, IsCheckedBallast, IsCheckedRestriktor);
             CarBoP.SortByCount();
         }

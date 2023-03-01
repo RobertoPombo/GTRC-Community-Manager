@@ -10,13 +10,8 @@ namespace GTRCLeagueManager.Database
     public class ThemeColor : DatabaseObject<ThemeColor>
     {
         [NotMapped][JsonIgnore] public static StaticDbField<ThemeColor> Statics { get ; set; }
-
-        private Int16 alpha = 0;
-        private Int16 red = 0;
-        private Int16 green = 0;
-        private Int16 blue = 0;
-
-        static ThemeColor() {
+        static ThemeColor()
+        {
             Statics = new(true)
             {
                 Table = "Colors",
@@ -25,10 +20,14 @@ namespace GTRCLeagueManager.Database
                 ListSetter = () => ListSetter()
             };
         }
-
         public ThemeColor() { This = this; Initialize(true, true); }
         public ThemeColor(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public ThemeColor(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private Int16 alpha = 0;
+        private Int16 red = 0;
+        private Int16 green = 0;
+        private Int16 blue = 0;
 
         public Int16 Alpha
         {

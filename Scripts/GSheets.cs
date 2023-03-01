@@ -284,15 +284,16 @@ namespace GTRCLeagueManager
                     Entry _entry = Entry.Statics.GetByID(_id);
                     List<DriverEntries> _driverEntries = DriverEntries.Statics.GetBy("EntryID", _entry.ID);
                     string driverText = "";
-                    foreach (DriverEntries _driverEntry in _driverEntries) { driverText += Driver.Statics.GetByID(_driverEntry.EntryID).FullName + ", "; }
+                    foreach (DriverEntries _driverEntry in _driverEntries) { driverText += Driver.Statics.GetByID(_driverEntry.DriverID).FullName + ", "; }
                     driverText = driverText.Substring(0, Math.Max(0, driverText.Length - 2));
                     int average = _resultsLine.Average;
                     int average1 = PreQualiResultLine.Statics.List[Math.Max(0, rowNr - 1)].Average;
                     values.Add((rowNr + 1).ToString() + ".");
                     values.Add(driverText);
                     values.Add(_entry.RaceNumber.ToString());
-                    values.Add(_entry.TeamID);
-                    values.Add(Car.Statics.GetByUniqueProp(_entry.CarID).Name);
+                    Team _team = Team.Statics.GetByID(_entry.TeamID);
+                    if (_team.ReadyForList) { values.Add(_team.Name); } else { values.Add("Gaststarter"); }
+                    values.Add(Car.Statics.GetByID(_entry.CarID).Name);
                     if (average < int.MaxValue)
                     {
                         values.Add(Basics.ms2laptime(average));
