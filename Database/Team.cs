@@ -14,8 +14,8 @@ namespace GTRCLeagueManager.Database
             Statics = new StaticDbField<Team>(true)
             {
                 Table = "Teams",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Name" } },
-                ToStringPropertiesNames = new List<string>() { "Name" },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "SeasonID", "Name" } },
+                ToStringPropertiesNames = new List<string>() { "SeasonID", "Name" },
                 ListSetter = () => ListSetter()
             };
         }
@@ -23,7 +23,14 @@ namespace GTRCLeagueManager.Database
         public Team(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Team(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private int seasonID = 0;
         private string name = DefaultName;
+
+        public int SeasonID
+        {
+            get { return seasonID; }
+            set { seasonID = value; if (ReadyForList) { SetNextAvailable(); } }
+        }
 
         public string Name
         {
@@ -40,13 +47,25 @@ namespace GTRCLeagueManager.Database
 
         public override void SetNextAvailable()
         {
+            int seasonNr = 0;
+            List<Season> _idListSeason = Season.Statics.IDList;
+            if (_idListSeason.Count == 0) { _ = new Season() { ID = 1 }; _idListSeason = Season.Statics.IDList; }
+            Season _season = Season.Statics.GetByID(seasonID);
+            if (_season.ReadyForList) { seasonNr = Season.Statics.IDList.IndexOf(_season); } else { seasonID = _idListSeason[0].ID; }
+            int startValueSeason = seasonNr;
+
             int nr = 1;
             string defName = name;
             if (Basics.SubStr(defName, -3, 2) == " #") { defName = Basics.SubStr(defName, 0, defName.Length - 3); }
             while (!IsUnique())
             {
                 name = defName + " #" + nr.ToString();
-                nr++; if (nr == int.MaxValue) { break; }
+                nr++; if (nr == int.MaxValue)
+                {
+                    if (seasonNr + 1 < _idListSeason.Count) { seasonNr += 1; } else { seasonNr = 0; }
+                    seasonID = _idListSeason[seasonNr].ID;
+                    if (seasonNr == startValueSeason) { break; }
+                }
             }
         }
 

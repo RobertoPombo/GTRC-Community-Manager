@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Windows.Documents;
 
 namespace GTRCLeagueManager.Database
 {
@@ -19,12 +20,13 @@ namespace GTRCLeagueManager.Database
         void Initialize(bool _readyForList, bool inList);
         void ListAdd();
         void ListInsert(int index);
-        void ListRemove();
+        void ListRemove(bool forceDel = false);
         void SetNextAvailable();
         Dictionary<PropertyInfo, dynamic> ReturnAsDict(bool retID, bool retJsonIgnore, bool retCanNotWrite, bool retNotUnique);
         bool IsUnique();
         bool IsUnique(int index);
         bool IsChild();
+        void RemoveAllChilds();
         string ToString();
     }
 
@@ -34,19 +36,19 @@ namespace GTRCLeagueManager.Database
     {
         public static List<dynamic> List = new();
 
-        public static dynamic GetByType(Type _varDbType)
+        public static dynamic? GetByType(Type _varDbType)
         {
             foreach (dynamic _obj in List) { if (_obj.VarDbType == _varDbType) { return _obj; } }
             return null;
         }
 
-        public static dynamic GetByType(string _varDbType)
+        public static dynamic? GetByType(string _varDbType)
         {
             foreach (dynamic _obj in List) { if (_obj.VarDbType.Name == _varDbType) { return _obj; } }
             return null;
         }
 
-        public static dynamic GetByIDProperty(string _idPropertyName)
+        public static dynamic? GetByIDProperty(string _idPropertyName)
         {
             if (Basics.SubStr(_idPropertyName, -2, 2) == "ID")
             {
@@ -64,19 +66,15 @@ namespace GTRCLeagueManager.Database
         public StaticDbField(bool inList) { if (inList) { StaticFieldList.List.Add(this); } }
 
         public string Table = "";
-        public List<List<string>> UniquePropertiesNames = new List<List<string>>();
-        public List<string> ToStringPropertiesNames = new List<string>();
+        public List<List<string>> UniquePropertiesNames = new();
+        public List<string> ToStringPropertiesNames = new();
         public Action ListSetter = () => Console.WriteLine("Error");
-        public Action DoSync = () => Console.WriteLine("Error");
 
         public Type VarDbType = typeof(DbType);
-        public List<DbType> List = new List<DbType>();
-        public List<PropertyInfo> AllProperties = new List<PropertyInfo>();
-        public List<List<PropertyInfo>> UniqueProperties = new List<List<PropertyInfo>>();
-        public List<PropertyInfo> ToStringProperties = new List<PropertyInfo>();
-
-        private bool pendingSync = false;
-        [NotMapped][JsonIgnore] public bool PendingSync { get { return pendingSync; } set { if (pendingSync && !value) { DoSync(); } pendingSync = value; } }
+        public List<DbType> List = new();
+        public List<PropertyInfo> AllProperties = new();
+        public List<List<PropertyInfo>> UniqueProperties = new();
+        public List<PropertyInfo> ToStringProperties = new();
 
         public string Path { get { return MainWindow.dataDirectory + Table.ToLower() + ".json"; } }
 
@@ -90,42 +88,50 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        public void ListRemoveAt(int index) { if (List.Count > index && !List[index].IsChild()) { List.RemoveAt(index); ListSetter(); } }
-        public void ListClear()
+        public void ListRemoveAt(int index, bool forceDel = false)
         {
-            List<DbType> iterateList = new List<DbType>();
+            if (List.Count > index)
+            {
+                if (forceDel) { List[index].RemoveAllChilds(); }
+                if (!List[index].IsChild()) { List.RemoveAt(index); ListSetter(); }
+            }
+        }
+
+        public void ListClear(bool forceDel = false)
+        {
+            List<DbType> iterateList = new();
             foreach (DbType _obj in List) { iterateList.Add(_obj); }
-            foreach (DbType _obj in iterateList) { if (!_obj.IsChild()) { List.Remove(_obj); } }
+            foreach (DbType _obj in iterateList)
+            {
+                if (forceDel) { _obj.RemoveAllChilds(); }
+                if (!_obj.IsChild()) { List.Remove(_obj); }
+            }
             ListSetter();
         }
 
-        public void ReadJson()
+        public void ReadJson(bool forceDel = false)
         {
-            ListClear();
+            ListClear(forceDel);
             JsonConvert.DeserializeObject<DbType[]>(File.ReadAllText(Path, Encoding.Unicode));
-            Sync();
         }
 
         public void WriteJson()
         {
             string text = JsonConvert.SerializeObject(List, Formatting.Indented);
             File.WriteAllText(Path, text, Encoding.Unicode);
-            Sync();
         }
 
-        public void LoadSQL()
+        public void LoadSQL(bool forceDel = false)
         {
-            ListClear();
+            ListClear(forceDel);
             string SqlQry = "SELECT * FROM " + Table + ";";
-            string connectionString = SQL.connectionString;
-            try { using (SqlConnection connection = new SqlConnection(@connectionString)) { connection.Query<DbType>(SqlQry); } }
-            catch { MainVM.List[0].LogCurrentText = "Connection to database failed!"; }
-            Sync();
+            try { SQL.Connection.Query<DbType>(SqlQry); }
+            catch { MainVM.List[0].LogCurrentText = "Loading SQL table '" + Table + "' failed!"; }
         }
 
         public void WriteSQL()
         {
-            List<DbType> currentListSQL = new List<DbType>();
+            List<DbType> currentListSQL = new();
             List<dynamic> objList = SQL.LoadSQL(Table);
             for (int objNr = 0; objNr < objList.Count; objNr++)
             {
@@ -160,16 +166,11 @@ namespace GTRCLeagueManager.Database
             LoadSQL();
         }
 
-        public void ResetSQL()
+        public void ResetSQL(bool forceDel = false)
         {
-            ListClear();
+            ListClear(forceDel);
             WriteSQL();
             if (List.Count == 0) { SQL.ReseedSQL(Table, 0); }
-        }
-
-        public void Sync()
-        {
-            foreach (dynamic _staticField in StaticFieldList.List) { _staticField.PendingSync = false; }
         }
 
         public DbType GetByID(int id)
@@ -178,7 +179,7 @@ namespace GTRCLeagueManager.Database
             return (DbType)Activator.CreateInstance(VarDbType, false, false)!;
         }
 
-        public DbType GetByUniqueProp(List<dynamic> values, int index = 0)
+        public DbType GetByUniqProp(List<dynamic> values, int index = 0)
         {
             if (UniqueProperties.Count > index && UniqueProperties[index].Count > 0 && UniqueProperties[index].Count == values.Count)
             {
@@ -199,18 +200,18 @@ namespace GTRCLeagueManager.Database
             return (DbType)Activator.CreateInstance(VarDbType, false, false)!;
         }
 
-        public DbType GetByUniqueProp(dynamic _value, int index = 0)
+        public DbType GetByUniqProp(dynamic _value, int index = 0)
         {
             if (UniqueProperties[index].Count == 1)
             {
-                return GetByUniqueProp(new List<dynamic>() { _value }, index);
+                return GetByUniqProp(new List<dynamic>() { _value }, index);
             }
             return (DbType)Activator.CreateInstance(VarDbType, false, false)!;
         }
 
         public List<DbType> GetBy(List<PropertyInfo> properties, List<dynamic> values)
         {
-            List<DbType> _list = new List<DbType>();
+            List<DbType> _list = new();
             if (properties.Count > 0 && properties.Count == values.Count)
             {
                 foreach (DbType _obj in List)
@@ -228,11 +229,11 @@ namespace GTRCLeagueManager.Database
 
         public List<DbType> GetBy(List<string> propertyNames, List<dynamic> values)
         {
-            List<DbType> _list = new List<DbType>();
+            List<DbType> _list = new();
             if (propertyNames.Count > 0 && propertyNames.Count == values.Count)
             {
-                List<PropertyInfo> properties = new List<PropertyInfo>();
-                List<dynamic> newValues = new List<dynamic>();
+                List<PropertyInfo> properties = new();
+                List<dynamic> newValues = new();
                 foreach (PropertyInfo property in AllProperties)
                 {
                     if (propertyNames.Contains(property.Name))
@@ -251,7 +252,7 @@ namespace GTRCLeagueManager.Database
             return GetBy(new List<PropertyInfo>() { property }, new List<dynamic>() { _value });
         }
 
-        public dynamic GetBy(string propertyName, dynamic _value)
+        public dynamic GetBy(string propertyName, dynamic? _value)
         {
             return GetBy(new List<string>() { propertyName }, new List<dynamic>() { _value });
         }
@@ -261,14 +262,14 @@ namespace GTRCLeagueManager.Database
             if (GetByID(id).ID == Basics.NoID) { return false; } else { return true; }
         }
 
-        public bool ExistsUniqueProp(List<dynamic> values, int index = 0)
+        public bool ExistsUniqProp(List<dynamic> values, int index = 0)
         {
-            if (GetByUniqueProp(values, index).ReadyForList) { return true; } else { return false; }
+            if (GetByUniqProp(values, index).ReadyForList) { return true; } else { return false; }
         }
 
-        public bool ExistsUniqueProp(dynamic _value, int index = 0)
+        public bool ExistsUniqProp(dynamic _value, int index = 0)
         {
-            if (GetByUniqueProp(_value, index).ReadyForList) { return true; } else { return false; }
+            if (GetByUniqProp(_value, index).ReadyForList) { return true; } else { return false; }
         }
 
         public bool Exists(List<PropertyInfo> properties, List<dynamic> values)
@@ -291,7 +292,7 @@ namespace GTRCLeagueManager.Database
             if (GetBy(propertyName, _value).Count == 0) { return false; } else { return true; }
         }
 
-        public bool IsUniqueProperty(string propertyName)
+        public bool IsUniqProperty(string propertyName)
         {
             foreach (List<PropertyInfo> propertyList in UniqueProperties)
             {
@@ -336,6 +337,7 @@ namespace GTRCLeagueManager.Database
                 int listIndex = StaticFields.List.IndexOf(oldObj);
                 if (oldObj.ID != Basics.NoID && StaticFields.List.Contains(This)) { This.ListRemove(); StaticFields.List[listIndex] = This; }
                 id = value;
+                StaticFields.ListSetter();
             }
         }
 
@@ -381,14 +383,14 @@ namespace GTRCLeagueManager.Database
             else if (_readyForList) { ReadyForList = true; } else { ReadyForList = false; }
         }
 
-        public void ListAdd() { ReadyForList = true; if (ReadyForList) { StaticFields.List.Add(This); StaticFields.ListSetter(); } }
+        public void ListAdd() { ReadyForList = true; if (ReadyForList) { StaticFields.List.Add(This); } }
         public void ListInsert(int index) { if (StaticFields.List.Count > index) { ReadyForList = true; StaticFields.List.Insert(index, This); StaticFields.ListSetter(); } }
-        public void ListRemove()
+        public void ListRemove(bool forceDel = false)
         {
-            if (StaticFields.List.Contains(This) && !IsChild())
+            if (StaticFields.List.Contains(This))
             {
-                StaticFields.List.Remove(This);
-                StaticFields.ListSetter();
+                if (forceDel) { RemoveAllChilds(); }
+                if (!IsChild()) { StaticFields.List.Remove(This); StaticFields.ListSetter(); }
             }
         }
 
@@ -396,7 +398,7 @@ namespace GTRCLeagueManager.Database
 
         public Dictionary<PropertyInfo, dynamic> ReturnAsDict(bool retID, bool retJsonIgnore, bool retCanNotWrite, bool retNotUnique)
         {
-            Dictionary<PropertyInfo, dynamic> dict = new Dictionary<PropertyInfo, dynamic>();
+            Dictionary<PropertyInfo, dynamic> dict = new();
             foreach (PropertyInfo property in StaticFields.AllProperties)
             {
                 bool ret = true;
@@ -404,7 +406,7 @@ namespace GTRCLeagueManager.Database
                 else if (!retID && property.Name == "ID") { ret = false; }
                 else if (!retJsonIgnore && property.GetCustomAttributes(false).OfType<JsonIgnoreAttribute>().Any()) { ret = false; }
                 else if (!retCanNotWrite && !property.CanWrite) { ret = false; }
-                else if (!retNotUnique && !StaticFields.IsUniqueProperty(property.Name)) { ret = false; }
+                else if (!retNotUnique && !StaticFields.IsUniqProperty(property.Name)) { ret = false; }
                 if (ret) { dict[property] = property.GetValue(this)!; }
             }
             return dict;
@@ -445,7 +447,7 @@ namespace GTRCLeagueManager.Database
         {
             if (ID == Basics.NoID) { return false; }
             string idPropertyName = StaticFields.VarDbType.Name + "ID";
-            List<dynamic> listTempParents = new List<dynamic>();
+            List<dynamic> listTempParents = new();
             foreach (dynamic _type in StaticFieldList.List)
             {
                 if (_type.VarDbType != StaticFields.VarDbType)
@@ -463,6 +465,28 @@ namespace GTRCLeagueManager.Database
             }
             foreach (dynamic _parent in listTempParents) { _parent.ListRemove(); }
             return false;
+        }
+
+        public void RemoveAllChilds()
+        {
+            if (ID != Basics.NoID)
+            {
+                string idPropertyName = StaticFields.VarDbType.Name + "ID";
+                foreach (dynamic _type in StaticFieldList.List)
+                {
+                    if (_type.VarDbType != StaticFields.VarDbType)
+                    {
+                        foreach (PropertyInfo property in _type.AllProperties)
+                        {
+                            if (property.Name == idPropertyName)
+                            {
+                                var listParents = _type.GetBy(idPropertyName, ID);
+                                foreach (dynamic _parent in listParents) { _parent.ListRemove(true); }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public override string ToString()

@@ -16,8 +16,8 @@ namespace GTRCLeagueManager.Database
             Statics = new StaticDbField<Event>(true)
             {
                 Table = "Events",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "EventDate" }, new List<string>() { "Name" } },
-                ToStringPropertiesNames = new List<string>() { "Name" },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "SeasonID", "EventDate" }, new List<string>() { "SeasonID", "Name" } },
+                ToStringPropertiesNames = new List<string>() { "SeasonID", "Name" },
                 ListSetter = () => ListSetter()
             };
         }
@@ -25,13 +25,34 @@ namespace GTRCLeagueManager.Database
         public Event(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Event(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private int seasonID = 0;
         private DateTime eventDate = DateTime.Now;
         private int trackID = 0;
         private string name = DefaultName;
 
         [JsonIgnore] public int EventNr
         {
-            get { if (List.Contains(this)) { SortByDate(); return List.IndexOf(this); } else return -1; }
+            get
+            {
+                if (List.Contains(this) && ID != Basics.NoID)
+                {
+                    SortByDate();
+                    int nr = 0;
+                    foreach (Event _event in Statics.List)
+                    {
+                        if (_event == this) { return nr; }
+                        if (_event.SeasonID == SeasonID) { nr++; }
+                    }
+                    return -1;
+                }
+                else { return -1; }
+            }
+        }
+
+        public int SeasonID
+        {
+            get { return seasonID; }
+            set { seasonID = value; if (ReadyForList) { SetNextAvailable(); } }
         }
 
         public DateTime EventDate
@@ -52,7 +73,7 @@ namespace GTRCLeagueManager.Database
             get { return trackID; }
             set
             {
-                if (Track.Statics.IDList.Count == 0) { new Track() { ID = 1 }; }
+                if (Track.Statics.IDList.Count == 0) { _ = new Track() { ID = 1 }; }
                 if (!Track.Statics.ExistsID(value)) { value = Track.Statics.IDList[0].ID; }
                 trackID = value;
             }
@@ -71,26 +92,43 @@ namespace GTRCLeagueManager.Database
 
         public static void ListSetter()
         {
-            PreSeasonVM.UpdateListEvents();
-            EventsEntries.Statics.PendingSync = true;
             SortByDate();
+            PreSeasonVM.UpdateListEvents();
         }
 
         public override void SetNextAvailable()
         {
+            int seasonNr = 0;
+            List<Season> _idListSeason = Season.Statics.IDList;
+            if (_idListSeason.Count == 0) { _ = new Season() { ID = 1 }; _idListSeason = Season.Statics.IDList; }
+            Season _season = Season.Statics.GetByID(seasonID);
+            if (_season.ReadyForList) { seasonNr = Season.Statics.IDList.IndexOf(_season); } else { seasonID = _idListSeason[0].ID; }
+            int startValueSeason = seasonNr;
+
             DateTime startValue = eventDate;
             while (!IsUnique(0))
             {
-                if (eventDate < DateTimeMaxValue) { eventDate.AddDays(1); } else { eventDate = DateTimeMinValue; }
-                if (eventDate == startValue) { break; }
+                if (eventDate < DateTimeMaxValue) { eventDate = eventDate.AddDays(1); } else { eventDate = DateTimeMinValue; }
+                if (eventDate == startValue)
+                {
+                    if (seasonNr + 1 < _idListSeason.Count) { seasonNr += 1; } else { seasonNr = 0; }
+                    seasonID = _idListSeason[seasonNr].ID;
+                    if (seasonNr == startValueSeason) { break; }
+                }
             }
+
             int nr = 1;
             string defName = name;
             if (Basics.SubStr(defName, -3, 2) == " #") { defName = Basics.SubStr(defName, 0, defName.Length - 3); }
             while (!IsUnique(1))
             {
                 name = defName + " #" + nr.ToString();
-                nr++; if (nr == int.MaxValue) { break; }
+                nr++; if (nr == int.MaxValue)
+                {
+                    if (seasonNr + 1 < _idListSeason.Count) { seasonNr += 1; } else { seasonNr = 0; }
+                    seasonID = _idListSeason[seasonNr].ID;
+                    if (seasonNr == startValueSeason) { break; }
+                }
             }
         }
 
@@ -100,7 +138,9 @@ namespace GTRCLeagueManager.Database
             {
                 for (int _eventID2 = _eventID1; _eventID2 < Statics.List.Count; _eventID2++)
                 {
-                    if (Statics.List[_eventID1].EventDate > Statics.List[_eventID2].EventDate)
+                    Event _event1 = Statics.List[_eventID1];
+                    Event _event2 = Statics.List[_eventID2];
+                    if ((_event1.SeasonID > _event2.SeasonID) || ((_event1.SeasonID == _event2.SeasonID) && (_event1.EventDate > _event2.EventDate)))
                     {
                         (Statics.List[_eventID2], Statics.List[_eventID1]) = (Statics.List[_eventID1], Statics.List[_eventID2]);
                     }
@@ -108,16 +148,29 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        public static Event GetEventByCurrentDate()
+        public static List<Event> SortByDate(List<Event> listEvents)
         {
-            SortByDate();
-            DateTime _now = DateTime.Now;
-            Event nextEvent;
-            foreach (Event _event in Statics.List) { nextEvent = _event; if (_event.EventDate > _now) { return nextEvent; } }
-            return new Event(false);
+            for (int _eventID1 = 0; _eventID1 < listEvents.Count - 1; _eventID1++)
+            {
+                for (int _eventID2 = _eventID1; _eventID2 < listEvents.Count; _eventID2++)
+                {
+                    Event _event1 = listEvents[_eventID1];
+                    Event _event2 = listEvents[_eventID2];
+                    if ((_event1.SeasonID > _event2.SeasonID) || ((_event1.SeasonID == _event2.SeasonID) && (_event1.EventDate > _event2.EventDate)))
+                    {
+                        (listEvents[_eventID2], listEvents[_eventID1]) = (listEvents[_eventID1], listEvents[_eventID2]);
+                    }
+                }
+            }
+            return listEvents;
         }
 
-        //TEMP: Converter
-        [NotMapped] public string TrackID2 { set { TrackID = Track.Statics.GetByUniqueProp(value).ID; } }
+        public static Event GetNextEvent(int _seasonID, DateTime _date)
+        {
+            Event nextEvent = new(false);
+            List<Event> eventList = SortByDate(Statics.GetBy(nameof(SeasonID), _seasonID));
+            foreach (Event _event in eventList) { nextEvent = _event; if (_event.EventDate > _date) { return nextEvent; } }
+            return nextEvent;
+        }
     }
 }

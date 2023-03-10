@@ -17,6 +17,8 @@ using System.Data.SqlClient;
 using Dapper;
 using System.ComponentModel;
 using System.Threading;
+using System.Windows.Documents;
+using System.Globalization;
 
 namespace GTRCLeagueManager
 {
@@ -29,12 +31,12 @@ namespace GTRCLeagueManager
         public static string DefText = "#!#";
         public ListWindow instanceListWindow;
         public ListWindow instanceListHiddenWindow;
-        private Thread SignInOutBotThread;
         //private Storyboard AnimStoryBoard;
 
         public MainWindow()
         {
             if (!Directory.Exists(dataDirectory)) { Directory.CreateDirectory(dataDirectory); }
+            SetCultureInfo();
             InitializeComponent();
             Width = screenWidth * 0.5;
             Height = screenHeight * 0.55;
@@ -42,21 +44,41 @@ namespace GTRCLeagueManager
             Top = (screenHeight / 2) - (Height / 2);
             MinimizeButton.Click += (s, e) => WindowState = WindowState.Minimized;
             CloseButton.Click += (s, e) => CloseWindow();
-            //SignInOutBotThread = new Thread(obj => new SignInOutBot().RunBotAsync().GetAwaiter().GetResult());
-            //SignInOutBotThread.Start();
         }
 
         public void CloseWindow()
         {
             if (instanceListWindow != null) { instanceListWindow.Close(); }
-            //SignInOutBotThread.Abort();
-            foreach (Server _server in Server.List) { _server.SetOnline = false; }
+            foreach (ServerM _server in ServerM.List) { _server.SetOnline = false; }
+            try { SQL.Connection.Close(); } catch { }
+            if (SignInOutBot.Instance?._client is not null)
+            {
+                try { SignInOutBot.Instance.StopBot(); }
+                catch { }
+            }
             this.Close();
         }
 
         private void SettingsTabItem_Initialized(object sender, EventArgs e)
         {
 
+        }
+
+        private void SetCultureInfo()
+        {
+            var newCulture = new CultureInfo(Thread.CurrentThread.CurrentUICulture.Name);
+            newCulture.DateTimeFormat.FullDateTimePattern = "dd MM yyyy HH mm ss";
+
+            CultureInfo.DefaultThreadCurrentCulture = newCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = newCulture;
+
+            Thread.CurrentThread.CurrentCulture = newCulture;
+            Thread.CurrentThread.CurrentUICulture = newCulture;
+
+            FrameworkElement.LanguageProperty.OverrideMetadata(
+                typeof(FrameworkElement),
+                new FrameworkPropertyMetadata(
+                    System.Windows.Markup.XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
         }
 
         /*

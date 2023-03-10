@@ -13,7 +13,7 @@ namespace GTRCLeagueManager
     {
 
         public static string ResultsLinePath = AppDomain.CurrentDomain.BaseDirectory + "data\\resultslines.json";
-        public static List<ResultsLine> ResultsLineList = new List<ResultsLine>();
+        public static List<ResultsLine> ResultsLineList = new();
 
         private int id = -1;
 
@@ -31,13 +31,13 @@ namespace GTRCLeagueManager
         private int ballast = 0;
         private int restrictor = 0;
         private string space = "";
-        private Canvas line = new Canvas();
-        private Canvas trianglelefttop = new Canvas();
-        private Canvas triangleleftbottom = new Canvas();
-        private Canvas trianglerighttop = new Canvas();
-        private Canvas trianglerightbottom = new Canvas();
-        private Canvas arrowup = new Canvas();
-        private Canvas arrowdown = new Canvas();
+        private Canvas line = new();
+        private Canvas trianglelefttop = new();
+        private Canvas triangleleftbottom = new();
+        private Canvas trianglerighttop = new();
+        private Canvas trianglerightbottom = new();
+        private Canvas arrowup = new();
+        private Canvas arrowdown = new();
 
         public ResultsLine()
         {
@@ -59,19 +59,19 @@ namespace GTRCLeagueManager
 
         public static List<string> ReturnPropsAsList()
         {
-            List<string> list = new List<string>();
+            List<string> list = new();
             List<string> blackListProperties = new List<string> { "EntryID", "CurrentDriverID",  "CarID" };
             foreach (PropertyInfo property in typeof(ResultsLine).GetProperties()) { if (!blackListProperties.Contains(property.Name)) { list.Add(property.Name); } }
-            foreach (string key in Entry.ReturnPropsAsList()) { list.Add("Entry " + key); }
-            foreach (string key in Driver.ReturnPropsAsList()) { list.Add("CurrentDriver " + key); }
-            foreach (string key in Car.ReturnPropsAsList()) { list.Add("OnServer Car " + key); }
+            //foreach (string key in Entry.ReturnPropsAsList()) { list.Add("Entry " + key); }
+            //foreach (string key in Driver.ReturnPropsAsList()) { list.Add("CurrentDriver " + key); }
+            //foreach (string key in Car.ReturnPropsAsList()) { list.Add("OnServer Car " + key); }
             return list;
         }
 
         public Dictionary<string, dynamic> ReturnAsDict()
         {
-            Dictionary<string, dynamic> dict = new Dictionary<string, dynamic>();
-            List<string> blackListProperties = new List<string> { "CurrentDriverID", "EntryID", "CarID" };
+            Dictionary<string, dynamic> dict = new();
+            List<string> blackListProperties = new() { "CurrentDriverID", "EntryID", "CarID" };
             foreach (PropertyInfo property in typeof(ResultsLine).GetProperties())
             {
                 if (!blackListProperties.Contains(property.Name))
@@ -79,19 +79,19 @@ namespace GTRCLeagueManager
                     if (property.GetValue(this) != null) { dict[property.Name] = property.GetValue(this); }
                     else { dict[property.Name] = ""; }
                 }
-            }
-            foreach (string key in Entry.Statics.List[entryid].ReturnAsDict().Keys)
+            }/*
+            foreach (string key in Entry.Statics.GetByID(entryid).ReturnAsDict().Keys)
             {
-                dict["Entry " + key] = Entry.Statics.List[entryid].ReturnAsDict()[key];
+                dict["Entry " + key] = Entry.Statics.GetByID(entryid).ReturnAsDict()[key];
             }
-            foreach (string key in Driver.Statics.GetByUniqueProp(currentdriverid).ReturnAsDict().Keys)
+            foreach (string key in Driver.Statics.GetByUniqProp(currentdriverid).ReturnAsDict().Keys)
             {
-                dict["CurrentDriver " + key] = Driver.Statics.GetByUniqueProp(currentdriverid).ReturnAsDict()[key];
+                dict["CurrentDriver " + key] = Driver.Statics.GetByUniqProp(currentdriverid).ReturnAsDict()[key];
             }
-            foreach (string key in Car.Statics.GetByUniqueProp(carid).ReturnAsDict().Keys)
+            foreach (string key in Car.Statics.GetByUniqProp(carid).ReturnAsDict().Keys)
             {
-                dict["OnServer Car " + key] = Car.Statics.GetByUniqueProp(carid).ReturnAsDict()[key];
-            }
+                dict["OnServer Car " + key] = Car.Statics.GetByUniqProp(carid).ReturnAsDict()[key];
+            }*/
             return dict;
         }
 

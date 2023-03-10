@@ -133,10 +133,10 @@ namespace GTRCLeagueManager.Database
             return _discordID >= DiscordIDMinValue && _discordID <= DiscordIDMaxValue;
         }
 
-        public static long String2LongSteamID(string _strSteamID)
+        public static long String2LongSteamID(string? _strSteamID)
         {
             long _steamID = Basics.NoID;
-            _strSteamID = new string(_strSteamID.Where(Char.IsNumber).ToArray());
+            _strSteamID = new string(_strSteamID?.Where(Char.IsNumber).ToArray());
             Int64.TryParse(_strSteamID, out _steamID);
             if (IsValidSteamID(_steamID)) { return _steamID; }
             else { return Basics.NoID; }
@@ -150,7 +150,7 @@ namespace GTRCLeagueManager.Database
         public static string GetShortName(string _firstName, string _lastName)
         {
             string _shortName = "";
-            List<char> cList = new List<char> { ' ', '-' };
+            List<char> cList = new() { ' ', '-' };
             if (_firstName != null)
             {
                 for (int index = 0; index < _firstName.Length - 1; index++)
@@ -168,6 +168,21 @@ namespace GTRCLeagueManager.Database
             }
             else { _shortName = _lastName; }
             return _shortName;
+        }
+
+        public static string DriverList2String(List<Driver> drivers, string PropertyName)
+        {
+            string strDrivers = "";
+            foreach (PropertyInfo property in Statics.AllProperties)
+            {
+                if (property.Name == PropertyName)
+                {
+                    foreach (Driver obj in drivers) { strDrivers += Basics.GetCastedValue(obj, property).ToString() + ", "; }
+                    break;
+                }
+            }
+            strDrivers = strDrivers[..Math.Max(0, strDrivers.Length - 2)];
+            return strDrivers;
         }
 
         public void UpdateName3DigitsOptions()
@@ -287,23 +302,6 @@ namespace GTRCLeagueManager.Database
             List<string> nameList = new List<string>();
             foreach (string _name in name.Split(' ')) { if (_name.Length > 0) { nameList.Add(_name); } }
             return nameList;
-        }
-
-
-
-        //später löschen
-        public static List<string> ReturnPropsAsList()
-        {
-            List<string> list = new List<string>();
-            foreach (PropertyInfo property in typeof(Driver).GetProperties()) { list.Add(property.Name); }
-            return list;
-        }
-
-        public Dictionary<string, dynamic> ReturnAsDict()
-        {
-            Dictionary<string, dynamic> dict = new Dictionary<string, dynamic>();
-            foreach (PropertyInfo property in typeof(Driver).GetProperties()) { dict[property.Name] = property.GetValue(this); }
-            return dict;
         }
     }
 }

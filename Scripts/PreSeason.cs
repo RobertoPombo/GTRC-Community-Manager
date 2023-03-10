@@ -92,29 +92,30 @@ namespace GTRCLeagueManager
                             }
                         }
                     }
-                    int _entryID = DriverEntries.Statics.GetByUniqueProp(Driver.Statics.GetByUniqueProp(Driver.String2LongSteamID(steamID)).ID).EntryID;
+                    int _entryID = DriverEntries.Statics.GetByUniqProp(Driver.Statics.GetByUniqProp(Driver.String2LongSteamID(steamID)).ID).EntryID;
                     if (_entryID != Basics.NoID) { lap.EntryID = _entryID; }
                 }
             }
         }
 
-        public static void ResetPreQResults()
+        public static void ResetPreQResults(int seasonID)
         {
             PreQualiResultLine.Statics.ResetSQL();
             PreQualiResultLine.Statics.LoadSQL();
-            foreach (Entry _entry in Entry.Statics.List) { new PreQualiResultLine { EntryID = _entry.RaceNumber }; }
+            List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), seasonID);
+            foreach (Entry _entry in listEntries) { _ = new PreQualiResultLine { EntryID = _entry.RaceNumber }; }
             PreQualiResultLine.Statics.WriteJson();
             PreQualiResultLine.Statics.WriteSQL();
         }
 
-        public static void UpdatePreQResults()
+        public static void UpdatePreQResults(int seasonID)
         {
             //Sollte dynamisch sein:
             double timeFactorMax = 1.07;
             int lapsCountStintMin = 10;
             Dictionary<string, int> QualiTracks = new() { { "nurburgring", 0 }, { "misano", 1 } };
 
-            ResetPreQResults();
+            ResetPreQResults(seasonID);
             foreach (PreQualiResultLine preQualiResultLine in PreQualiResultLine.Statics.List)
             {
                 List<Lap> lapsEntry = new();
@@ -181,14 +182,14 @@ namespace GTRCLeagueManager
                             break;
                     }
                     bool newStint = true;
-                    List<Lap> lapsEntryTrackStint = new List<Lap>();
+                    List<Lap> lapsEntryTrackStint = new();
                     foreach (Lap _lap in lapsEntryTrack)
                     {
                         if (_lap.Time > time107 && _lap.Sector1 + _lap.Sector3 > s1s3_107) { lapsEntryTrackStint = new List<Lap>(); newStint = true; }
                         else if (_lap.Valid) { lapsEntryTrackStint.Add(_lap); }
                         if (lapsEntryTrackStint.Count >= lapsCountStintMin)
                         {
-                            List<int> bestTimes = new List<int>();
+                            List<int> bestTimes = new();
                             foreach (Lap _lapStint in lapsEntryTrackStint) { bestTimes.Add(_lapStint.Time); }
                             for (int lapNr1 = 0; lapNr1 < lapsEntryTrackStint.Count - 1; lapNr1++)
                             {
@@ -301,15 +302,18 @@ namespace GTRCLeagueManager
 
         public static void EntryAutoSignOut(Event _event, int SignOutLimit, int NoShowLimit)
         {
-            foreach (Entry _entry in Entry.Statics.List)
+            Event.SortByDate();
+            List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), _event.SeasonID);
+            List<Event> listEvents = Event.Statics.GetBy(nameof(Event.SeasonID), _event.SeasonID);
+            foreach (Entry _entry in listEntries)
             {
                 int SignOutCount = 0;
                 int NoShowCount = 0;
-                foreach (Event _tempEvent in Event.Statics.List)
+                foreach (Event _tempEvent in listEvents)
                 {
                     if (_tempEvent.EventDate <= _event.EventDate && _tempEvent.EventDate < DateTime.Now)
                     {
-                        EventsEntries _eventsEntries = EventsEntries.Statics.GetByUniqueProp(new List<dynamic>() { _entry.ID, _event.ID });
+                        EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
                         bool candidate = _entry.SignOutDate > _tempEvent.EventDate && _entry.RegisterDate < _tempEvent.EventDate;
                         if (candidate && !_eventsEntries.SignInState && _eventsEntries.ScorePoints) { SignOutCount++; }
                         if (candidate && _eventsEntries.SignInState && _eventsEntries.IsOnEntrylist && !_eventsEntries.Attended) { NoShowCount++; }
@@ -327,14 +331,16 @@ namespace GTRCLeagueManager
             if (!IsCheckedBoPFreeze) { DateBoPFreeze = Event.DateTimeMaxValue; }
 
             var linqList = from _entry in Entry.Statics.List
-                           orderby EventsEntries.Statics.GetByUniqueProp(new List<dynamic>() { _entry.ID, _event.ID }).CarChangeDate
+                           where _entry.SeasonID == _event.SeasonID
+                           orderby EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID).CarChangeDate
                            select _entry;
             List<Entry> Entrylist = linqList.Cast<Entry>().ToList();
 
-            foreach (CarBoP _carBoP in CarBoP.List) { _carBoP.Count = 0; _carBoP.CountBoP = 0; }
+            List<EventsCars> _eventsCars = EventsCars.GetAnyBy(nameof(EventsCars.EventID), _event.ID);
+            foreach (EventsCars _eventCar in _eventsCars) { _eventCar.ListRemove(); }
             foreach (Entry _entry in Entrylist)
             {
-                EventsEntries _eventsEntries = EventsEntries.Statics.GetByUniqueProp(new List<dynamic>() { _entry.ID, _event.ID });
+                EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
                 _eventsEntries.Category = _entry.Category;
                 _eventsEntries.ScorePoints = _entry.ScorePoints;
                 if (_entry.RegisterDate < _event.EventDate && _entry.ScorePoints)
@@ -346,18 +352,19 @@ namespace GTRCLeagueManager
                     if (eventsEntries.ReadyForList) { carID = eventsEntries.CarID; }
                     DateTime carChangeDateBeforeFreeze = _entry.RegisterDate;
                     if (eventsEntries.ReadyForList) { carChangeDateBeforeFreeze = eventsEntries.CarChangeDate; }
-                    CarBoP _carBoP = CarBoP.GetCarByCarID(_eventsEntries.CarID);
-                    CarBoP _carBoPAtFreeze = CarBoP.GetCarByCarID(carID);
-                    bool validCar = _carBoP.Car.ID != Basics.NoID;
-                    bool validCarAtFreeze = _carBoPAtFreeze.Car.ID != Basics.NoID;
-                    bool respectsRegLimit = _eventsEntries.CarChangeDate < DateRegisterLimit || _carBoP.Count < CarLimitRegisterLimit;
-                    bool respectsRegLimitAtFreeze = carChangeDateBeforeFreeze < DateRegisterLimit || _carBoPAtFreeze.CountBoP < CarLimitRegisterLimit;
+                    EventsCars _eventCar = EventsCars.GetAnyByUniqProp(_eventsEntries.CarID, _event.ID);
+                    EventsCars _eventCarAtFreeze = EventsCars.GetAnyByUniqProp(carID, _event.ID);
+                    bool validCar = _eventCar.ReadyForList;
+                    bool validCarAtFreeze = _eventCarAtFreeze.ReadyForList;
+                    bool respectsRegLimit = _eventsEntries.CarChangeDate < DateRegisterLimit || _eventCar.Count < CarLimitRegisterLimit;
+                    bool respectsRegLimitAtFreeze = carChangeDateBeforeFreeze < DateRegisterLimit || _eventCarAtFreeze.CountBoP < CarLimitRegisterLimit;
                     bool isRegistered = _entry.SignOutDate > _event.EventDate;
                     bool isRegisteredAtFreeze = _entry.RegisterDate < DateBoPFreeze && (_entry.SignOutDate > DateBoPFreeze || _entry.SignOutDate > _event.EventDate);
-                    if (validCarAtFreeze && respectsRegLimitAtFreeze && isRegisteredAtFreeze) { _carBoPAtFreeze.CountBoP++; }
-                    if (validCar && isRegistered) { if (respectsRegLimit) { _carBoPAtFreeze.Count++; } else { _eventsEntries.Category = 1; _eventsEntries.ScorePoints = false; } }
+                    if (validCarAtFreeze && respectsRegLimitAtFreeze && isRegisteredAtFreeze) { _eventCarAtFreeze.CountBoP++; }
+                    if (validCar && isRegistered) { if (respectsRegLimit) { _eventCarAtFreeze.Count++; } else { _eventsEntries.Category = 1; _eventsEntries.ScorePoints = false; } }
                 }
             }
+            EventsCars.Statics.WriteSQL();
             EventsEntries.Statics.WriteSQL();
         }
 
@@ -368,31 +375,35 @@ namespace GTRCLeagueManager
             List<Entry> EntriesSortPreQualiPos = new();
             List<Entry> EntriesSortSignInDate = new();
             PreQualiResultLine.Statics.LoadSQL();
-            foreach (Entry _entry in Entry.Statics.List) { if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate) { EntriesSortPreQualiPos.Add(_entry); } }
+            List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), _event.SeasonID);
+            foreach (Entry _entry in listEntries)
+            {
+                if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate) { EntriesSortPreQualiPos.Add(_entry); }
+            }
             var linqList = from _entry in EntriesSortPreQualiPos
-                           orderby PreQualiResultLine.Statics.List.IndexOf(PreQualiResultLine.Statics.GetByUniqueProp(_entry.ID))
+                           orderby PreQualiResultLine.Statics.GetByUniqProp(_entry.ID, 1).Position
                            select _entry;
             EntriesSortPreQualiPos = linqList.Cast<Entry>().ToList();
             linqList = from _entry in EntriesSortPreQualiPos
-                       orderby EventsEntries.Statics.GetByUniqueProp(new List<dynamic>() { _entry.ID, _event.ID }).SignInDate
+                       orderby EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID).SignInDate
                        select _entry;
             EntriesSortSignInDate = linqList.Cast<Entry>().ToList();
 
             foreach (Entry _entry in EntriesSortPreQualiPos)
             {
-                EventsEntries _eventsEntries = EventsEntries.Statics.GetByUniqueProp(new List<dynamic>() { _entry.ID, _event.ID });
+                EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
                 bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable && _eventsEntries.SignInState;
                 if (candidate && _entry.ScorePoints && _entry.RegisterDate < DateRegisterLimit) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
             }
             foreach (Entry _entry in EntriesSortPreQualiPos)
             {
-                EventsEntries _eventsEntries = EventsEntries.Statics.GetByUniqueProp(new List<dynamic>() { _entry.ID, _event.ID });
+                EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
                 bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable && _eventsEntries.SignInState;
                 if (candidate && _entry.ScorePoints) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
             }
             foreach (Entry _entry in EntriesSortSignInDate)
             {
-                EventsEntries _eventsEntries = EventsEntries.Statics.GetByUniqueProp(new List<dynamic>() { _entry.ID, _event.ID });
+                EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
                 bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable && _eventsEntries.SignInState;
                 if (candidate) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
             }
@@ -400,9 +411,9 @@ namespace GTRCLeagueManager
             {
                 if (!EntriesSignedIn.Contains(_entry) && !EntriesSignedOut.Contains(_entry)) { EntriesSignedOut.Add(_entry); }
             }
-            foreach (Entry _entry in Entry.Statics.List)
+            foreach (Entry _entry in listEntries)
             {
-                EventsEntries _eventsEntries = EventsEntries.Statics.GetByUniqueProp(new List<dynamic>() { _entry.ID, _event.ID });
+                EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
                 if (!EntriesSignedIn.Contains(_entry)) { _eventsEntries.IsOnEntrylist = false; }
             }
             EventsEntries.Statics.WriteSQL();
@@ -412,14 +423,20 @@ namespace GTRCLeagueManager
         public static (List<Entry>, List<Entry>) FillUpEntrylist(Event _event, int SlotsAvailable, List<Entry> EntriesSignedIn, List<Entry> EntriesSignedOut)
         {
             List<Entry> Entrylist = new();
-            foreach (Entry _entry in Entry.Statics.List) { if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate) { Entrylist.Add(_entry); } }
+            foreach (Entry _entry in Entry.Statics.List)
+            {
+                if (_entry.SeasonID == _event.SeasonID && _entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate)
+                {
+                    Entrylist.Add(_entry);
+                }
+            }
             var linqList = from _entry in Entrylist
-                           orderby PreQualiResultLine.Statics.List.IndexOf(PreQualiResultLine.Statics.GetByUniqueProp(_entry.ID))
+                           orderby PreQualiResultLine.Statics.GetByUniqProp(_entry.ID, 1).Position
                            select _entry;
             Entrylist = linqList.Cast<Entry>().ToList();
             foreach (Entry _entry in Entrylist)
             {
-                EventsEntries _eventsEntries = EventsEntries.Statics.GetByUniqueProp(new List<dynamic>() { _entry.ID, _event.ID });
+                EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
                 bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable;
                 if (candidate) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; if (EntriesSignedOut.Contains(_entry)) { EntriesSignedOut.Remove(_entry); } }
             }
@@ -427,42 +444,50 @@ namespace GTRCLeagueManager
             return (EntriesSignedIn, EntriesSignedOut);
         }
 
-        public static void CalcBoP(int CarLimitBallast, int CarLimitRestriktor, int GainBallast, int GainRestriktor, bool IsCheckedBallast, bool IsCheckedRestriktor)
+        public static void CalcBoP(Event _event, int CarLimitBallast, int CarLimitRestriktor, int GainBallast, int GainRestriktor, bool IsCheckedBallast, bool IsCheckedRestriktor)
         {
             if (!IsCheckedBallast) { GainBallast = 0; }
             if (!IsCheckedRestriktor) { GainRestriktor = 0; }
-            foreach (CarBoP _carBoP in CarBoP.List)
+            List<EventsCars> listEventsCars = EventsCars.GetAnyBy(nameof(EventsCars.EventID), _event.ID);
+            foreach (EventsCars _eventCar in listEventsCars)
             {
-                _carBoP.Ballast = Math.Max(0, _carBoP.CountBoP - CarLimitBallast) * GainBallast;
-                _carBoP.Restrictor = Math.Max(0, _carBoP.CountBoP - CarLimitRestriktor) * GainRestriktor;
+                _eventCar.Ballast = Math.Max(0, _eventCar.CountBoP - CarLimitBallast) * GainBallast;
+                _eventCar.Restrictor = Math.Max(0, _eventCar.CountBoP - CarLimitRestriktor) * GainRestriktor;
             }
+            EventsCars.Statics.WriteSQL();
         }
 
-        public static void UpdateName3Digits()
+        public static void UpdateName3Digits(int _seasonID)
         {
             bool allUnique = false; int number = 0;
             List<Driver> driverList = new();
             foreach (Entry _entry in Entry.Statics.List)
             {
-                foreach (DriverEntries _driverEntries in DriverEntries.Statics.GetBy("EntryID", _entry.ID)) { driverList.Add(Driver.Statics.GetByID(_driverEntries.DriverID)); }
+                if (_entry.SeasonID == _seasonID)
+                {
+                    foreach (DriverEntries _driverEntries in DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), _entry.ID))
+                    {
+                        driverList.Add(Driver.Statics.GetByID(_driverEntries.DriverID));
+                    }
+                }
             }
-            foreach (Driver _driver in driverList) { DriverEntries.Statics.GetByUniqueProp(_driver.ID).Name3Digits = _driver.Name3DigitsOptions[0]; }
+            foreach (Driver _driver in driverList) { DriverEntries.Statics.GetByUniqProp(_driver.ID).Name3Digits = _driver.Name3DigitsOptions[0]; }
             while (!allUnique)
             {
                 allUnique = true;
                 foreach (Driver _driver in driverList)
                 {
                     List<Driver> identicalN3D = new List<Driver>();
-                    string currentN3D = DriverEntries.Statics.GetByUniqueProp(_driver.ID).Name3Digits;
+                    string currentN3D = DriverEntries.Statics.GetByUniqProp(_driver.ID).Name3Digits;
                     foreach (Driver _driver2 in driverList)
                     {
-                        if (currentN3D == DriverEntries.Statics.GetByUniqueProp(_driver2.ID).Name3Digits) { identicalN3D.Add(_driver2); }
+                        if (currentN3D == DriverEntries.Statics.GetByUniqProp(_driver2.ID).Name3Digits) { identicalN3D.Add(_driver2); }
                     }
                     if (identicalN3D.Count > 1)
                     {
                         int lvlsMax = -1;
-                        List<Driver> identicalN3D_0 = new List<Driver>();
-                        List<Driver> identicalN3D_1 = new List<Driver>();
+                        List<Driver> identicalN3D_0 = new();
+                        List<Driver> identicalN3D_1 = new();
                         foreach (Driver _driver2 in identicalN3D)
                         {
                             if (_driver2.Name3DigitsOptions.IndexOf(currentN3D) == 0) { identicalN3D_0.Add(_driver2); }
@@ -474,8 +499,8 @@ namespace GTRCLeagueManager
                         {
                             int currentLvl = _driver2.Name3DigitsOptions.IndexOf(currentN3D) + 1;
                             int lvlMax = _driver2.Name3DigitsOptions.Count;
-                            if (currentLvl == lvlMax) { DriverEntries.Statics.GetByUniqueProp(_driver2.ID).Name3Digits = number.ToString(); number++; }
-                            else { DriverEntries.Statics.GetByUniqueProp(_driver2.ID).Name3Digits = _driver2.Name3DigitsOptions[currentLvl]; }
+                            if (currentLvl == lvlMax) { DriverEntries.Statics.GetByUniqProp(_driver2.ID).Name3Digits = number.ToString(); number++; }
+                            else { DriverEntries.Statics.GetByUniqProp(_driver2.ID).Name3Digits = _driver2.Name3DigitsOptions[currentLvl]; }
                         }
                         allUnique = false;
                         break;
@@ -484,7 +509,7 @@ namespace GTRCLeagueManager
             }
             foreach (Driver _driver in driverList)
             {
-                DriverEntries _driverEntries = DriverEntries.Statics.GetByUniqueProp(_driver.ID);
+                DriverEntries _driverEntries = DriverEntries.Statics.GetByUniqProp(_driver.ID);
                 if (Int32.TryParse(_driverEntries.Name3Digits, out number)) { _driverEntries.Name3Digits = _driver.Name3DigitsOptions[0]; }
             }
         }

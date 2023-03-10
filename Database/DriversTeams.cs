@@ -43,14 +43,14 @@ namespace GTRCLeagueManager.Database
         {
             int teamNr = 0;
             List<Team> _idListTeam = Team.Statics.IDList;
-            if (_idListTeam.Count == 0) { new Team() { ID = 1 }; _idListTeam = Team.Statics.IDList; }
+            if (_idListTeam.Count == 0) { _ = new Team() { ID = 1 }; _idListTeam = Team.Statics.IDList; }
             Team _team = Team.Statics.GetByID(teamID);
             if (_team.ReadyForList) { teamNr = Team.Statics.IDList.IndexOf(_team); } else { teamID = _idListTeam[0].ID; }
             int startValueTeam = teamNr;
 
             int driverNr = 0;
             List<Driver> _idListDriver = Driver.Statics.IDList;
-            if (_idListDriver.Count == 0) { new Driver() { ID = 1 }; _idListDriver = Driver.Statics.IDList; }
+            if (_idListDriver.Count == 0) { _ = new Driver() { ID = 1 }; _idListDriver = Driver.Statics.IDList; }
             Driver _driver = Driver.Statics.GetByID(driverID);
             if (_driver.ReadyForList) { driverNr = Driver.Statics.IDList.IndexOf(_driver); } else { driverID = _idListDriver[0].ID; }
             int startValueDriver = driverNr;
@@ -69,7 +69,7 @@ namespace GTRCLeagueManager.Database
         }
 
         //TEMP: Converter
-        [NotMapped] public string SteamID { set { DriverID = Driver.Statics.GetByUniqueProp(value).ID; } }
-        [NotMapped] public string TeamID2 { set { TeamID = Team.Statics.GetByUniqueProp(value).ID; } }
+        [NotMapped] public string SteamID { set { DriverID = Driver.Statics.GetByUniqProp(value).ID; } }
+        [NotMapped] public string TeamID2 { set { TeamID = Team.Statics.GetByUniqProp(new List<dynamic>() { 4, value }).ID; } }
     }
 }

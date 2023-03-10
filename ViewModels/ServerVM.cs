@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Reactive;
 using System.Text;
 using System.Threading;
 using System.Windows;
-using System.Windows.Media;
+using System.Windows.Input;
+using Discord;
+using GTRC_Community_Manager;
 using GTRCLeagueManager.Database;
 using Newtonsoft.Json;
 
@@ -17,15 +20,8 @@ namespace GTRCLeagueManager
     {
         public static ServerVM Instance;
         private static readonly string PathSettings = MainWindow.dataDirectory + "config server.json";
-        public static readonly Brush StateOff = (Brush)Application.Current.FindResource("color1");
-        public static readonly Brush StateOn = (Brush)Application.Current.FindResource("color3");
-        public static readonly Brush StateWait = (Brush)Application.Current.FindResource("color6");
-        public static readonly Brush StateRun = (Brush)Application.Current.FindResource("color5");
-        public static readonly Brush StateRunWait = (Brush)Application.Current.FindResource("color4");
-        public static readonly string NoPath = MainWindow.currentDirectory;
-        public static readonly string ForbiddenPath = MainWindow.dataDirectory;
-        [JsonIgnore] public BackgroundWorker BackgroundWorkerRestartServer = new BackgroundWorker() { WorkerSupportsCancellation = true };
-        public static readonly Random random = new Random();
+        [JsonIgnore] public BackgroundWorker BackgroundWorkerRestartServer = new() { WorkerSupportsCancellation = true };
+        public static readonly Random random = new();
 
         private bool stateAutoServerRestart = false;
         private int serverRestartTime = 0;
@@ -34,13 +30,14 @@ namespace GTRCLeagueManager
         public ServerVM()
         {
             Instance = this;
-            AddServerCmd = new UICmd((o) => AddDefServer());
+            AddServerCmd = new UICmd((o) => AddServer());
             DelServerCmd = new UICmd((o) => DelServer(o));
-            RestoreSettingsCmd = new UICmd((o) => RestoreSettings());
+            RestoreSettingsCmd = new UICmd((o) => RestoreSettingsTrigger());
             SaveSettingsCmd = new UICmd((o) => SaveSettings());
             ReloadAllResultsJsonCmd = new UICmd((o) => ReloadAllResultsJson(o));
+            ReloadAllServerAllResultsJsonCmd = new UICmd((o) => ReloadAllServerAllResultsJson());
             if (!File.Exists(PathSettings)) { SaveSettings(); }
-            RestoreSettings();
+            RestoreSettingsTrigger();
             BackgroundWorkerRestartServer.DoWork += InfiniteLoopRestartServer;
             BackgroundWorkerRestartServer.RunWorkerAsync();
         }
@@ -64,8 +61,7 @@ namespace GTRCLeagueManager
             }
         }
 
-        [JsonIgnore]
-        public string ServerRestartRemTime
+        [JsonIgnore] public string ServerRestartRemTime
         {
             get
             {
@@ -77,10 +73,24 @@ namespace GTRCLeagueManager
             set { this.RaisePropertyChanged(); }
         }
 
-        public ObservableCollection<Server> ListServer
+        public ObservableCollection<ServerM> ListServer
         {
-            get { return Server.List; }
+            get { return ServerM.List; }
             set { }
+        }
+
+        public static void UpdateListSeasons()
+        {
+            if (Instance != null)
+            {
+                foreach (ServerM _serverM in ServerM.List) { _serverM.RaisePropertyChanged(nameof(ServerM.ListSeasonNames)); }
+                Instance.RestoreSettings();
+            }
+        }
+
+        public static void UpdateListServers()
+        {
+            if (Instance != null) { Instance.RestoreSettings(); }
         }
 
         public void UpdateServerRestartRemTime()
@@ -111,7 +121,7 @@ namespace GTRCLeagueManager
 
         public void ThreadRestartServer()
         {
-            foreach (Server _server in Server.List)
+            foreach (ServerM _server in ServerM.List)
             {
                 if (_server.SetOnline) { _server.SetOnline = false; Thread.Sleep(500); _server.SetOnline = true; Thread.Sleep(500); }
             }
@@ -126,9 +136,9 @@ namespace GTRCLeagueManager
 
         public void EventNewResultsJson(object source, FileSystemEventArgs e)
         {
-            foreach (Server _server in Server.List)
+            foreach (ServerM _server in ServerM.List)
             {
-                if (_server.Type == ServerTypeEnum.PreQuali && Basics.PathIsParentOf(NoPath, _server.PathResults, e.FullPath))
+                if (_server.Server.ServerTypeEnum == ServerTypeEnum.PreQuali && Basics.PathIsParentOf(Server.NoPath, _server.Server.PathResults, e.FullPath))
                 {
                     new Thread(() => ThreadReadNewResultsJsons(_server, new List<string>() { e.FullPath })).Start();
                     break;
@@ -136,7 +146,7 @@ namespace GTRCLeagueManager
             }
         }
 
-        public void ThreadReadNewResultsJsons(Server _server, List<string> paths)
+        public void ThreadReadNewResultsJsons(ServerM _server, List<string> paths)
         {
             _server.WaitQueue++;
             _server.WaitQueue += paths.Count;
@@ -146,27 +156,35 @@ namespace GTRCLeagueManager
             Lap.Statics.LoadSQL();
             for (int pathNr = 0; pathNr < paths.Count; pathNr++) { PreSeason.AddResultsJson(paths[pathNr]); _server.WaitQueue--; }
             Lap.Statics.WriteSQL();
-            PreSeason.UpdatePreQResults();
-            GSheets.UpdatePreQStandings(GSheet.ListIDs[0].DocID, GSheet.ListIDs[0].SheetID);
+            if (PreSeasonVM.Instance is not null)
+            {
+                PreSeason.UpdatePreQResults(PreSeasonVM.Instance.CurrentSeasonID);
+                GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
+            }
             _server.IsRunning = false;
+        }
+
+        public void ReloadAllServerAllResultsJson()
+        {
+
         }
 
         public void ReloadAllResultsJson(object obj)
         {
-            if (obj.GetType() == typeof(Server)) { Server _server = (Server)obj; new Thread(() => ThreadReloadAllResultsJson(_server)).Start(); }
+            if (obj.GetType() == typeof(ServerM)) { ServerM _server = (ServerM)obj; new Thread(() => ThreadReloadAllResultsJson(_server)).Start(); }
         }
 
-        public void ThreadReloadAllResultsJson(Server _server)
+        public void ThreadReloadAllResultsJson(ServerM _server)
         {
             Lap.Statics.ResetSQL();
-            if (_server.Type == ServerTypeEnum.PreQuali)
+            if (_server.Server.ServerTypeEnum == ServerTypeEnum.PreQuali)
             {
-                DirectoryInfo dirInfo = new(_server.PathResults);
+                DirectoryInfo dirInfo = new(_server.Server.PathResults);
                 FileInfo[] listResultsJsonFiles = dirInfo.GetFiles(_server.ResultsWatcher.Filter);
                 List<string> listPaths = new();
                 foreach (FileInfo resultsJsonFile in listResultsJsonFiles)
                 {
-                    listPaths.Add(_server.PathResults + resultsJsonFile.Name);
+                    listPaths.Add(_server.Server.PathResults + resultsJsonFile.Name);
                 }
                 new Thread(() => ThreadReadNewResultsJsons(_server, listPaths)).Start();
             }
@@ -174,30 +192,30 @@ namespace GTRCLeagueManager
 
         public static void UpdateEntrylists()
         {
-            foreach (Server _server in Server.List) { UpdateEntrylist(_server); }
+            foreach (ServerM _server in ServerM.List) { UpdateEntrylist(_server.Server); }
         }
 
         public static void UpdateEntrylist(Server _server)
         {
-            if (_server.PathExists)
+            if (_server.PathExists())
             {
                 ACC_Entrylist Entrylist = new();
-                if (_server.EntrylistType == Server.listEntrylistTypes[0])
+                if (_server.EntrylistTypeEnum == EntrylistTypeEnum.None)
                 {
                     Entrylist.CreateEmpty();
                     Entrylist.WriteJson(_server.PathCfg);
                 }
-                else if (_server.EntrylistType == Server.listEntrylistTypes[1])
+                else if (_server.EntrylistTypeEnum == EntrylistTypeEnum.RaceControl)
                 {
                     Entrylist.CreateRaceControl(_server.ForceEntrylist);
                     Entrylist.WriteJson(_server.PathCfg);
                 }
-                else if (_server.EntrylistType == Server.listEntrylistTypes[2])
+                else if (_server.EntrylistTypeEnum == EntrylistTypeEnum.AllDrivers)
                 {
                     Entrylist.CreateDrivers(_server.ForceEntrylist);
                     Entrylist.WriteJson(_server.PathCfg);
                 }
-                else
+                else if (_server.EntrylistTypeEnum == EntrylistTypeEnum.Season && PreSeasonVM.Instance is not null)
                 {
                     Entrylist.Create(_server.ForceCarModel, _server.ForceEntrylist, PreSeasonVM.Instance.CurrentEvent);
                     Entrylist.WriteJson(_server.PathCfg);
@@ -207,76 +225,65 @@ namespace GTRCLeagueManager
 
         public static void UpdateBoPs()
         {
-            foreach (Server _server in Server.List) { UpdateBoP(_server); }
+            foreach (ServerM _server in ServerM.List) { UpdateBoP(_server.Server); }
         }
 
         public static void UpdateBoP(Server _server)
         {
-            if (_server.PathExists)
+            if (_server.PathExists())
             {
                 ACC_BoP BoP = new();
-                if (_server.WriteBoP) { BoP.Create(); } else { BoP.CreateEmpty(); }
-                BoP.WriteJson(_server.PathCfg);
+                if (_server.WriteBoP && PreSeasonVM.Instance is not null) { BoP.Create(PreSeasonVM.Instance.CurrentEvent); BoP.WriteJson(_server.PathCfg); }
+                else if (!_server.WriteBoP) { BoP.CreateEmpty(); BoP.WriteJson(_server.PathCfg); }
             }
         }
 
-        public void AddServer(string name, string path, ServerTypeEnum type, bool setOnline, string entrylistType, bool forceCarModel, bool forceEntrylist, bool writeBoP, bool detectResults)
+        public void AddServer()
         {
-            Server _server = new Server()
-            {
-                Name = name,
-                Path = path,
-                Type = type,
-                SetOnline = setOnline,
-                EntrylistType = entrylistType,
-                ForceCarModel = forceCarModel,
-                ForceEntrylist = forceEntrylist,
-                WriteBoP = writeBoP,
-                DetectResults = detectResults
-            };
-            _server.ResultsWatcher.Created += new FileSystemEventHandler(EventNewResultsJson);
-            this.RaisePropertyChanged("ListServer");
-        }
-
-        public void AddDefServer()
-        {
-            Server _server = new Server();
-            _server.ResultsWatcher.Created += new FileSystemEventHandler(EventNewResultsJson);
-            this.RaisePropertyChanged("ListServer");
+            Server.Statics.LoadSQL();
+            _ = new Server();
+            Server.Statics.WriteSQL();
+            Server.Statics.LoadSQL();
         }
 
         public void DelServer(object obj)
         {
-            if (obj.GetType() == typeof(Server)) { Server _server = (Server)obj; _server.Delete(); this.RaisePropertyChanged("ListServer"); }
+            if (obj.GetType() == typeof(ServerM)) { ServerM _serverM = (ServerM)obj; _serverM.Server.ListRemove(); this.RaisePropertyChanged(nameof(ListServer)); }
         }
+
+        public void RestoreSettingsTrigger() { Server.Statics.LoadSQL(); }
 
         public void RestoreSettings()
         {
             try
             {
-                int ServerCount = Server.List.Count;
-                for (int serverNr = ServerCount - 1; serverNr >= 0; serverNr--) { DelServer(Server.List[serverNr]); }
-                dynamic obj = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(PathSettings, Encoding.Unicode));
-                StateAutoServerRestart = obj.StateAutoServerRestart ?? stateAutoServerRestart;
-                ServerRestartTime = obj.ServerRestartTime ?? serverRestartTime;
-                if (obj.ListServer is IList)
+                int countServerM = ServerM.List.Count;
+                for (int _serverMNr = countServerM - 1; _serverMNr >= 0; _serverMNr--) { ServerM.List.RemoveAt(_serverMNr); }
+                dynamic? obj = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(PathSettings, Encoding.Unicode));
+                StateAutoServerRestart = obj?.StateAutoServerRestart ?? stateAutoServerRestart;
+                ServerRestartTime = obj?.ServerRestartTime ?? serverRestartTime;
+                Dictionary<int, Tuple<bool, bool>> listServerSettings = new();
+                if (obj?.ListServer is IList)
                 {
                     foreach (var item in obj.ListServer)
                     {
-                        AddServer(
-                            (string)item.Name,
-                            (string)item.Path,
-                            (ServerTypeEnum)item.Type,
-                            (bool)item.SetOnline,
-                            (string)item.EntrylistType,
-                            (bool)item.ForceCarModel,
-                            (bool)item.ForceEntrylist,
-                            (bool)item.WriteBoP,
-                            (bool)item.DetectResults
-                            );
+                        int serverID = item.ServerID ?? Basics.NoID;
+                        bool setOnline = item.SetOnline ?? new ServerM().SetOnline;
+                        bool detectResults = item.DetectResults ?? new ServerM().DetectResults;
+                        if (Server.Statics.ExistsID(serverID)) { listServerSettings[serverID] = new Tuple<bool, bool> (setOnline, detectResults); }
                     }
                 }
-                if (Server.List.Count == 0) { AddDefServer(); }
+                foreach (Server _server in Server.Statics.List)
+                {
+                    ServerM serverM = new(_server.ID);
+                    if (listServerSettings.ContainsKey(_server.ID))
+                    {
+                        serverM.SetOnline = listServerSettings[_server.ID].Item1;
+                        serverM.DetectResults = listServerSettings[_server.ID].Item2;
+                    }
+                }
+                UpdateEntrylists();
+                UpdateBoPs();
                 MainVM.List[0].LogCurrentText = "Server settings restored.";
             }
             catch { MainVM.List[0].LogCurrentText = "Restore server settings failed!"; }
@@ -286,6 +293,7 @@ namespace GTRCLeagueManager
         {
             string text = JsonConvert.SerializeObject(this, Formatting.Indented);
             File.WriteAllText(PathSettings, text, Encoding.Unicode);
+            Server.Statics.WriteSQL();
             MainVM.List[0].LogCurrentText = "Server settings saved.";
         }
 
@@ -294,5 +302,6 @@ namespace GTRCLeagueManager
         [JsonIgnore] public UICmd RestoreSettingsCmd { get; set; }
         [JsonIgnore] public UICmd SaveSettingsCmd { get; set; }
         [JsonIgnore] public UICmd ReloadAllResultsJsonCmd { get; set; }
+        [JsonIgnore] public UICmd ReloadAllServerAllResultsJsonCmd { get; set; }
     }
 }

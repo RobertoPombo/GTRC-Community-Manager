@@ -78,22 +78,5 @@ namespace GTRCLeagueManager.Database
                 nr++; if (nr == int.MaxValue) { break; }
             }
         }
-
-
-
-        //später löschen
-        public static List<string> ReturnPropsAsList()
-        {
-            List<string> list = new List<string>();
-            foreach (PropertyInfo property in typeof(Track).GetProperties()) { list.Add(property.Name); }
-            return list;
-        }
-
-        public Dictionary<string, dynamic> ReturnAsDict()
-        {
-            Dictionary<string, dynamic> dict = new Dictionary<string, dynamic>();
-            foreach (PropertyInfo property in typeof(Track).GetProperties()) { dict[property.Name] = property.GetValue(this); }
-            return dict;
-        }
     }
 }

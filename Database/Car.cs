@@ -86,11 +86,7 @@ namespace GTRCLeagueManager.Database
             get { foreach (Car _car in Statics.List) { if (_car.Manufacturer == Manufacturer && _car.Category == Category && _car.Year > Year) { return false; } } return true; }
         }
 
-        public static void ListSetter()
-        {
-            CarBoP.List.Clear();
-            foreach (Car _car in Statics.List) { CarBoP.List.Add(new CarBoP() { Car = _car }); }
-        }
+        public static void ListSetter() { }
 
         public override void SetNextAvailable()
         {
@@ -100,23 +96,6 @@ namespace GTRCLeagueManager.Database
                 if (accCarID < int.MaxValue) { accCarID += 1; } else { accCarID = 0; }
                 if (accCarID == startValue) { break; }
             }
-        }
-
-
-
-        //später löschen
-        public static List<string> ReturnPropsAsList()
-        {
-            List<string> list = new List<string>();
-            foreach (PropertyInfo property in typeof(Car).GetProperties()) { list.Add(property.Name); }
-            return list;
-        }
-
-        public Dictionary<string, dynamic> ReturnAsDict()
-        {
-            Dictionary<string, dynamic> dict = new Dictionary<string, dynamic>();
-            foreach (PropertyInfo property in typeof(Car).GetProperties()) { dict[property.Name] = property.GetValue(this); }
-            return dict;
         }
     }
 }

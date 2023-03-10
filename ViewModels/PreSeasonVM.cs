@@ -16,10 +16,10 @@ namespace GTRCLeagueManager
     {
         public static PreSeasonVM Instance;
         private static readonly string PathSettings = MainWindow.dataDirectory + "config preseason.json";
-        [JsonIgnore] public BackgroundWorker BackgroundWorkerResetEntries = new BackgroundWorker() { WorkerSupportsCancellation = true };
-        public static readonly Random random = new Random();
+        [JsonIgnore] public BackgroundWorker BackgroundWorkerResetEntries = new() { WorkerSupportsCancellation = true };
+        public static readonly Random random = new();
 
-        private static ObservableCollection<Season> listSeasons = new ObservableCollection<Season>();
+        private static ObservableCollection<Season> listSeasons = new();
 
         private int currentSeasonID = Basics.NoID;
         private Event currentevent;
@@ -62,7 +62,7 @@ namespace GTRCLeagueManager
             UpdateEntrylistBoPCmd = new UICmd((o) => UpdateEntrylistBoP());
             if (!File.Exists(PathSettings)) { SaveSettings(); }
             RestoreSettings();
-            StateEntries = ServerVM.StateOff;
+            StateEntries = ServerM.StateOff;
             BackgroundWorkerResetEntries.DoWork += InfiniteLoopResetEntries;
             BackgroundWorkerResetEntries.RunWorkerAsync();
         }
@@ -76,22 +76,19 @@ namespace GTRCLeagueManager
             set { CurrentSeason = Season.Statics.GetByID(value); }
         }
 
-        [JsonIgnore]
-        public Season CurrentSeason
+        [JsonIgnore] public Season CurrentSeason
         {
             get { Season _season = Season.Statics.GetByID(currentSeasonID); return _season; }
-            set { if (value != null && value != CurrentSeason) { UpdateListEvents(); currentSeasonID = value.ID; this.RaisePropertyChanged(); } }
+            set { if (value != null && value != CurrentSeason) { currentSeasonID = value.ID; this.RaisePropertyChanged(); UpdateListEvents(); } }
         }
 
-        [JsonIgnore]
-        public Event CurrentEvent
+        [JsonIgnore] public Event CurrentEvent
         {
             get { return currentevent; }
             set { currentevent = value; SlotsAvailable++; this.RaisePropertyChanged(); }
         }
 
-        [JsonIgnore]
-        public int SlotsAvailable
+        [JsonIgnore] public int SlotsAvailable
         {
             get { return slotsavailable; }
             set
@@ -104,15 +101,13 @@ namespace GTRCLeagueManager
             }
         }
 
-        [JsonIgnore]
-        public int SlotsTaken
+        [JsonIgnore] public int SlotsTaken
         {
             get { return slotstaken; }
             set { slotstaken = value; SlotsTakenText = "?"; }
         }
 
-        [JsonIgnore]
-        public string SlotsTakenText
+        [JsonIgnore] public string SlotsTakenText
         {
             get { return slotstakentext; }
             set { slotstakentext = SlotsTaken.ToString() + "/" + SlotsAvailable.ToString(); this.RaisePropertyChanged(); }
@@ -125,15 +120,14 @@ namespace GTRCLeagueManager
             {
                 stateautoupdateentries = value;
                 this.RaisePropertyChanged();
-                if (stateautoupdateentries && StateEntries == ServerVM.StateOff) { StateEntries = ServerVM.StateOn; }
-                else if (!stateautoupdateentries && StateEntries == ServerVM.StateOn) { StateEntries = ServerVM.StateOff; }
+                if (stateautoupdateentries && StateEntries == ServerM.StateOff) { StateEntries = ServerM.StateOn; }
+                else if (!stateautoupdateentries && StateEntries == ServerM.StateOn) { StateEntries = ServerM.StateOff; }
                 entriesupdateremtime = intervallminrefreshentries * 60;
                 EntriesUpdateRemTime = "?";
             }
         }
 
-        [JsonIgnore]
-        public Brush StateEntries
+        [JsonIgnore] public Brush StateEntries
         {
             get { return stateentries; }
             set { stateentries = value; this.RaisePropertyChanged(); }
@@ -153,8 +147,7 @@ namespace GTRCLeagueManager
             }
         }
 
-        [JsonIgnore]
-        public string EntriesUpdateRemTime
+        [JsonIgnore] public string EntriesUpdateRemTime
         {
             get
             {
@@ -320,17 +313,20 @@ namespace GTRCLeagueManager
 
         public static void UpdateListEvents()
         {
-            if (Instance != null)
+            if (Instance is not null)
             {
+                Event.SortByDate();
                 Instance.ListEvents = new ObservableCollection<Event>();
-                foreach (Event _event in Event.Statics.List) { Instance.ListEvents.Add(_event); Instance.RaisePropertyChanged("ListEvents"); }
+                List<Event> eventList = Event.Statics.GetBy(nameof(Event.SeasonID), Instance.CurrentSeasonID);
+                foreach (Event _event in eventList) { Instance.ListEvents.Add(_event); }
+                Instance.RaisePropertyChanged(nameof(ListEvents));
                 Instance.SetCurrentEvent();
             }
         }
 
         public void SetCurrentEvent()
         {
-            foreach (Event _event in Event.Statics.List) { CurrentEvent = _event; if (_event.EventDate > DateTime.Now) { return; } }
+            CurrentEvent = Event.GetNextEvent(CurrentSeasonID, DateTime.Now);
         }
 
         public void InfiniteLoopResetEntries(object sender, DoWorkEventArgs e)
@@ -359,11 +355,11 @@ namespace GTRCLeagueManager
             WaitQueueEntries--;
             Lap.Statics.LoadSQL();
             ResetEntries();
-            PreSeason.UpdatePreQResults();
+            PreSeason.UpdatePreQResults(CurrentSeasonID);
             PreSeason.CountCars(CurrentEvent, DateRegisterLimit, CarLimitRegisterLimit, DateBoPFreeze, IsCheckedRegisterLimit, IsCheckedBoPFreeze);
-            PreSeason.CalcBoP(CarLimitBallast, CarLimitRestriktor, GainBallast, GainRestriktor, IsCheckedBallast, IsCheckedRestriktor);
-            GSheets.UpdateBoPStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
-            GSheets.UpdatePreQStandings(GSheet.ListIDs[0].DocID, GSheet.ListIDs[0].SheetID);
+            PreSeason.CalcBoP(CurrentEvent, CarLimitBallast, CarLimitRestriktor, GainBallast, GainRestriktor, IsCheckedBallast, IsCheckedRestriktor);
+            GSheets.UpdateBoPStandings(CurrentEvent, GSheet.ListIDs[2].DocID, GSheet.ListIDs[2].SheetID);
+            GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
             IsRunningEntries = false;
         }
 
@@ -376,27 +372,27 @@ namespace GTRCLeagueManager
         {
             if (IsRunningEntries)
             {
-                if (WaitQueueEntries > 0) { StateEntries = ServerVM.StateRunWait; }
-                else { StateEntries = ServerVM.StateRun; }
+                if (WaitQueueEntries > 0) { StateEntries = ServerM.StateRunWait; }
+                else { StateEntries = ServerM.StateRun; }
             }
             else
             {
-                if (WaitQueueEntries > 0) { StateEntries = ServerVM.StateWait; }
-                else { if (StateAutoUpdateEntries) { StateEntries = ServerVM.StateOn; } else { StateEntries = ServerVM.StateOff; } }
+                if (WaitQueueEntries > 0) { StateEntries = ServerM.StateWait; }
+                else { if (StateAutoUpdateEntries) { StateEntries = ServerM.StateOn; } else { StateEntries = ServerM.StateOff; } }
             }
         }
 
         public bool CheckExistingThreads()
         {
             if (IsRunningEntries) { return true; }
-            foreach (Server _server in Server.List) { if (_server.IsRunning) { return true; } }
+            foreach (ServerM _server in ServerM.List) { if (_server.IsRunning) { return true; } }
             return false;
         }
 
         public void ResetEntries()
         {
-            GSheets.SyncFormsEntries(GSheet.ListIDs[3].DocID, GSheet.ListIDs[3].SheetID, "A:I");
-            DatabaseVM.UpdateDatabase(true);
+            GSheets.SyncFormsEntries(CurrentSeasonID, GSheet.ListIDs[4].DocID, GSheet.ListIDs[4].SheetID, "A:I");
+            GSheets.UpdateEntriesCurrentEvent(GSheet.ListIDs[6].DocID, GSheet.ListIDs[6].SheetID, CurrentEvent);
         }
 
         public void UpdateEntrylistBoP()
@@ -405,40 +401,39 @@ namespace GTRCLeagueManager
             MainVM.List[0].LogCurrentText = "Export entrylists and BoPs...";
         }
 
-        public int ThreadUpdateEntrylistBoP(Event _event)
+        public void ThreadUpdateEntrylistBoP(Event _event)
         {
-            PreSeason.UpdateName3Digits();
+            PreSeason.UpdateName3Digits(_event.SeasonID);
             PreSeason.EntryAutoSignOut(_event, SignOutLimit, NoShowLimit);
             UpdateBoPForEvent(_event);
             (List<Entry> EntriesSignedIn, List<Entry> EntriesSignedOut) = PreSeason.DetermineEntrylist(_event, SlotsAvailable, DateRegisterLimit);
             int tempSlotsTaken = EntriesSignedIn.Count;
             (EntriesSignedIn, EntriesSignedOut) = PreSeason.FillUpEntrylist(_event, SlotsAvailable, EntriesSignedIn, EntriesSignedOut);
+            GSheets.UpdateEntriesCurrentEvent(GSheet.ListIDs[6].DocID, GSheet.ListIDs[6].SheetID, CurrentEvent);
+            GSheets.UpdateCarChanges(GSheet.ListIDs[7].DocID, GSheet.ListIDs[7].SheetID, _event.SeasonID);
             if (_event.ID == CurrentEvent.ID)
             {
                 SlotsTaken = tempSlotsTaken;
-                GSheets.UpdateBoPStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
-                MainVM.List[0].LogCurrentText = "Entrylist exported.";
+                GSheets.UpdateBoPStandings(CurrentEvent, GSheet.ListIDs[2].DocID, GSheet.ListIDs[2].SheetID);
                 ServerVM.UpdateEntrylists();
                 ServerVM.UpdateBoPs();
+                MainVM.List[0].LogCurrentText = "Entrylist exported.";
             }
-            return tempSlotsTaken;
         }
 
         public void UpdateBoPForEvent(Event _event)
         {
             PreSeason.CountCars(_event, DateRegisterLimit, CarLimitRegisterLimit, DateBoPFreeze, IsCheckedRegisterLimit, IsCheckedBoPFreeze);
-            PreSeason.CalcBoP(CarLimitBallast, CarLimitRestriktor, GainBallast, GainRestriktor, IsCheckedBallast, IsCheckedRestriktor);
-            CarBoP.SortByCount();
+            PreSeason.CalcBoP(_event, CarLimitBallast, CarLimitRestriktor, GainBallast, GainRestriktor, IsCheckedBallast, IsCheckedRestriktor);
         }
 
-        public int CarChangeCount(int entryID, DateTime maxEventDate)
+        public int CarChangeCount(Entry entry, DateTime maxEventDate)
         {
             int carChangeCount = 0;
-            Entry entry = Entry.Statics.GetByID(entryID);
             if (IsCheckedCarChangeLimit && entry.ScorePoints)
             {
-                EventsEntries.SortByDate();
-                List<EventsEntries> eventList = EventsEntries.Statics.GetBy("EntryID", entry.ID);
+                List<EventsEntries> eventList = EventsEntries.GetAnyBy(nameof(EventsEntries.EntryID), entry.ID);
+                eventList = EventsEntries.SortByDate(eventList);
                 int currentCarID = entry.CarID;
                 for (int index = 0; index < eventList.Count; index++)
                 {

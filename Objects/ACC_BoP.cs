@@ -28,21 +28,23 @@ namespace GTRCLeagueManager.Database
             File.WriteAllText(absolutePath, text, Encoding.Unicode);
         }
 
-        public void Create()
+        public void Create(Event _event)
         {
             entries = new List<ACC_BoP_Entry>();
+            List<EventsCars> eventsCars = EventsCars.GetAnyBy(nameof(EventsCars.EventID), _event.ID);
             foreach (Track _track in Track.Statics.List)
             {
-                foreach (CarBoP _carBoP in CarBoP.List)
+                foreach (EventsCars eventCar in eventsCars)
                 {
-                    if (_carBoP.Ballast > 0 || _carBoP.Restrictor > 0)
+                    if (eventCar.Ballast > 0 || eventCar.Restrictor > 0)
                     {
-                        ACC_BoP_Entry accBoPEntry = new ACC_BoP_Entry();
+                        Car car = Car.Statics.GetByID(eventCar.CarID);
+                        ACC_BoP_Entry accBoPEntry = new();
                         entries.Add(accBoPEntry);
                         accBoPEntry.track = _track.AccTrackID;
-                        accBoPEntry.carModel = _carBoP.Car.AccCarID;
-                        accBoPEntry.ballastKg = _carBoP.Ballast;
-                        accBoPEntry.restrictor = _carBoP.Restrictor;
+                        accBoPEntry.carModel = car.AccCarID;
+                        accBoPEntry.ballastKg = eventCar.Ballast;
+                        accBoPEntry.restrictor = eventCar.Restrictor;
                     }
                 }
             }

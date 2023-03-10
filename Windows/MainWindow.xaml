@@ -165,6 +165,10 @@
                                         <Button Content="Json" Command="{Binding ClearJsonCmd}"
                                                 Style="{StaticResource BinTextButtonStyle}" Padding="7" Margin="5,0"/>
                                     </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Height="30" HorizontalAlignment="Center" Margin="0,5">
+                                        <CheckBox IsChecked="{Binding ForceDel}" Style="{StaticResource SwitchCheckBoxStyle}"/>
+                                        <Label Content="Delete child objects" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </Grid>
                         </ScrollViewer>
@@ -337,6 +341,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
                                     <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5">
@@ -375,6 +380,7 @@
                                     <Label Grid.Row="3" Grid.Column="0" Content="Server ID" Style="{StaticResource LabelStyle}" Margin="5"/>
                                     <Label Grid.Row="4" Grid.Column="0" Content="Channel ID" Style="{StaticResource LabelStyle}" Margin="5"/>
                                     <Label Grid.Row="5" Grid.Column="0" Content="Admin Role ID" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    <Label Grid.Row="6" Grid.Column="0" Content="Max Message Size" Style="{StaticResource LabelStyle}" Margin="5"/>
 
                                     <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDisBotPreset.PresetName}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
                                     <ComboBox Grid.Row="2" Grid.Column="1" Margin="10,5"
@@ -384,6 +390,7 @@
                                     <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding SelectedDisBotPreset.ServerID}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
                                     <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding SelectedDisBotPreset.ChannelID}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
                                     <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding SelectedDisBotPreset.AdminRoleID}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
+                                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SelectedDisBotPreset.CharLimit}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
                                 </Grid>
                             </StackPanel>
 
@@ -695,6 +702,7 @@
                                 <Label Content=": 00" Style="{StaticResource LabelStyle}" Margin="1,0"/>
                                 <CheckBox IsChecked="{Binding StateAutoServerRestart}" Style="{StaticResource SwitchCheckBoxStyle}"/>
                                 <Label Content="{Binding ServerRestartRemTime}" Style="{StaticResource LabelStyle}"/>
+                                <Button Command="{Binding ReloadAllServerAllResultsJsonCmd}" Style="{StaticResource ImpButtonStyle}" Margin="0,5,5,5"/>
                             </StackPanel>
                             <Grid Grid.Row="1">
                                 <Grid.ColumnDefinitions>
@@ -710,16 +718,18 @@
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_9"/>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_10"/>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_11"/>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_12"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Grid.Column="2" Content="Name" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                                 <Label Grid.Column="3" Content="Online" Grid.ColumnSpan="2" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                                 <Label Grid.Column="5" Content="Results" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                                 <Label Grid.Column="6" Content="Type" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                                 <Label Grid.Column="7" Content="Entrylist" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
-                                <Label Grid.Column="8" Content="fCM" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
-                                <Label Grid.Column="9" Content="fEL" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
-                                <Label Grid.Column="10" Content="BoP" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
-                                <Label Grid.Column="11" Content="Path" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="8" Content="Season" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="9" Content="fCM" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="10" Content="fEL" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="11" Content="BoP" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="12" Content="Path" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                             </Grid>
                             <Grid Grid.Row="2">
                                 <Grid.ColumnDefinitions>
@@ -735,6 +745,7 @@
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_9"/>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_10"/>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_11"/>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_12"/>
                                 </Grid.ColumnDefinitions>
                                 <ItemsControl Grid.Column="1" ItemsSource="{Binding ListServer}" x:Name="ItemCtrlServerColumn_1">
                                     <ItemsControl.ItemTemplate>
@@ -793,8 +804,8 @@
                                 <ItemsControl Grid.Column="6" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding ListServerTypes, UpdateSourceTrigger=PropertyChanged}"
-                                                      SelectedValue="{Binding Type, UpdateSourceTrigger=PropertyChanged}"
+                                            <ComboBox ItemsSource="{Binding ListServerTypeEnums, UpdateSourceTrigger=PropertyChanged}"
+                                                      SelectedValue="{Binding ServerTypeEnum, UpdateSourceTrigger=PropertyChanged}"
                                                       Style="{StaticResource ComboBoxStyle}" Margin="5" Cursor="Hand"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -802,8 +813,8 @@
                                 <ItemsControl Grid.Column="7" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding ListEntrylistTypes, UpdateSourceTrigger=PropertyChanged}"
-                                                      SelectedValue="{Binding EntrylistType, UpdateSourceTrigger=PropertyChanged}"
+                                            <ComboBox ItemsSource="{Binding ListEntrylistTypeEnums, UpdateSourceTrigger=PropertyChanged}"
+                                                      SelectedValue="{Binding EntrylistTypeEnum, UpdateSourceTrigger=PropertyChanged}"
                                                       Style="{StaticResource ComboBoxStyle}" Margin="5" Cursor="Hand"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -811,31 +822,40 @@
                                 <ItemsControl Grid.Column="8" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <CheckBox IsChecked="{Binding ForceCarModel}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
+                                            <ComboBox ItemsSource="{Binding ListSeasonNames, UpdateSourceTrigger=PropertyChanged}"
+                                                      SelectedValue="{Binding SeasonName, UpdateSourceTrigger=PropertyChanged}"
+                                                      Style="{StaticResource ComboBoxStyle}" Margin="5" Cursor="Hand"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <ItemsControl Grid.Column="9" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <CheckBox IsChecked="{Binding ForceEntrylist}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
+                                            <CheckBox IsChecked="{Binding ForceCarModel}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <ItemsControl Grid.Column="10" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <CheckBox IsChecked="{Binding WriteBoP}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
+                                            <CheckBox IsChecked="{Binding ForceEntrylist}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <ItemsControl Grid.Column="11" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBox x:Name="TextBoxSever_11" Text="{Binding Path}" Style="{StaticResource TextBoxStyle}" MaxWidth="150" Margin="5" HorizontalContentAlignment="Right"/>
+                                            <CheckBox IsChecked="{Binding WriteBoP}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <ItemsControl Grid.Column="12" ItemsSource="{Binding ListServer}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBox x:Name="TextBoxSever_12" Text="{Binding Path}" Style="{StaticResource TextBoxStyle}" MaxWidth="150" Margin="5"/>
                                             <DataTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding PathExists}" Value="False">
-                                                    <Setter TargetName="TextBoxSever_11" Property="BorderBrush" Value="{StaticResource color6}"/>
+                                                    <Setter TargetName="TextBoxSever_12" Property="BorderBrush" Value="{StaticResource color6}"/>
                                                 </DataTrigger>
                                             </DataTemplate.Triggers>
                                         </DataTemplate>

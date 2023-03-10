@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.ConstrainedExecution;
 using GTRCLeagueManager.Database;
 
 namespace GTRCLeagueManager
@@ -14,9 +13,10 @@ namespace GTRCLeagueManager
         public static SortState CurrentSortState = new();
 
         private static Type dataType = typeof(ThemeColor);
-        private static List<KeyValuePair<string, Type>> listDataTypes = new List<KeyValuePair<string, Type>>();
+        private static List<KeyValuePair<string, Type>> listDataTypes = new();
 
-        private ObservableCollection<DataRowVM> list = new ObservableCollection<DataRowVM>();
+        private bool forceDel = false;
+        private ObservableCollection<DataRowVM> list = new();
         private DataRowVM current;
         private DataRowVM selected;
 
@@ -26,6 +26,7 @@ namespace GTRCLeagueManager
             ListDataTypes.Add(new KeyValuePair<string, Type>("Colors", typeof(ThemeColor)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Cars", typeof(Car)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Tracks", typeof(Track)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>("Servers", typeof(Server)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Drivers", typeof(Driver)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("RaceControl", typeof(RaceControl)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Series", typeof(Series)));
@@ -36,6 +37,7 @@ namespace GTRCLeagueManager
             ListDataTypes.Add(new KeyValuePair<string, Type>("DriverEntries", typeof(DriverEntries)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("DriversTeams", typeof(DriversTeams)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("EventsEntries", typeof(EventsEntries)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>("EventsCars", typeof(EventsCars)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("PreQualiResultLines", typeof(PreQualiResultLine)));
             DataType = ListDataTypes[0].Value;
             AddCmd = new UICmd((o) => Add());
@@ -58,12 +60,13 @@ namespace GTRCLeagueManager
             DataType = backupDataType;
         }
 
-        public static void UpdateDatabase(bool saveSQL)
+        public bool ForceDel
         {
-            Type backupDataType = dataType;
-            foreach (KeyValuePair<string, Type> _dataType in listDataTypes) { dataType = _dataType.Value; if (saveSQL) { WriteSQL(); } }
-            dataType = backupDataType ?? dataType;
+            get { return forceDel; }
+            set { forceDel = value; RaisePropertyChanged(); }
         }
+
+        public bool UseForceDel() { if (ForceDel) { ForceDel = false; return true; } else { return false; } }
 
         public List<KeyValuePair<string, Type>> ListDataTypes
         {
@@ -105,7 +108,7 @@ namespace GTRCLeagueManager
         public void ResetList(int index = 0)
         {
             List.Clear();
-            List<dynamic> iterateObj = new List<dynamic>();
+            List<dynamic> iterateObj = new();
             foreach (var _obj in Current.Object.List) { iterateObj.Add(_obj); }
             foreach (var _obj in iterateObj) { List.Add(new DataRowVM(_obj, true, true)); }
             SetSelected(index);
@@ -143,28 +146,23 @@ namespace GTRCLeagueManager
 
         public void Add()
         {
+            List<dynamic> backupValues = Current.Values;
             if (Current.Object.List.Contains(Current.Object))
             {
                 Current.Object = Activator.CreateInstance(DataType, true, false)!;
-                DataRow2Object(Current.Object, Current);
-                Current = new DataRowVM(Current.Object, false, false);
             }
-            else
-            {
-                List<dynamic> backupValues = Current.Values;
-                DataRow2Object(Current.Object, Current);
-                Current.Object.ID = Basics.NoID;
-                Current = new DataRowVM(Current.Object, false, false);
-                if (Enumerable.SequenceEqual(backupValues, Current.Values)) { Current.Object.ListAdd(); ResetList(List.Count); }
-            }
+            DataRow2Object(Current.Object, Current);
+            Current.Object.ID = Basics.NoID;
+            Current = new DataRowVM(Current.Object, false, false);
+            if (Enumerable.SequenceEqual(backupValues, Current.Values)) { Current.Object.ListAdd(); ResetList(List.Count); }
         }
 
         public void Del()
         {
-            if (Selected != null && Current.Object.List.Contains(Selected.Object))
+            if (Selected is not null && Current.Object.List.Contains(Selected.Object))
             {
                 int index = Selected.Object.List.IndexOf(Selected.Object);
-                Selected.Object.ListRemove();
+                Selected.Object.ListRemove(UseForceDel());
                 if (index == Selected.Object.List.Count) { index -= 1; }
                 ResetList(index);
             }
@@ -211,7 +209,7 @@ namespace GTRCLeagueManager
 
         public void ReadJson()
         {
-            StaticFieldList.GetByType(DataType).ReadJson();
+            StaticFieldList.GetByType(DataType).ReadJson(UseForceDel());
             ResetList();
         }
 
@@ -222,7 +220,7 @@ namespace GTRCLeagueManager
 
         public void LoadSQL()
         {
-            StaticFieldList.GetByType(DataType).LoadSQL();
+            StaticFieldList.GetByType(DataType).LoadSQL(UseForceDel());
             ResetList();
         }
 
@@ -233,13 +231,13 @@ namespace GTRCLeagueManager
 
         public void ClearList()
         {
-            StaticFieldList.GetByType(DataType).ListClear();
+            StaticFieldList.GetByType(DataType).ListClear(UseForceDel());
             ResetList();
         }
 
         public void ClearSQL()
         {
-            StaticFieldList.GetByType(dataType).ResetSQL();
+            StaticFieldList.GetByType(dataType).ResetSQL(UseForceDel());
             ResetList();
         }
 
@@ -266,7 +264,7 @@ namespace GTRCLeagueManager
 
     public class DataRowVM : ObservableObject
     {
-        private ObservableCollection<DataFieldVM> list = new ObservableCollection<DataFieldVM>();
+        private ObservableCollection<DataFieldVM> list = new();
 
         public dynamic Object;
 
@@ -275,7 +273,7 @@ namespace GTRCLeagueManager
             Object = _obj;
             Dictionary<PropertyInfo, dynamic> dict = _obj.ReturnAsDict(retID, retJsonIgnore, true, true);
             foreach (KeyValuePair<PropertyInfo, dynamic> item in dict) { List.Add(new DataFieldVM(this, item)); }
-            RaisePropertyChanged("List");
+            RaisePropertyChanged(nameof(List));
         }
 
         public ObservableCollection<DataFieldVM> List { get { return list; } set { list = value; RaisePropertyChanged(); } }
@@ -316,7 +314,7 @@ namespace GTRCLeagueManager
     {
         private string name;
         private dynamic val;
-        private List<KeyValuePair<string, int>> idList = new List<KeyValuePair<string, int>>();
+        private List<KeyValuePair<string, int>> idList = new();
         private string path;
 
         public DataRowVM DataRow;

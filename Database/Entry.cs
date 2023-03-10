@@ -17,8 +17,8 @@ namespace GTRCLeagueManager.Database
             Statics = new StaticDbField<Entry>(true)
             {
                 Table = "Entries",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "RaceNumber" } },
-                ToStringPropertiesNames = new List<string>() { "RaceNumber", "TeamID" },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "SeasonID", "RaceNumber" } },
+                ToStringPropertiesNames = new List<string>() { "SeasonID", "RaceNumber", "TeamID" },
                 ListSetter = () => ListSetter()
             };
         }
@@ -26,6 +26,7 @@ namespace GTRCLeagueManager.Database
         public Entry(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Entry(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private int seasonID = 0;
         private int raceNumber = DefaultRaceNumber;
         private int teamID = Basics.NoID;
         private int carID = 0;
@@ -35,6 +36,12 @@ namespace GTRCLeagueManager.Database
         private int restrictor = 0;
         private int category = 3;
         private bool scorepoints = true;
+
+        public int SeasonID
+        {
+            get { return seasonID; }
+            set { seasonID = value; if (ReadyForList) { SetNextAvailable(); } }
+        }
 
         public int RaceNumber
         {
@@ -61,7 +68,7 @@ namespace GTRCLeagueManager.Database
             {
                 if (Car.Statics.IDList.Count == 0) { new Car() { ID = 1 }; }
                 if (!Car.Statics.ExistsID(value)) { value = Car.Statics.IDList[0].ID; }
-                List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy("EntryID", ID);
+                List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
                 foreach (EventsEntries _eventsEntries in listEventsEntries) { if (_eventsEntries.CarID == carID) { _eventsEntries.CarID = value; } }
                 carID = value;
             }
@@ -72,7 +79,7 @@ namespace GTRCLeagueManager.Database
             get { return registerdate; }
             set
             {
-                List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy("EntryID", ID);
+                List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
                 foreach (EventsEntries _eventsEntries in listEventsEntries)
                 {
                     if (_eventsEntries.CarChangeDate == registerdate) { _eventsEntries.CarChangeDate = value; }
@@ -91,7 +98,7 @@ namespace GTRCLeagueManager.Database
                     signoutdate = value;
                     if (ScorePoints)
                     {
-                        List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy("EntryID", ID);
+                        List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
                         foreach (EventsEntries _eventsEntries in listEventsEntries)
                         {
                             Event _event = Event.Statics.GetByID(_eventsEntries.EventID);
@@ -135,7 +142,7 @@ namespace GTRCLeagueManager.Database
             {
                 if (value >= 0 && value <= 4)
                 {
-                    List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy("EntryID", ID);
+                    List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
                     foreach (EventsEntries _eventsEntries in listEventsEntries)
                     {
                         if (_eventsEntries.Category == category) { _eventsEntries.Category = value; }
@@ -150,7 +157,7 @@ namespace GTRCLeagueManager.Database
             get { return scorepoints; }
             set
             {
-                List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy("EntryID", ID);
+                List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
                 foreach (EventsEntries _eventsEntries in listEventsEntries)
                 {
                     if (_eventsEntries.ScorePoints == scorepoints) { _eventsEntries.ScorePoints = value; }
@@ -159,60 +166,33 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        public static void ListSetter()
-        {
-            EventsEntries.Statics.PendingSync = true;
-        }
+        public static void ListSetter() { }
 
         public override void SetNextAvailable()
         {
+            int seasonNr = 0;
+            List<Season> _idListSeason = Season.Statics.IDList;
+            if (_idListSeason.Count == 0) { _ = new Season() { ID = 1 }; _idListSeason = Season.Statics.IDList; }
+            Season _season = Season.Statics.GetByID(seasonID);
+            if (_season.ReadyForList) { seasonNr = Season.Statics.IDList.IndexOf(_season); } else { seasonID = _idListSeason[0].ID; }
+            int startValueSeason = seasonNr;
+
             if (!IsUnique()) { raceNumber = DefaultRaceNumber; }
-            int startValue = raceNumber;
+            int startValueRaceNumber = raceNumber;
             while (!IsUnique())
             {
                 if (raceNumber < RaceNumberMaxValue) { raceNumber += 1; } else { raceNumber = RaceNumberMinValue; }
-                if (raceNumber == startValue) { break; }
-            }
-        }
-
-
-
-        //später löschen
-        public static List<string> ReturnPropsAsList()
-        {
-            List<string> list = new List<string>();
-            List<string> blackListProperties = new List<string> { "CarID", "DriverIDs" };
-            foreach (PropertyInfo property in typeof(Entry).GetProperties()) { if (!blackListProperties.Contains(property.Name)) { list.Add(property.Name); } }
-            foreach (string key in Driver.ReturnPropsAsList()) { list.Add("Driver " + key); }
-            foreach (string key in Car.ReturnPropsAsList()) { list.Add("Car " + key); }
-            return list;
-        }
-
-        public Dictionary<string, dynamic> ReturnAsDict()
-        {
-            Dictionary<string, dynamic> dict = new Dictionary<string, dynamic>();
-            List<string> blackListProperties = new List<string> { "CarID", "DriverIDs" };
-            foreach (PropertyInfo property in typeof(Entry).GetProperties())
-            {
-                if (!blackListProperties.Contains(property.Name))
+                if (raceNumber == startValueRaceNumber)
                 {
-                    if (property.GetValue(this) != null) { dict[property.Name] = property.GetValue(this); }
-                    else { dict[property.Name] = ""; }
+                    if (seasonNr + 1 < _idListSeason.Count) { seasonNr += 1; } else { seasonNr = 0; }
+                    seasonID = _idListSeason[seasonNr].ID;
+                    if (seasonNr == startValueSeason) { break; }
                 }
             }
-            foreach (string key in Car.Statics.GetByUniqueProp(carID).ReturnAsDict().Keys)
-            {
-                dict["Car " + key] = Car.Statics.GetByUniqueProp(carID).ReturnAsDict()[key];
-            }
-            foreach (string key in Driver.ReturnPropsAsList())
-            {
-                dict["Driver " + key] = new List<dynamic>();
-            }
-            return dict;
         }
 
         //TEMP: Converter
-        [NotMapped] public string TeamID2 { set { TeamID = Team.Statics.GetByUniqueProp(value).ID; } }
-        [NotMapped] public string CarID2 { set { CarID = Car.Statics.GetByUniqueProp(value).ID; } }
+        [NotMapped] public string TeamID2 { set { TeamID = Team.Statics.GetByUniqProp(new List<dynamic>() { 4, value }).ID; } }
+        [NotMapped] public string CarID2 { set { CarID = Car.Statics.GetByUniqProp(value).ID; } }
     }
 }

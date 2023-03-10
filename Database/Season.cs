@@ -42,7 +42,7 @@ namespace GTRCLeagueManager.Database
             get { return seriesID; }
             set
             {
-                if (Series.Statics.IDList.Count == 0) { new Series() { ID = 1 }; }
+                if (Series.Statics.IDList.Count == 0) { _ = new Series() { ID = 1 }; }
                 if (!Series.Statics.ExistsID(value)) { value = Series.Statics.IDList[0].ID; }
                 seriesID = value;
             }
@@ -51,6 +51,7 @@ namespace GTRCLeagueManager.Database
         public static void ListSetter()
         {
             PreSeasonVM.UpdateListSeasons();
+            ServerVM.UpdateListSeasons();
         }
 
         public override void SetNextAvailable()

@@ -1,14 +1,18 @@
-﻿using GTRCLeagueManager.Database;
+﻿using Google.Apis.Sheets.v4.Data;
+using GTRCLeagueManager.Database;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data.SqlClient;
+using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace GTRCLeagueManager
 {
@@ -18,12 +22,11 @@ namespace GTRCLeagueManager
         private static readonly string DBPathSettings = MainWindow.dataDirectory + "config database.json";
         private static readonly string DisBotPathSettings = MainWindow.dataDirectory + "config discordbot.json";
         private static readonly string GSPathSettings = MainWindow.dataDirectory + "config gsheets.json";
-        private static readonly List<string> GSheetNames = new List<string>() { "Pre-Qualifying", "Balance of Performace", "Stewarding", "Registered Entries", "Final Results" };
+        private static readonly List<string> GSheetNames = new() { "Practice Leaderboard", "Pre-Qualifying Leaderboard", "Balance of Performace", "Stewarding", "Registered Entries", "Final Results", "Entries Current Event", "Car Changes" };
 
         public SettingsVM()
         {
             Instance = this;
-            foreach (string _sheetName in GSheetNames) { GSList.Add(new GSheet() { Name = _sheetName }); }
             this.RestoreDBSettingsCmd = new UICmd((o) => RestoreDBSettings());
             this.SaveDBSettingsCmd = new UICmd((o) => SaveDBSettings());
             this.AddDBPresetCmd = new UICmd((o) => AddDBPreset());
@@ -44,21 +47,22 @@ namespace GTRCLeagueManager
 
         //Database Connection Settings:
 
-        public static readonly ObservableCollection<string> dBConnectionTypes = new ObservableCollection<string>() { "Local", "Network" };
+        public static readonly ObservableCollection<string> dBConnectionTypes = new() { "Local", "Network" };
         public ObservableCollection<string> DBConnectionTypes { get { return dBConnectionTypes; } }
 
-        private ObservableCollection<DBConnection> dblist = new ObservableCollection<DBConnection>();
+        private ObservableCollection<DBConnection> dblist = new();
         public ObservableCollection<DBConnection> DBList { get { return dblist; } set { dblist = value; this.RaisePropertyChanged(); } }
 
-        private DBConnection activeDBConnection = null;
-        public DBConnection ActiveDBConnection
+        private DBConnection? activeDBConnection = null;
+        public DBConnection? ActiveDBConnection
         {
             get { return activeDBConnection; }
         }
 
         public void UpdateActiveDBConnection()
         {
-            DBConnection nextActiveDBConnection = null;
+            try { SQL.Connection.Close(); } catch { }
+            DBConnection? nextActiveDBConnection = null;
             foreach (DBConnection _dbCon in DBList)
             {
                 if (_dbCon.IsActive)
@@ -77,10 +81,11 @@ namespace GTRCLeagueManager
                 //MainVM.List[0].LogCurrentText = "Trying to connect to database...";
                 try
                 {
-                    SqlConnection connection = new SqlConnection(SQL.ConVal(ActiveDBConnection));
-                    if (SQL.defaultConnectionString != SQL.connectionString)
+                    _ = SQL.ConVal(ActiveDBConnection);
+                    if (SQL.defaultConnectionString != SQL.ConnectionString)
                     {
-                        connection.Open(); connection.Close();
+                        SQL.Connection = new SqlConnection(SQL.ConnectionString);
+                        SQL.Connection.Open();
                         MainVM.List[0].LogCurrentText = "Connection to database succeded.";
                         DatabaseVM.Instance.InitializeDatabase();
                     }
@@ -121,7 +126,7 @@ namespace GTRCLeagueManager
 
         public void AddDBPreset()
         {
-            DBConnection newCon = new DBConnection(); DBList.Add(newCon); SelectedDBConnection = newCon;
+            DBConnection newCon = new(); DBList.Add(newCon); SelectedDBConnection = newCon;
         }
 
         public void DelDBPreset()
@@ -151,18 +156,25 @@ namespace GTRCLeagueManager
         };
         public ObservableCollection<DiscordBot> DiscordBotList { get { return discordBotList; } }
 
-        private ObservableCollection<DisBotPreset> disBotPresetList = new ObservableCollection<DisBotPreset>();
+        private ObservableCollection<DisBotPreset> disBotPresetList = new();
         public ObservableCollection<DisBotPreset> DisBotPresetList { get { return disBotPresetList; } set { disBotPresetList = value; this.RaisePropertyChanged(); } }
 
-        private DisBotPreset activeDisBotPreset = null;
-        public DisBotPreset ActiveDisBotPreset
+        private DisBotPreset? activeDisBotPreset = null;
+        public DisBotPreset? ActiveDisBotPreset
         {
             get { return activeDisBotPreset; }
         }
 
+        public Thread SignInOutBotThread;
+
         public void UpdateActiveDiscordBot()
         {
-            DisBotPreset nextActiveDisBotPreset = null;
+            if (SignInOutBot.Instance?._client is not null)
+            {
+                try { SignInOutBot.Instance.StopBot(); }
+                catch { }
+            }
+            DisBotPreset? nextActiveDisBotPreset = null;
             foreach (DisBotPreset _disBotPre in DisBotPresetList)
             {
                 if (_disBotPre.IsActive)
@@ -178,11 +190,14 @@ namespace GTRCLeagueManager
             if (nextActiveDisBotPreset != activeDisBotPreset)
             {
                 activeDisBotPreset = nextActiveDisBotPreset;
-                if (nextActiveDisBotPreset != null)
+                if (nextActiveDisBotPreset is not null)
                 {
                     //MainVM.List[0].LogCurrentText = "Trying to start discord bot...";
                     try
                     {
+                        SignInOutBot signInOutBot = new(nextActiveDisBotPreset);
+                        SignInOutBotThread = new(obj => signInOutBot.RunBotAsync().GetAwaiter().GetResult());
+                        SignInOutBotThread.Start();
                         MainVM.List[0].LogCurrentText = "Discord bot is running.";
                     }
                     catch { nextActiveDisBotPreset.IsActive = false; MainVM.List[0].LogCurrentText = "Discord bot failed!"; }
@@ -219,7 +234,7 @@ namespace GTRCLeagueManager
 
         public void AddDisBotPreset()
         {
-            DisBotPreset newPreset = new DisBotPreset(); DisBotPresetList.Add(newPreset); SelectedDisBotPreset = newPreset;
+            DisBotPreset newPreset = new(); DisBotPresetList.Add(newPreset); SelectedDisBotPreset = newPreset;
         }
 
         public void DelDisBotPreset()
@@ -244,14 +259,33 @@ namespace GTRCLeagueManager
 
         //Google Sheets Settings:
 
-        private ObservableCollection<GSheet> gslist = new ObservableCollection<GSheet>();
+        private ObservableCollection<GSheet> gslist = new();
         public ObservableCollection<GSheet> GSList { get { return gslist; } set { gslist = value; this.RaisePropertyChanged(); } }
 
         public void RestoreGSSettings()
         {
             try
             {
-                GSList = JsonConvert.DeserializeObject<ObservableCollection<GSheet>>(File.ReadAllText(GSPathSettings, Encoding.Unicode));
+                dynamic? obj = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(GSPathSettings, Encoding.Unicode));
+                GSList = new ObservableCollection<GSheet>();
+                foreach (string _sheetName in GSheetNames)
+                {
+                    GSheet _gSheet = new() { Name = _sheetName };   
+                    GSList.Add(_gSheet);
+                    if (obj is IList)
+                    {
+                        foreach (var item in obj)
+                        {
+                            string _name = item.Name ?? "";
+                            if (_name == _gSheet.Name)
+                            {
+                                _gSheet.DocID = item.DocID ?? _gSheet.DocID;
+                                _gSheet.SheetID = item.SheetID ?? _gSheet.SheetID;
+                                _gSheet.Range = item.Range ?? _gSheet.Range;
+                            }
+                        }
+                    }
+                }
                 PublishGSheetListIDs();
                 MainVM.List[0].LogCurrentText = "G-Sheet settings restored.";
             }
@@ -280,7 +314,7 @@ namespace GTRCLeagueManager
 
     public class DBConnection : ObservableObject
     {
-        public static List<DBConnection> ListIDs = new List<DBConnection>();
+        public static List<DBConnection> ListIDs = new();
 
         private string presetName = "";
         private string type = SettingsVM.dBConnectionTypes[0];
@@ -319,7 +353,19 @@ namespace GTRCLeagueManager
                 this.RaisePropertyChanged();
             }
         }
-        public string Type { get { return type; } set { if (SettingsVM.dBConnectionTypes.Contains(value)) { type = value; this.RaisePropertyChanged(); this.RaisePropertyChanged("IsType0"); this.RaisePropertyChanged("IsType1"); } } }
+        public string Type
+        {
+            get { return type; }
+            set {
+                if (SettingsVM.dBConnectionTypes.Contains(value))
+                {
+                    type = value;
+                    this.RaisePropertyChanged();
+                    this.RaisePropertyChanged(nameof(IsType0));
+                    this.RaisePropertyChanged(nameof(IsType1));
+                }
+            }
+        }
         public string SourceName { get { return sourceName; } set { sourceName = value; this.RaisePropertyChanged(); } }
         public string CatalogName { get { return catalogName; } set { catalogName = value; this.RaisePropertyChanged(); } }
         public string PCName { get { return pCName; } set { pCName = value; this.RaisePropertyChanged(); } }
@@ -349,7 +395,7 @@ namespace GTRCLeagueManager
 
     public class DisBotPreset : ObservableObject
     {
-        public static List<DisBotPreset> ListIDs = new List<DisBotPreset>();
+        public static List<DisBotPreset> ListIDs = new();
 
         private string presetName = "";
         private DiscordBot disBot = SettingsVM.discordBotList[0];
@@ -357,6 +403,7 @@ namespace GTRCLeagueManager
         private long serverID = Driver.DiscordIDMinValue;
         private long channelID = Driver.DiscordIDMinValue;
         private long adminRoleID = Driver.DiscordIDMinValue;
+        private int charLimit = 2000;
         private bool isActive = false;
 
         public DisBotPreset() { PresetName = "Preset"; }
@@ -406,6 +453,11 @@ namespace GTRCLeagueManager
             get { return adminRoleID; }
             set { if (!Driver.IsValidDiscordID(value)) { adminRoleID = Driver.DiscordIDMinValue; } else { adminRoleID = value; } }
         }
+        public int CharLimit
+        {
+            get { return charLimit; }
+            set { if (value < 0) { charLimit = 0; } else { charLimit = value; } }
+        }
         public bool IsActive
         {
             get { return isActive; }
@@ -426,7 +478,7 @@ namespace GTRCLeagueManager
 
     public class GSheet : ObservableObject
     {
-        public static List<GSheet> ListIDs = new List<GSheet>();
+        public static List<GSheet> ListIDs = new();
 
         private string name = "";
         private string docid = "";
