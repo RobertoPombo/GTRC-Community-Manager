@@ -335,7 +335,7 @@ namespace GTRCLeagueManager
                            select _entry;
             List<Entry> Entrylist = linqList.Cast<Entry>().ToList();
 
-            List<EventsCars> _eventsCars = EventsCars.GetAnyBy(nameof(EventsCars.EventID), _event.ID);
+            List<EventsCars> _eventsCars = EventsCars.Statics.GetBy(nameof(EventsCars.EventID), _event.ID);
             foreach (EventsCars _eventCar in _eventsCars) { _eventCar.ListRemove(); }
             foreach (Entry _entry in Entrylist)
             {

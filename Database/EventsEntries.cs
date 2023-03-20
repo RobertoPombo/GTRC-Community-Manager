@@ -41,13 +41,13 @@ namespace GTRCLeagueManager.Database
         public int EntryID
         {
             get { return entryID; }
-            set { entryID = value; if (ReadyForList) { SetNextAvailable(); SetParentProps(); } }
+            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } SetParentProps(); }
         }
 
         public int EventID
         {
             get { return eventID; }
-            set { eventID = value; if (ReadyForList) { SetNextAvailable(); SetParentProps(); } }
+            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } SetParentProps(); }
         }
 
         public DateTime SignInDate

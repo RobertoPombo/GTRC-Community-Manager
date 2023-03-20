@@ -417,14 +417,22 @@ namespace GTRCLeagueManager
 
         public void CheckAuthorInEntry()
         {
-            List<Driver> _drivers = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), EntryID);
-            foreach (Driver _driver in _drivers) { if (_driver.DiscordID == DiscordID_Author) { DiscordID_Driver = DiscordID_Author; break; } }
+            List<DriverEntries> _driverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), EntryID);
+            foreach (DriverEntries _driverEntry in _driverEntries)
+            {
+                Driver _driver = Driver.Statics.GetByID(_driverEntry.DriverID);
+                if (_driver.DiscordID == DiscordID_Author) { DiscordID_Driver = DiscordID_Author; break; }
+            }
         }
 
         public void SetDiscordIDs_Drivers()
         {
-            List<Driver> _drivers = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), EntryID);
-            foreach (Driver _driver in _drivers) { if (_driver.ID != Basics.NoID) { DiscordIDs_Drivers.Add(_driver.DiscordID); } }
+            List<DriverEntries> _driverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), EntryID);
+            foreach (DriverEntries _driverEntry in _driverEntries)
+            {
+                Driver _driver = Driver.Statics.GetByID(_driverEntry.DriverID);
+                if (_driver.ID != Basics.NoID) { DiscordIDs_Drivers.Add(_driver.DiscordID); }
+            }
         }
 
         public string TagDiscordIDs(List<long> listDiscordIDs, bool mobileType)
@@ -522,6 +530,7 @@ namespace GTRCLeagueManager
                         iPreSVM.UpdateBoPForEvent(_event);
                         await ShowStartingGrid(true, true);
                         await UserMessage.AddReactionAsync(emojiSuccess);
+                        _eventsEntries = EventsEntries.Statics.GetByUniqProp(new List<dynamic>() { EntryID, EventID });
                         if (_entry.ScorePoints && !_eventsEntries.ScorePoints)
                         {
                             await ReplyAsync(TagDiscordIDs(DiscordIDs_Drivers, false) + "Seit dem " + Basics.Date2String(iPreSVM.DateCarChangeLimit, "DD.MM.YY") +
@@ -658,11 +667,14 @@ namespace GTRCLeagueManager
 
         public async Task ShowCars()
         {
-            if (EventID != Basics.NoID && iPreSVM is not null)
+            if (iPreSVM is not null)
             {
                 var tempReply = await ReplyAsync(":sleeping:");
-                Event _event = Event.Statics.GetByID(EventID);
-                iPreSVM.UpdateBoPForEvent(_event);
+                if (EventID != Basics.NoID)
+                {
+                    Event _event = Event.Statics.GetByID(EventID);
+                    iPreSVM.UpdateBoPForEvent(_event);
+                }
                 string text = "**Fahrzeugliste**\n";
                 var linqList = from _car in Car.Statics.List
                                orderby _car.Name
@@ -670,13 +682,15 @@ namespace GTRCLeagueManager
                 List<Car> carList = linqList.Cast<Car>().ToList();
                 foreach (Car _car in carList)
                 {
-                    EventsCars eventCar = EventsCars.GetAnyByUniqProp(_car.ID, EventID);
+                    EventsCars? eventCar = null;
+                    if (EventID != Basics.NoID) { eventCar = EventsCars.GetAnyByUniqProp(_car.ID, EventID); }
                     if (_car.Category == "GT3" && (_car.IsLatestVersion || IsAdmin))
                     {
                         text += _car.AccCarID.ToString() + "\t";
                         text += _car.Name;
-                        text += " (" + _car.Year.ToString() + ") - ";
-                        text += eventCar.CountBoP.ToString() + "/" + iPreSVM.CarLimitRegisterLimit.ToString() + "\n";
+                        text += " (" + _car.Year.ToString() + ")";
+                        if (eventCar is not null) { text += " - " + eventCar.CountBoP.ToString() + "/" + iPreSVM.CarLimitRegisterLimit.ToString(); }
+                        text += "\n";
                     }
                 }
                 await SendMessage(text, false);
@@ -725,8 +739,7 @@ namespace GTRCLeagueManager
             if (eventID != Basics.NoID && iPreSVM is not null)
             {
                 Event _event = Event.Statics.GetByID(eventID);
-                iPreSVM.ThreadUpdateEntrylistBoP(_event);
-                int SlotsTaken = iPreSVM.SlotsTaken;
+                int SlotsTaken = iPreSVM.ThreadUpdateEntrylistBoP_Int(_event);
                 //if (iPreSVM.IsCheckedRegisterLimit && iPreSVM.DateRegisterLimit < DateTime.Now) { printCarChange = true; }
 
                 List<Entry> EntriesSortRaceNumber = new();

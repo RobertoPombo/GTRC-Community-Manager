@@ -438,6 +438,11 @@ namespace GTRCLeagueManager
 
         public void ThreadUpdateEntrylistBoP(Event _event)
         {
+            _ = ThreadUpdateEntrylistBoP_Int(_event);
+        }
+
+        public int ThreadUpdateEntrylistBoP_Int(Event _event)
+        {
             PreSeason.UpdateName3Digits(_event.SeasonID);
             PreSeason.EntryAutoSignOut(_event, SignOutLimit, NoShowLimit);
             UpdateBoPForEvent(_event);
@@ -454,6 +459,7 @@ namespace GTRCLeagueManager
                 ServerVM.UpdateBoPs();
                 MainVM.List[0].LogCurrentText = "Entrylist exported.";
             }
+            return tempSlotsTaken;
         }
 
         public void UpdateBoPForEvent(Event _event)
