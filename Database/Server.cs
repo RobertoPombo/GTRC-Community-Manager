@@ -22,7 +22,7 @@ namespace GTRCLeagueManager.Database
                 Table = "Servers",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Name" }, new List<string>() { "Path" } },
                 ToStringPropertiesNames = new List<string>() { "Name" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public Server() { This = this; Initialize(true, true); }
@@ -131,7 +131,7 @@ namespace GTRCLeagueManager.Database
             set { writeBoP = value; }
         }
 
-        public static void ListSetter()
+        public static void PublishList()
         {
             ServerVM.UpdateListServers();
         }

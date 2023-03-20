@@ -302,9 +302,8 @@ namespace GTRCLeagueManager
 
         public static void EntryAutoSignOut(Event _event, int SignOutLimit, int NoShowLimit)
         {
-            Event.SortByDate();
             List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), _event.SeasonID);
-            List<Event> listEvents = Event.Statics.GetBy(nameof(Event.SeasonID), _event.SeasonID);
+            List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), _event.SeasonID));
             foreach (Entry _entry in listEntries)
             {
                 int SignOutCount = 0;

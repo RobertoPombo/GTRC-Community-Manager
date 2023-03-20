@@ -1,11 +1,12 @@
 ﻿using Discord.Commands;
-using Discord.WebSocket;
 using System.Linq;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
 using GTRCLeagueManager.Database;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -21,6 +22,7 @@ namespace GTRCLeagueManager
         public static SignInOutBot? Instance;
         public DiscordSocketClient _client;
         private CommandService _commands;
+        private InteractionService _interactions;
         private IServiceProvider _services;
         public DisBotPreset Settings;
 
@@ -648,7 +650,7 @@ namespace GTRCLeagueManager
                 {
                     text += (_event.EventNr + 1).ToString() + ".\t";
                     text += Basics.Date2String(_event.EventDate, "DD.MM.\t");
-                    text += Track.Statics.GetByID(_event.TrackID).Name + "\n";
+                    text += Track.Statics.GetByID(_event.TrackID).Name_GTRC + "\n";
                 }
                 await SendMessage(text, false);
             }
@@ -719,6 +721,7 @@ namespace GTRCLeagueManager
 
         public static async Task CreateStartingGridMessage(int eventID, bool printCar, bool printCarChange)
         {
+            if (PreSeasonVM.Instance is not null && iPreSVM is null) { iPreSVM = PreSeasonVM.Instance; }
             if (eventID != Basics.NoID && iPreSVM is not null)
             {
                 Event _event = Event.Statics.GetByID(eventID);
@@ -828,7 +831,10 @@ namespace GTRCLeagueManager
         {
             if (printPos) { text += pos.ToString() + ".\t"; }
             text += entry.RaceNumber.ToString() + "\t";
-            text += Driver.DriverList2String(DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), entry.ID), nameof(Driver.FullName));
+            List<Driver> listDrivers = new();
+            List<DriverEntries> listDriverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), entry.ID);
+            foreach (DriverEntries driverEntry in listDriverEntries) { listDrivers.Add(Driver.Statics.GetByID(driverEntry.DriverID)); }
+            text += Driver.DriverList2String(listDrivers, nameof(Driver.FullName));
             if (!eventEntry.ScorePoints) { if (entry.ScorePoints) { text += " (Gaststarter | wg. Fzglimit)"; } else { text += " (Gaststarter)"; } }
             if (printCar) { text += "\t" + Car.Statics.GetByID(eventEntry.CarID).Name; }
             if (printCarChange && entry.ScorePoints && iPreSVM is not null)

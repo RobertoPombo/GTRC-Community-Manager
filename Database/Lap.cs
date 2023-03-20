@@ -13,7 +13,7 @@ namespace GTRCLeagueManager.Database
             Statics = new StaticDbField<Lap>(true)
             {
                 Table = "Laps",
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public Lap() { This = this; Initialize(true, true); }
@@ -70,7 +70,7 @@ namespace GTRCLeagueManager.Database
             set { if (value == 0 || value == 1) { track = value; } }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

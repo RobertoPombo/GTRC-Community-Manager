@@ -15,7 +15,7 @@ namespace GTRCLeagueManager.Database
                 Table = "RaceControl",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "DriverID" } },
                 ToStringPropertiesNames = new List<string>() { "FullName" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public RaceControl() { This = this; Initialize(true, true); }
@@ -54,7 +54,7 @@ namespace GTRCLeagueManager.Database
             get { return Driver.GetShortName(firstName, lastName); }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

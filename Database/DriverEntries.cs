@@ -15,7 +15,7 @@ namespace GTRCLeagueManager.Database
                 Table = "DriverEntries",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "DriverID" } },
                 ToStringPropertiesNames = new List<string>() { "DriverID" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public DriverEntries() { This = this; Initialize(true, true); }
@@ -49,7 +49,7 @@ namespace GTRCLeagueManager.Database
             set { if (value != null && value.Length == 3) { name3Digits = value.ToUpper(); } }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

@@ -17,7 +17,7 @@ namespace GTRCLeagueManager.Database
                 Table = "Cars",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "AccCarID" } },
                 ToStringPropertiesNames = new List<string>() { "Name" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public Car() { This = this; Initialize(true, true); }
@@ -86,7 +86,7 @@ namespace GTRCLeagueManager.Database
             get { foreach (Car _car in Statics.List) { if (_car.Manufacturer == Manufacturer && _car.Category == Category && _car.Year > Year) { return false; } } return true; }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

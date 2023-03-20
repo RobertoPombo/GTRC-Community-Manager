@@ -52,19 +52,19 @@ namespace GTRCLeagueManager
         public string ColumnName
         {
             get { return columnname; }
-            set { if (ResultsLine.ReturnPropsAsList().Contains(value)) { columnname = value; this.RaisePropertyChanged(); } }
+            set { if (ResultsLine.ReturnPropsAsList().Contains(value)) { columnname = value; RaisePropertyChanged(); } }
         }
 
         public string BackgroundColor
         {
             get { return backgroundcolor; }
-            set { backgroundcolor = value; this.RaisePropertyChanged(); }
+            set { backgroundcolor = value; RaisePropertyChanged(); }
         }
 
         public string FontColor
         {
             get { return fontcolor; }
-            set { fontcolor = value; this.RaisePropertyChanged(); }
+            set { fontcolor = value; RaisePropertyChanged(); }
         }
 
         public string FontFamily
@@ -76,25 +76,25 @@ namespace GTRCLeagueManager
         public int FontSize
         {
             get { return fontsize; }
-            set { if (value > 0) { fontsize = value; this.RaisePropertyChanged(); } }
+            set { if (value > 0) { fontsize = value; RaisePropertyChanged(); } }
         }
 
         public int FontThickness
         {
             get { return fontweight.ToOpenTypeWeight(); }
-            set { if (value >= 1 && value <= 999) { fontweight = FontWeight.FromOpenTypeWeight(value); this.RaisePropertyChanged(); } }
+            set { if (value >= 1 && value <= 999) { fontweight = FontWeight.FromOpenTypeWeight(value); RaisePropertyChanged(); } }
         }
 
         public double Padding
         {
             get { return padding.Left; }
-            set { padding = new Thickness(value); this.RaisePropertyChanged(); }
+            set { padding = new Thickness(value); RaisePropertyChanged(); }
         }
 
         public string DefText
         {
             get { return deftext; }
-            set { deftext = value; this.RaisePropertyChanged(); }
+            set { deftext = value; RaisePropertyChanged(); }
         }
     }
 }

@@ -26,11 +26,11 @@ namespace GTRCLeagueManager
             ListDataTypes.Add(new KeyValuePair<string, Type>("Colors", typeof(ThemeColor)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Cars", typeof(Car)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Tracks", typeof(Track)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Servers", typeof(Server)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Drivers", typeof(Driver)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("RaceControl", typeof(RaceControl)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Series", typeof(Series)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Seasons", typeof(Season)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>("Servers", typeof(Server)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Teams", typeof(Team)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Entries", typeof(Entry)));
             ListDataTypes.Add(new KeyValuePair<string, Type>("Events", typeof(Event)));
@@ -56,6 +56,7 @@ namespace GTRCLeagueManager
         public void InitializeDatabase()
         {
             Type backupDataType = DataType;
+            foreach (KeyValuePair<string, Type> _dataType in ListDataTypes) { DataType = _dataType.Value; forceDel = true; ClearList(); }
             foreach (KeyValuePair<string, Type> _dataType in ListDataTypes) { DataType = _dataType.Value; LoadSQL(); }
             DataType = backupDataType;
         }
@@ -224,9 +225,10 @@ namespace GTRCLeagueManager
             ResetList();
         }
 
-        public static void WriteSQL()
+        public void WriteSQL()
         {
             StaticFieldList.GetByType(dataType).WriteSQL();
+            ResetList();
         }
 
         public void ClearList()

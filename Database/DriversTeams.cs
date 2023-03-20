@@ -15,7 +15,7 @@ namespace GTRCLeagueManager.Database
                 Table = "DriversTeams",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "DriverID", "TeamID" } },
                 ToStringPropertiesNames = new List<string>() { "DriverID", "TeamID" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public DriversTeams() { This = this; Initialize(true, true); }
@@ -37,7 +37,7 @@ namespace GTRCLeagueManager.Database
             set { teamID = value; if (ReadyForList) { SetNextAvailable(); } }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

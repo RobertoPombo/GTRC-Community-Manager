@@ -17,7 +17,7 @@ namespace GTRCLeagueManager.Database
                 Table = "Colors",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Alpha", "Red", "Green", "Blue" } },
                 ToStringPropertiesNames = new List<string>() { "Alpha", "Red", "Green", "Blue" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public ThemeColor() { This = this; Initialize(true, true); }
@@ -58,7 +58,7 @@ namespace GTRCLeagueManager.Database
             get { return new SolidColorBrush(Color.FromArgb((byte)Alpha, (byte)Red, (byte)Green, (byte)Blue)); }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

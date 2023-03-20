@@ -77,7 +77,7 @@ namespace GTRCLeagueManager
                 if (tableDesignList != value)
                 {
                     tableDesignList = value;
-                    this.RaisePropertyChanged();
+                    RaisePropertyChanged();
                 }
             }
         }
@@ -85,7 +85,7 @@ namespace GTRCLeagueManager
         public TableDesign SelectedDesign
         {
             get { return selectedDesign; }
-            set { selectedDesign = value; this.RaisePropertyChanged(); }
+            set { selectedDesign = value; RaisePropertyChanged(); }
         }
 
         public UICmd AddDesign { get; set; }

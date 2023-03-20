@@ -22,7 +22,7 @@ namespace GTRCLeagueManager.Database
                 Table = "Drivers",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "SteamID" }, new List<string>() { "DiscordID" } },
                 ToStringPropertiesNames = new List<string>() { "FullName" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public Driver() { This = this; Initialize(true, true); }
@@ -105,7 +105,7 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

@@ -17,7 +17,7 @@ namespace GTRCLeagueManager.Database
                 Table = "Tracks",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "AccTrackID" } },
                 ToStringPropertiesNames = new List<string>() { "Name" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public Track() { This = this; Initialize(true, true); }
@@ -65,7 +65,7 @@ namespace GTRCLeagueManager.Database
             set { name_GTRC = Basics.RemoveSpaceStartEnd(value ?? name_GTRC); }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

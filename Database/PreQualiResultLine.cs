@@ -15,7 +15,7 @@ namespace GTRCLeagueManager.Database
                 Table = "PreQualiResultLines",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Position" }, new List<string>() { "EntryID" } },
                 ToStringPropertiesNames = new List<string>() { "Position", "EntryID" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public PreQualiResultLine() { This = this; Initialize(true, true); }
@@ -153,7 +153,7 @@ namespace GTRCLeagueManager.Database
             set { validStintsCount2 = value; }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

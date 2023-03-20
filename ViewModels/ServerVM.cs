@@ -45,7 +45,7 @@ namespace GTRCLeagueManager
         public bool StateAutoServerRestart
         {
             get { return stateAutoServerRestart; }
-            set { stateAutoServerRestart = value; UpdateServerRestartRemTime(); this.RaisePropertyChanged(); }
+            set { stateAutoServerRestart = value; UpdateServerRestartRemTime(); RaisePropertyChanged(); }
         }
 
         public int ServerRestartTime
@@ -57,7 +57,7 @@ namespace GTRCLeagueManager
                 else if (value > 23) { value = 23; }
                 serverRestartTime = value;
                 UpdateServerRestartRemTime();
-                this.RaisePropertyChanged();
+                RaisePropertyChanged();
             }
         }
 
@@ -70,7 +70,7 @@ namespace GTRCLeagueManager
                 else if (serverRestartRemTime > 120) { return ((int)Math.Ceiling((double)serverRestartRemTime / 60)).ToString() + " min"; }
                 else { return serverRestartRemTime.ToString() + " sec"; }
             }
-            set { this.RaisePropertyChanged(); }
+            set { RaisePropertyChanged(); }
         }
 
         public ObservableCollection<ServerM> ListServer

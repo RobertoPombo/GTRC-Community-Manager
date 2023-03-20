@@ -16,7 +16,7 @@ namespace GTRCLeagueManager.Database
                 Table = "EventsCars",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "CarID", "EventID" } },
                 ToStringPropertiesNames = new List<string>() { "CarID", "EventID" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public EventsCars() { This = this; Initialize(true, true); }
@@ -76,7 +76,7 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {
@@ -110,7 +110,7 @@ namespace GTRCLeagueManager.Database
         public static EventsCars GetAnyByUniqProp(int _carID, int _eventID)
         {
             EventsCars eventCar = Statics.GetByUniqProp(new List<dynamic>() { _carID, _eventID });
-            if (!eventCar.ReadyForList)
+            if (!eventCar.ReadyForList && _carID != Basics.NoID && _eventID != Basics.NoID)
             {
                 eventCar.CarID = _carID;
                 eventCar.EventID = _eventID;
@@ -122,7 +122,7 @@ namespace GTRCLeagueManager.Database
         public static List<EventsCars> GetAnyBy(string propName, int id, int seasonID = 0)
         {
             List<EventsCars> eventsCars = new();
-            if (propName == nameof(CarID))
+            if (propName == nameof(CarID) && id != Basics.NoID && seasonID != Basics.NoID)
             {
                 List<Event> listEvents = Event.Statics.GetBy(nameof(Event.SeasonID), seasonID);
                 foreach (Event _event in listEvents)
@@ -131,11 +131,11 @@ namespace GTRCLeagueManager.Database
                     if (eventCar.ReadyForList) { eventsCars.Add(eventCar); }
                 }
             }
-            else if (propName == nameof(EventID))
+            else if (propName == nameof(EventID) && id != Basics.NoID)
             {
                 foreach (Car _car in Car.Statics.List)
                 {
-                    EventsCars eventCar = GetAnyByUniqProp(id, _car.ID);
+                    EventsCars eventCar = GetAnyByUniqProp(_car.ID, id);
                     if (eventCar.ReadyForList) { eventsCars.Add(eventCar); }
                 }
             }

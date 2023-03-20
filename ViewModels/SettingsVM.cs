@@ -51,7 +51,7 @@ namespace GTRCLeagueManager
         public ObservableCollection<string> DBConnectionTypes { get { return dBConnectionTypes; } }
 
         private ObservableCollection<DBConnection> dblist = new();
-        public ObservableCollection<DBConnection> DBList { get { return dblist; } set { dblist = value; this.RaisePropertyChanged(); } }
+        public ObservableCollection<DBConnection> DBList { get { return dblist; } set { dblist = value; RaisePropertyChanged(); } }
 
         private DBConnection? activeDBConnection = null;
         public DBConnection? ActiveDBConnection
@@ -96,7 +96,7 @@ namespace GTRCLeagueManager
         }
 
         private DBConnection selectedDBConnection;
-        public DBConnection SelectedDBConnection { get { return selectedDBConnection; } set { selectedDBConnection = value; this.RaisePropertyChanged(); } }
+        public DBConnection SelectedDBConnection { get { return selectedDBConnection; } set { selectedDBConnection = value; RaisePropertyChanged(); } }
 
         private bool stateShowHidePassword = false;
         public bool StateShowHidePassword { get { return stateShowHidePassword; } set { stateShowHidePassword = value; } }
@@ -157,7 +157,7 @@ namespace GTRCLeagueManager
         public ObservableCollection<DiscordBot> DiscordBotList { get { return discordBotList; } }
 
         private ObservableCollection<DisBotPreset> disBotPresetList = new();
-        public ObservableCollection<DisBotPreset> DisBotPresetList { get { return disBotPresetList; } set { disBotPresetList = value; this.RaisePropertyChanged(); } }
+        public ObservableCollection<DisBotPreset> DisBotPresetList { get { return disBotPresetList; } set { disBotPresetList = value; RaisePropertyChanged(); } }
 
         private DisBotPreset? activeDisBotPreset = null;
         public DisBotPreset? ActiveDisBotPreset
@@ -207,7 +207,7 @@ namespace GTRCLeagueManager
         }
 
         private DisBotPreset selectedDisBotPreset;
-        public DisBotPreset SelectedDisBotPreset { get { return selectedDisBotPreset; } set { selectedDisBotPreset = value; this.RaisePropertyChanged(); } }
+        public DisBotPreset SelectedDisBotPreset { get { return selectedDisBotPreset; } set { selectedDisBotPreset = value; RaisePropertyChanged(); } }
 
         public void RestoreDisBotSettings()
         {
@@ -260,7 +260,7 @@ namespace GTRCLeagueManager
         //Google Sheets Settings:
 
         private ObservableCollection<GSheet> gslist = new();
-        public ObservableCollection<GSheet> GSList { get { return gslist; } set { gslist = value; this.RaisePropertyChanged(); } }
+        public ObservableCollection<GSheet> GSList { get { return gslist; } set { gslist = value; RaisePropertyChanged(); } }
 
         public void RestoreGSSettings()
         {
@@ -350,7 +350,7 @@ namespace GTRCLeagueManager
                     }
                     presetName = tempID;
                 }
-                this.RaisePropertyChanged();
+                RaisePropertyChanged();
             }
         }
         public string Type
@@ -360,19 +360,19 @@ namespace GTRCLeagueManager
                 if (SettingsVM.dBConnectionTypes.Contains(value))
                 {
                     type = value;
-                    this.RaisePropertyChanged();
-                    this.RaisePropertyChanged(nameof(IsType0));
-                    this.RaisePropertyChanged(nameof(IsType1));
+                    RaisePropertyChanged();
+                    RaisePropertyChanged(nameof(IsType0));
+                    RaisePropertyChanged(nameof(IsType1));
                 }
             }
         }
-        public string SourceName { get { return sourceName; } set { sourceName = value; this.RaisePropertyChanged(); } }
-        public string CatalogName { get { return catalogName; } set { catalogName = value; this.RaisePropertyChanged(); } }
-        public string PCName { get { return pCName; } set { pCName = value; this.RaisePropertyChanged(); } }
-        public string IP6Address { get { return iP6Address; } set { iP6Address = value; this.RaisePropertyChanged(); } }
-        public int Port { get { return port; } set { port = value; this.RaisePropertyChanged(); } }
-        public string UserID { get { return userID; } set { userID = value; this.RaisePropertyChanged(); } }
-        public string Password { get { return password; } set { password = value; this.RaisePropertyChanged(); } }
+        public string SourceName { get { return sourceName; } set { sourceName = value; RaisePropertyChanged(); } }
+        public string CatalogName { get { return catalogName; } set { catalogName = value; RaisePropertyChanged(); } }
+        public string PCName { get { return pCName; } set { pCName = value; RaisePropertyChanged(); } }
+        public string IP6Address { get { return iP6Address; } set { iP6Address = value; RaisePropertyChanged(); } }
+        public int Port { get { return port; } set { port = value; RaisePropertyChanged(); } }
+        public string UserID { get { return userID; } set { userID = value; RaisePropertyChanged(); } }
+        public string Password { get { return password; } set { password = value; RaisePropertyChanged(); } }
         public bool IsActive
         {
             get { return isActive; }
@@ -383,7 +383,7 @@ namespace GTRCLeagueManager
                     if (value) { foreach (DBConnection _dbCon in SettingsVM.Instance.DBList) { if (_dbCon.IsActive) { _dbCon.isActive = false; } } }
                     isActive = value;
                     SettingsVM.Instance.UpdateActiveDBConnection();
-                    this.RaisePropertyChanged();
+                    RaisePropertyChanged();
                 }
             }
         }
@@ -429,14 +429,14 @@ namespace GTRCLeagueManager
                     }
                     presetName = tempID;
                 }
-                this.RaisePropertyChanged();
+                RaisePropertyChanged();
             }
         }
         [JsonIgnore] public DiscordBot DisBot { get { return disBot; } set { if (SettingsVM.discordBotList.Contains(value)) { disBot = value; disBotName = disBot.Name; } } }
         public string DisBotName
         {
             get { return disBotName; }
-            set { DiscordBot _disBot = DiscordBot.GetByName(value); if (_disBot.Name == value) { disBotName = value; disBot = _disBot; this.RaisePropertyChanged(); } }
+            set { DiscordBot _disBot = DiscordBot.GetByName(value); if (_disBot.Name == value) { disBotName = value; disBot = _disBot; RaisePropertyChanged(); } }
         }
         public long ServerID
         {
@@ -468,7 +468,7 @@ namespace GTRCLeagueManager
                     if (value) { foreach (DisBotPreset _disBotPre in SettingsVM.Instance.DisBotPresetList) { if (_disBotPre.IsActive) { _disBotPre.isActive = false; } } }
                     isActive = value;
                     SettingsVM.Instance.UpdateActiveDiscordBot();
-                    this.RaisePropertyChanged();
+                    RaisePropertyChanged();
                 }
             }
         }
@@ -487,10 +487,10 @@ namespace GTRCLeagueManager
 
         public GSheet() { }
 
-        public string Name { get { return name; } set { name = value; this.RaisePropertyChanged(); } }
-        public string DocID { get { return docid; } set { docid = value; this.RaisePropertyChanged(); } }
-        public string SheetID { get { return sheetid; } set { sheetid = value; this.RaisePropertyChanged(); } }
-        public string Range { get { return range; } set { range = value; this.RaisePropertyChanged(); } }
+        public string Name { get { return name; } set { name = value; RaisePropertyChanged(); } }
+        public string DocID { get { return docid; } set { docid = value; RaisePropertyChanged(); } }
+        public string SheetID { get { return sheetid; } set { sheetid = value; RaisePropertyChanged(); } }
+        public string Range { get { return range; } set { range = value; RaisePropertyChanged(); } }
     }
 
 

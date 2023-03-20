@@ -16,7 +16,7 @@ namespace GTRCLeagueManager.Database
                 Table = "Series",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Name" } },
                 ToStringPropertiesNames = new List<string>() { "Name" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public Series() { This = this; Initialize(true, true); }
@@ -36,7 +36,10 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList()
+        {
+            PreSeasonVM.UpdateListSeries();
+        }
 
         public override void SetNextAvailable()
         {

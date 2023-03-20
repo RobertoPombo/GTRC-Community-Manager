@@ -50,14 +50,15 @@ namespace GTRCLeagueManager.Database
             {
                 Server = Server.Statics.GetByID(value);
                 PathExists = true;
-                this.RaisePropertyChanged(nameof(Name));
-                this.RaisePropertyChanged(nameof(Path));
-                this.RaisePropertyChanged(nameof(SeasonName));
-                this.RaisePropertyChanged(nameof(ServerTypeEnum));
-                this.RaisePropertyChanged(nameof(EntrylistTypeEnum));
-                this.RaisePropertyChanged(nameof(ForceCarModel));
-                this.RaisePropertyChanged(nameof(ForceEntrylist));
-                this.RaisePropertyChanged(nameof(WriteBoP));
+                RaisePropertyChanged(nameof(Name));
+                RaisePropertyChanged(nameof(Path));
+                RaisePropertyChanged(nameof(SeriesName));
+                RaisePropertyChanged(nameof(SeasonName));
+                RaisePropertyChanged(nameof(ServerTypeEnum));
+                RaisePropertyChanged(nameof(EntrylistTypeEnum));
+                RaisePropertyChanged(nameof(ForceCarModel));
+                RaisePropertyChanged(nameof(ForceEntrylist));
+                RaisePropertyChanged(nameof(WriteBoP));
             }
         }
 
@@ -76,13 +77,13 @@ namespace GTRCLeagueManager.Database
         [JsonIgnore] public string Name
         {
             get { return Server.Name; }
-            set { Server.Name = value; this.RaisePropertyChanged(); }
+            set { Server.Name = value; RaisePropertyChanged(); }
         }
 
         [JsonIgnore] public string Path
         {
             get { PathExists = true; return Server.Path; }
-            set { Server.Path = value; PathExists = true; this.RaisePropertyChanged(); }
+            set { Server.Path = value; PathExists = true; RaisePropertyChanged(); }
         }
 
         [JsonIgnore] public bool PathExists
@@ -93,7 +94,27 @@ namespace GTRCLeagueManager.Database
                 if (!Server.PathExistsExe()) { SetOnline = false; }
                 if (Server.PathExists()) { ResultsWatcher.Path = Server.AbsolutePath; if (DetectResults && State == ServerM.StateOff) { State = ServerM.StateOn; } }
                 else { DetectResults = false; if (State == ServerM.StateOn) { State = ServerM.StateOff; } }
-                this.RaisePropertyChanged();
+                RaisePropertyChanged();
+            }
+        }
+
+        [JsonIgnore] public string SeriesName
+        {
+            get { return Series.Statics.GetByID(Season.Statics.GetByID(Server.SeasonID).SeriesID).Name; }
+            set
+            {
+                int oldVal = Season.Statics.GetByID(Server.SeasonID).SeriesID;
+                int newVal = Series.Statics.GetByUniqProp(value).ID;
+                List<Season> _seasonList = Season.Statics.GetBy(nameof(Season.SeriesID), newVal);
+                int _seasonListCount = _seasonList.Count;
+                if (newVal != oldVal && _seasonListCount > 0)
+                {
+                    Server.SeasonID = _seasonList[_seasonListCount - 1].ID;
+                    RaisePropertyChanged(nameof(ListSeasonNames));
+                    SeasonName = _seasonList[_seasonListCount - 1].Name;
+                    RaisePropertyChanged(nameof(SeasonName));
+                    RaisePropertyChanged();
+                }
             }
         }
 
@@ -108,7 +129,7 @@ namespace GTRCLeagueManager.Database
                 {
                     if (EntrylistTypeEnum == EntrylistTypeEnum.Season) { ServerVM.UpdateEntrylist(Server); }
                     ServerVM.UpdateBoP(Server);
-                    this.RaisePropertyChanged();
+                    RaisePropertyChanged();
                 }
             }
         }
@@ -116,7 +137,7 @@ namespace GTRCLeagueManager.Database
         [JsonIgnore] public ServerTypeEnum ServerTypeEnum
         {
             get { return Server.ServerTypeEnum; }
-            set { Server.ServerTypeEnum = value; this.RaisePropertyChanged(); }
+            set { Server.ServerTypeEnum = value; RaisePropertyChanged(); }
         }
 
         [JsonIgnore] public EntrylistTypeEnum EntrylistTypeEnum
@@ -129,9 +150,9 @@ namespace GTRCLeagueManager.Database
                 if (Server.EntrylistTypeEnum != oldVal)
                 {
                     ServerVM.UpdateEntrylist(Server);
-                    this.RaisePropertyChanged();
-                    this.RaisePropertyChanged(nameof(ForceCarModel));
-                    this.RaisePropertyChanged(nameof(ForceEntrylist));
+                    RaisePropertyChanged();
+                    RaisePropertyChanged(nameof(ForceCarModel));
+                    RaisePropertyChanged(nameof(ForceEntrylist));
                 }
             }
         }
@@ -139,19 +160,19 @@ namespace GTRCLeagueManager.Database
         [JsonIgnore] public bool ForceCarModel
         {
             get { return Server.ForceCarModel; }
-            set { bool oldVal = Server.ForceCarModel; Server.ForceCarModel = value; if (Server.ForceCarModel != oldVal) { this.RaisePropertyChanged(); ServerVM.UpdateEntrylist(Server); } }
+            set { bool oldVal = Server.ForceCarModel; Server.ForceCarModel = value; if (Server.ForceCarModel != oldVal) { RaisePropertyChanged(); ServerVM.UpdateEntrylist(Server); } }
         }
 
         [JsonIgnore] public bool ForceEntrylist
         {
             get { return Server.ForceEntrylist; }
-            set { bool oldVal = Server.ForceEntrylist; Server.ForceEntrylist = value; if (Server.ForceEntrylist != oldVal) { this.RaisePropertyChanged(); ServerVM.UpdateEntrylist(Server); } }
+            set { bool oldVal = Server.ForceEntrylist; Server.ForceEntrylist = value; if (Server.ForceEntrylist != oldVal) { RaisePropertyChanged(); ServerVM.UpdateEntrylist(Server); } }
         }
 
         [JsonIgnore] public bool WriteBoP
         {
             get { return Server.WriteBoP; }
-            set { bool oldVal = Server.WriteBoP; Server.WriteBoP = value; if (Server.WriteBoP != oldVal) { this.RaisePropertyChanged(); ServerVM.UpdateBoP(Server); } }
+            set { bool oldVal = Server.WriteBoP; Server.WriteBoP = value; if (Server.WriteBoP != oldVal) { RaisePropertyChanged(); ServerVM.UpdateBoP(Server); } }
         }
 
         public bool SetOnline
@@ -165,7 +186,7 @@ namespace GTRCLeagueManager.Database
                         setOnline = value;
                         if (setOnline) { new Thread(ThreadStartAccServer).Start(); }
                         else { CountOnline = 0; StopAccServer(); }
-                        this.RaisePropertyChanged();
+                        RaisePropertyChanged();
                     }
                 }
             }
@@ -174,7 +195,7 @@ namespace GTRCLeagueManager.Database
         [JsonIgnore] public int CountOnline
         {
             get { return countOnline; }
-            set { countOnline = value; this.RaisePropertyChanged(); }
+            set { countOnline = value; RaisePropertyChanged(); }
         }
 
         public bool DetectResults
@@ -190,7 +211,7 @@ namespace GTRCLeagueManager.Database
                         ResultsWatcher.EnableRaisingEvents = detectResults;
                         if (detectResults && State == ServerM.StateOff) { State = ServerM.StateOn; }
                         else if (!detectResults && State == ServerM.StateOn) { State = ServerM.StateOff; }
-                        this.RaisePropertyChanged();
+                        RaisePropertyChanged();
                     }
                 }
             }
@@ -199,7 +220,7 @@ namespace GTRCLeagueManager.Database
         [JsonIgnore] public Brush State
         {
             get { return state; }
-            set { state = value; this.RaisePropertyChanged(); }
+            set { state = value; RaisePropertyChanged(); }
         }
 
         [JsonIgnore] public bool IsRunning
@@ -226,12 +247,22 @@ namespace GTRCLeagueManager.Database
             set { }
         }
 
+        [JsonIgnore] public ObservableCollection<string> ListSeriesNames
+        {
+            get
+            {
+                ObservableCollection<string> listSeriesNames = new();
+                foreach (Series _series in Series.Statics.List) { if (Season.Statics.GetBy(nameof(Season.SeriesID), _series.ID).Count > 0) { listSeriesNames.Add(_series.Name); } }
+                return listSeriesNames;
+            }
+        }
+
         [JsonIgnore] public ObservableCollection<string> ListSeasonNames
         {
             get
             {
                 ObservableCollection<string> listSeasonNames = new();
-                foreach (Season _season in Season.Statics.List) { listSeasonNames.Add(_season.Name); }
+                foreach (Season _season in Season.Statics.List) { if (_season.SeriesID == Season.Statics.GetByID(Server.SeasonID).SeriesID) { listSeasonNames.Add(_season.Name); } }
                 return listSeasonNames;
             }
         }

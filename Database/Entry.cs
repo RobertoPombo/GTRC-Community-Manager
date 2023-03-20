@@ -19,7 +19,7 @@ namespace GTRCLeagueManager.Database
                 Table = "Entries",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "SeasonID", "RaceNumber" } },
                 ToStringPropertiesNames = new List<string>() { "SeasonID", "RaceNumber", "TeamID" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public Entry() { This = this; Initialize(true, true); }
@@ -29,13 +29,14 @@ namespace GTRCLeagueManager.Database
         private int seasonID = 0;
         private int raceNumber = DefaultRaceNumber;
         private int teamID = Basics.NoID;
-        private int carID = 0;
+        private int carID = 1;
         private DateTime registerdate = DateTime.Now;
         private DateTime signoutdate = Event.DateTimeMaxValue;
         private int ballast = 0;
         private int restrictor = 0;
         private int category = 3;
         private bool scorepoints = true;
+        private int priority = int.MaxValue;
 
         public int SeasonID
         {
@@ -66,7 +67,7 @@ namespace GTRCLeagueManager.Database
             get { return carID; }
             set
             {
-                if (Car.Statics.IDList.Count == 0) { new Car() { ID = 1 }; }
+                if (Car.Statics.IDList.Count == 0) { _ = new Car() { ID = 1 }; }
                 if (!Car.Statics.ExistsID(value)) { value = Car.Statics.IDList[0].ID; }
                 List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
                 foreach (EventsEntries _eventsEntries in listEventsEntries) { if (_eventsEntries.CarID == carID) { _eventsEntries.CarID = value; } }
@@ -166,7 +167,17 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        public static void ListSetter() { }
+        public int Priority
+        {
+            get { return priority; }
+            set
+            {
+                if (value < 0) { priority = 0; }
+                else { priority = value; }
+            }
+        }
+
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {

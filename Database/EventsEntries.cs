@@ -19,7 +19,7 @@ namespace GTRCLeagueManager.Database
                 Table = "EventsEntries",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "EntryID", "EventID" } },
                 ToStringPropertiesNames = new List<string>() { "EntryID", "EventID" },
-                ListSetter = () => ListSetter(),
+                PublishList = () => PublishList(),
             };
         }
         public EventsEntries() { This = this; Initialize(true, true); }
@@ -129,23 +129,31 @@ namespace GTRCLeagueManager.Database
             get { return Event.Statics.GetByID(EventID).EventNr; }
         }
 
-        public static void ListSetter() { }
+        public static void PublishList() { }
 
         public override void SetNextAvailable()
         {
-            int eventNr = 0;
-            List<Event> _idListEvent = Event.Statics.IDList;
-            if (_idListEvent.Count == 0) { _ = new Event() { ID = 1 }; _idListEvent = Event.Statics.IDList; }
-            Event _event = Event.Statics.GetByID(eventID);
-            if (_event.ReadyForList) { eventNr = Event.Statics.IDList.IndexOf(_event); } else { eventID = _idListEvent[0].ID; }
-            int startValueEvent = eventNr;
-
-            int entryNr = 0;
             List<Entry> _idListEntry = Entry.Statics.IDList;
-            if (_idListEntry.Count == 0) { _ = new Entry() { ID = 1 }; _idListEntry = Entry.Statics.IDList; }
+            if (_idListEntry.Count == 0) { Entry _newEntry = new() { ID = 1 }; _idListEntry.Add(_newEntry); }
             Entry _entry = Entry.Statics.GetByID(entryID);
-            if (_entry.ReadyForList) { entryNr = Entry.Statics.IDList.IndexOf(_entry); } else { entryID = _idListEntry[0].ID; }
+            int entryNr = 0;
+            if (_entry.ReadyForList) { entryNr = _idListEntry.IndexOf(_entry); } else { _entry = _idListEntry[entryNr]; entryID = _entry.ID; }
             int startValueEntry = entryNr;
+
+            var linqListEntry = from _lingEntry in Entry.Statics.List
+                           where _lingEntry.SeasonID == _entry.SeasonID && _lingEntry.ID != Basics.NoID
+                           select _lingEntry;
+            _idListEntry = linqListEntry.Cast<Entry>().ToList();
+            var linqListEvent = from _lingEvent in Event.Statics.List
+                                where _lingEvent.SeasonID == _entry.SeasonID && _lingEvent.ID != Basics.NoID
+                                select _lingEvent;
+            List<Event> _idListEvent = linqListEvent.Cast<Event>().ToList();
+
+            if (_idListEvent.Count == 0) { Event _newEvent = new() { ID = 1, SeasonID = _entry.SeasonID }; _idListEvent.Add(_newEvent); }
+            Event _event = Event.Statics.GetByID(eventID);
+            int eventNr = 0;
+            if (_event.ReadyForList && _idListEvent.Contains(_event)) { eventNr = _idListEvent.IndexOf(_event); } else { eventID = _idListEvent[eventNr].ID; }
+            int startValueEvent = eventNr;
 
             while (!IsUnique())
             {
@@ -179,7 +187,7 @@ namespace GTRCLeagueManager.Database
         public static EventsEntries GetAnyByUniqProp(int _entryID, int _eventID)
         {
             EventsEntries eventEntry = Statics.GetByUniqProp(new List<dynamic>() { _entryID, _eventID });
-            if (!eventEntry.ReadyForList)
+            if (!eventEntry.ReadyForList && _entryID != Basics.NoID && _eventID != Basics.NoID)
             {
                 eventEntry.EntryID = _entryID;
                 eventEntry.EventID = _eventID;
@@ -191,7 +199,7 @@ namespace GTRCLeagueManager.Database
         public static List<EventsEntries> GetAnyBy(string propName, int id)
         {
             List<EventsEntries> eventsEntries = new();
-            if (propName == nameof(EntryID))
+            if (propName == nameof(EntryID) && id != Basics.NoID)
             {
                 List<Event> listEvents = Event.Statics.GetBy(nameof(Event.SeasonID), Entry.Statics.GetByID(id).SeasonID);
                 foreach (Event _event in listEvents)
@@ -200,7 +208,7 @@ namespace GTRCLeagueManager.Database
                     if (eventEntry.ReadyForList) { eventsEntries.Add(eventEntry); }
                 }
             }
-            else if (propName == nameof(EventID))
+            else if (propName == nameof(EventID) && id != Basics.NoID)
             {
                 List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), Event.Statics.GetByID(id).SeasonID);
                 foreach (Entry _entry in listEntries)

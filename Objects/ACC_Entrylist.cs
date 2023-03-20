@@ -94,7 +94,8 @@ namespace GTRCLeagueManager.Database
                         usedRaceNumber = false;
                         foreach (EventsEntries _eventsEntries in ListEntries)
                         {
-                            if (_eventsEntries.IsOnEntrylist && _eventsEntries.EntryID == raceNumber) { raceNumber++; usedRaceNumber = true; break; }
+                            Entry _entry = Entry.Statics.GetByID(_eventsEntries.EntryID);
+                            if (_eventsEntries.IsOnEntrylist && _entry.RaceNumber == raceNumber) { raceNumber++; usedRaceNumber = true; break; }
                         }
                     }
                     ACC_Entry accEntry = new();

@@ -13,7 +13,7 @@ namespace GTRCLeagueManager
         public string LogCurrentText
         {
             get { return logcurrenttext; }
-            set { logcurrenttext = value; this.RaisePropertyChanged(); }
+            set { logcurrenttext = value; RaisePropertyChanged(); }
         }
     }
 }

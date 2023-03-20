@@ -38,8 +38,8 @@ namespace GTRCLeagueManager
             if (!Directory.Exists(dataDirectory)) { Directory.CreateDirectory(dataDirectory); }
             SetCultureInfo();
             InitializeComponent();
-            Width = screenWidth * 0.5;
-            Height = screenHeight * 0.55;
+            Width = screenWidth * 0.55;
+            Height = screenHeight * 0.6;
             Left = (screenWidth / 2) - (Width / 2);
             Top = (screenHeight / 2) - (Height / 2);
             MinimizeButton.Click += (s, e) => WindowState = WindowState.Minimized;

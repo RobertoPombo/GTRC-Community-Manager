@@ -103,8 +103,9 @@ namespace GTRCLeagueManager
             if (Int64.TryParse(ReadValueFromColumn(VarMap, row, "DiscordID"), out long discordID) && Driver.IsValidDiscordID(discordID)) { values["DiscordID"] = discordID; }
             values["FirstName"] = ReadValueFromColumn(VarMap, row, "Vorname") ?? values["FirstName"];
             values["LastName"] = ReadValueFromColumn(VarMap, row, "Nachname") ?? values["LastName"];
-            values["Teamname"] = ReadValueFromColumn(VarMap, row, "Teamname") ?? values["Teamname"];
-            values["CarID"] = Car.Statics.GetBy(nameof(Car.Name_GTRC), ReadValueFromColumn(VarMap, row, "Fahrzeug")).AccCarID;
+            values["TeamName"] = ReadValueFromColumn(VarMap, row, "Teamname") ?? values["TeamName"];
+            List<Car> cars = Car.Statics.GetBy(nameof(Car.Name_GTRC), ReadValueFromColumn(VarMap, row, "Fahrzeug"));
+            if (cars.Count > 0) { values["CarID"] = cars[0].ID; }
             string? scorePoints = ReadValueFromColumn(VarMap, row, "Stammfahrer oder Gaststarter");
             if (scorePoints == "Stammfahrer") { values["Category"] = 3; values["ScorePoints"] = true; } else { values["Category"] = 1; values["ScorePoints"] = false; }
             if (DateTime.TryParse(ReadValueFromColumn(VarMap, row, "Zeitstempel"), out DateTime registerDate)) { values["RegisterDate"] = registerDate; }
@@ -130,9 +131,10 @@ namespace GTRCLeagueManager
             if (Driver.IsValidSteamID(SteamID))
             {
                 Driver driver = Driver.Statics.GetByUniqProp(SteamID);
-                if (!driver.ReadyForList) { driver = new Driver { SteamID = SteamID }; Driver.Statics.WriteSQL(); }
+                if (driver.ID == Basics.NoID) { _ = new Driver { SteamID = SteamID }; Driver.Statics.WriteSQL(); }
+                driver = Driver.Statics.GetByUniqProp(SteamID);
                 if (driver.SteamID == Driver.SteamIDMinValue) { driver.SteamID = SteamID; }
-                if (driver.DiscordID == Driver.DiscordIDNoValue) { driver.DiscordID = DiscordID; }
+                if (driver.DiscordID == Basics.NoID) { driver.DiscordID = DiscordID; }
                 if (driver.FirstName == "") { driver.FirstName = FirstName; }
                 if (driver.LastName == "") { driver.LastName = LastName; }
                 if (RegisterDate < driver.RegisterDate) { driver.RegisterDate = RegisterDate; }
@@ -145,40 +147,44 @@ namespace GTRCLeagueManager
         {
             Driver driver = SyncDriver(values);
             string TeamName = values["TeamName"];
-            if (driver.ReadyForList && TeamName != Team.DefaultName)
+            if (driver.ID != Basics.NoID && TeamName != Team.DefaultName)
             {
                 Team team = Team.Statics.GetByUniqProp(new List<dynamic>() { seasonID, TeamName });
-                if (!team.ReadyForList) { team = new Team { SeasonID = seasonID, Name = TeamName }; Team.Statics.WriteSQL(); }
+                if (team.ID == Basics.NoID) { _ = new Team { SeasonID = seasonID, Name = TeamName }; Team.Statics.WriteSQL(); }
+                team = Team.Statics.GetByUniqProp(new List<dynamic>() { seasonID, TeamName });
                 DriversTeams driverTeam = DriversTeams.Statics.GetByUniqProp(new List<dynamic>() { driver.ID, team.ID });
-                if (!driverTeam.ReadyForList) { driverTeam = new DriversTeams { DriverID = driver.ID, TeamID = team.ID }; DriversTeams.Statics.WriteSQL(); }
+                if (driverTeam.ID == Basics.NoID) { _ = new DriversTeams { DriverID = driver.ID, TeamID = team.ID }; DriversTeams.Statics.WriteSQL(); }
+                driverTeam = DriversTeams.Statics.GetByUniqProp(new List<dynamic>() { driver.ID, team.ID });
                 return driverTeam;
             }
             else { return new DriversTeams(false); }
         }
 
-        public static void SyncEntry(Dictionary<string, dynamic> values, int seasonID)
+        public static bool SyncEntry(Dictionary<string, dynamic> values, int seasonID, bool _newEntry)
         {
+            bool newEntry = false;
             DriversTeams driverTeam = SyncTeam(values, seasonID);
             int RaceNumber = values["RaceNumber"];
             int CarID = values["CarID"];
             int Category = values["Category"];
             bool ScorePoints = values["ScorePoints"];
             DateTime RegisterDate = values["RegisterDate"];
-            if (driverTeam.ReadyForList && RaceNumber != Basics.NoID)
+            if (driverTeam.ID != Basics.NoID && RaceNumber != Basics.NoID)
             {
-                bool newEntry = false;
                 Entry entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { seasonID, RaceNumber });
-                if (!entry.ReadyForList) { entry = new Entry { SeasonID = seasonID, RaceNumber = RaceNumber }; Entry.Statics.WriteSQL(); newEntry = true; }
+                if (entry.ID == Basics.NoID) { _ = new Entry { SeasonID = seasonID, RaceNumber = RaceNumber }; Entry.Statics.WriteSQL(); newEntry = true; }
+                entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { seasonID, RaceNumber });
                 DriverEntries driverEntry = DriverEntries.Statics.GetByUniqProp(driverTeam.DriverID);
-                if (!driverEntry.ReadyForList) { driverEntry = new DriverEntries { DriverID = driverTeam.DriverID }; DriverEntries.Statics.WriteSQL(); }
+                if (driverEntry.ID == Basics.NoID) { driverEntry = new DriverEntries { DriverID = driverTeam.DriverID }; DriverEntries.Statics.WriteSQL(); }
+                driverEntry = DriverEntries.Statics.GetByUniqProp(driverTeam.DriverID);
                 driverEntry.EntryID = entry.ID;
                 entry.TeamID = driverTeam.TeamID;
-                if (entry.CarID == Basics.NoID && CarID != Basics.NoID) { entry.CarID = CarID; }
+                if ((newEntry || entry.CarID == Basics.NoID) && CarID != Basics.NoID) { entry.CarID = CarID; }
                 entry.Category = Category;
                 entry.ScorePoints = ScorePoints;
                 if (RegisterDate < entry.RegisterDate) { entry.RegisterDate = RegisterDate; }
-                if (newEntry) { /*_ = Commands.CreateStartingGridMessage(entry.ID, Event.GetNextEvent(CurrentSeasonID, DateTime.Now).ID, false, false);*/ }
             }
+            return newEntry || _newEntry;
         }
 
         public static void SyncFormsEntries(int seasonID, string docID, string sheetID, string range)
@@ -206,11 +212,12 @@ namespace GTRCLeagueManager
                         if (rowNr == rows.Count - 1) { team.ListRemove(true); }
                     }
                 }
+                bool newEntry = false;
                 VarMap = CreateVarMap(rows[0], VarListEntries);
                 for (int rowNr = 1; rowNr < rows.Count; rowNr++)
                 {
                     Dictionary<string, dynamic> values = ReadValuesFromRow(VarMap, rows[rowNr]);
-                    SyncEntry(values, seasonID);
+                    newEntry = SyncEntry(values, seasonID, newEntry);
                 }
                 EventsEntries.Statics.WriteSQL();
                 DriversTeams.Statics.WriteSQL();
@@ -218,6 +225,7 @@ namespace GTRCLeagueManager
                 Entry.Statics.WriteSQL();
                 Team.Statics.WriteSQL();
                 Driver.Statics.WriteSQL();
+                if (newEntry) { _ = Commands.CreateStartingGridMessage(Event.GetNextEvent(seasonID, DateTime.Now).ID, false, false); }
             }
         }
 

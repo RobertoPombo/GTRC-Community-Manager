@@ -29,7 +29,7 @@ namespace GTRCLeagueManager
                 if (ruleList != value)
                 {
                     ruleList = value;
-                    this.RaisePropertyChanged();
+                    RaisePropertyChanged();
                 }
             }
         }
@@ -37,7 +37,7 @@ namespace GTRCLeagueManager
         public Rule SelectedRule
         {
             get { return selectedRule; }
-            set { selectedRule = value; this.RaisePropertyChanged(); currentRule = selectedRule; }
+            set { selectedRule = value; RaisePropertyChanged(); currentRule = selectedRule; }
         }
 
         public UICmd AddRule { get; set; }

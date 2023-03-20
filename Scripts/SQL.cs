@@ -34,7 +34,7 @@ namespace GTRCLeagueManager
             }
             else if (dBCon.Type == SettingsVM.Instance.DBConnectionTypes[1])
             {
-                ConnectionString = "Data Source=" + dBCon.IP6Address + "\\" + dBCon.SourceName + "," + dBCon.Port.ToString() + ";Network Library=DBMSSOCN;Initial Catalog=" + dBCon.CatalogName + ";User ID=" + dBCon.UserID + ";Password=" + dBCon.Password + ";";
+                ConnectionString = "Data Source=" + dBCon.IP6Address + "\\" + dBCon.SourceName + "," + dBCon.Port.ToString() + ";Initial Catalog=" + dBCon.CatalogName + ";User ID=" + dBCon.UserID + ";Password=" + dBCon.Password + ";";
             }
             return ConnectionString;
         }

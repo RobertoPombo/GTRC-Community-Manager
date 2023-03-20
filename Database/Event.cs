@@ -18,7 +18,7 @@ namespace GTRCLeagueManager.Database
                 Table = "Events",
                 UniquePropertiesNames = new List<List<string>>() { new List<string>() { "SeasonID", "EventDate" }, new List<string>() { "SeasonID", "Name" } },
                 ToStringPropertiesNames = new List<string>() { "SeasonID", "Name" },
-                ListSetter = () => ListSetter()
+                PublishList = () => PublishList()
             };
         }
         public Event() { This = this; Initialize(true, true); }
@@ -64,7 +64,7 @@ namespace GTRCLeagueManager.Database
                 else if (value > DateTimeMaxValue) { eventDate = DateTimeMaxValue; }
                 else { eventDate = value; }
                 if (ReadyForList) { SetNextAvailable(); }
-                if (Statics.IDList.Contains(this)) { ListSetter(); }
+                if (Statics.IDList.Contains(this)) { PublishList(); }
             }
         }
 
@@ -90,7 +90,7 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        public static void ListSetter()
+        public static void PublishList()
         {
             SortByDate();
             PreSeasonVM.UpdateListEvents();

@@ -19,8 +19,10 @@ namespace GTRCLeagueManager
         [JsonIgnore] public BackgroundWorker BackgroundWorkerResetEntries = new() { WorkerSupportsCancellation = true };
         public static readonly Random random = new();
 
+        private static ObservableCollection<Series> listSeries = new();
         private static ObservableCollection<Season> listSeasons = new();
 
+        private int currentSeriesID = Basics.NoID;
         private int currentSeasonID = Basics.NoID;
         private Event currentevent;
         private int slotsavailable = 0;
@@ -67,25 +69,44 @@ namespace GTRCLeagueManager
             BackgroundWorkerResetEntries.RunWorkerAsync();
         }
 
+        [JsonIgnore] public ObservableCollection<Series> ListSeries { get { return listSeries; } set { listSeries = value; } }
         [JsonIgnore] public ObservableCollection<Season> ListSeasons { get { return listSeasons; } set { listSeasons = value; } }
         [JsonIgnore] public ObservableCollection<Event> ListEvents { get; set; }
+
+        public int CurrentSeriesID
+        {
+            get { return currentSeriesID; }
+            set { CurrentSeries = Series.Statics.GetByID(value); }
+        }
+
+        [JsonIgnore]
+        public Series CurrentSeries
+        {
+            get { Series _series = Series.Statics.GetByID(currentSeriesID); return _series; }
+            set { if (value != null && value != CurrentSeries) { currentSeriesID = value.ID; RaisePropertyChanged(); UpdateListSeasons(); UpdateListEvents(); } }
+        }
 
         public int CurrentSeasonID
         {
             get { return currentSeasonID; }
-            set { CurrentSeason = Season.Statics.GetByID(value); }
+            set
+            {
+                CurrentSeason = Season.Statics.GetByID(value);
+                int _listSeasonsCount = ListSeasons.Count;
+                if (CurrentSeason.SeriesID != CurrentSeriesID && _listSeasonsCount > 0) { CurrentSeason = ListSeasons[_listSeasonsCount - 1]; }
+            }
         }
 
         [JsonIgnore] public Season CurrentSeason
         {
-            get { Season _season = Season.Statics.GetByID(currentSeasonID); return _season; }
-            set { if (value != null && value != CurrentSeason) { currentSeasonID = value.ID; this.RaisePropertyChanged(); UpdateListEvents(); } }
+            get { return Season.Statics.GetByID(currentSeasonID); }
+            set { if (value != null && value != CurrentSeason) { currentSeasonID = value.ID; RaisePropertyChanged(); UpdateListEvents(); } }
         }
 
         [JsonIgnore] public Event CurrentEvent
         {
             get { return currentevent; }
-            set { currentevent = value; SlotsAvailable++; this.RaisePropertyChanged(); }
+            set { currentevent = value; SlotsAvailable++; RaisePropertyChanged(); }
         }
 
         [JsonIgnore] public int SlotsAvailable
@@ -110,7 +131,7 @@ namespace GTRCLeagueManager
         [JsonIgnore] public string SlotsTakenText
         {
             get { return slotstakentext; }
-            set { slotstakentext = SlotsTaken.ToString() + "/" + SlotsAvailable.ToString(); this.RaisePropertyChanged(); }
+            set { slotstakentext = SlotsTaken.ToString() + "/" + SlotsAvailable.ToString(); RaisePropertyChanged(); }
         }
 
         public bool StateAutoUpdateEntries
@@ -119,7 +140,7 @@ namespace GTRCLeagueManager
             set
             {
                 stateautoupdateentries = value;
-                this.RaisePropertyChanged();
+                RaisePropertyChanged();
                 if (stateautoupdateentries && StateEntries == ServerM.StateOff) { StateEntries = ServerM.StateOn; }
                 else if (!stateautoupdateentries && StateEntries == ServerM.StateOn) { StateEntries = ServerM.StateOff; }
                 entriesupdateremtime = intervallminrefreshentries * 60;
@@ -130,7 +151,7 @@ namespace GTRCLeagueManager
         [JsonIgnore] public Brush StateEntries
         {
             get { return stateentries; }
-            set { stateentries = value; this.RaisePropertyChanged(); }
+            set { stateentries = value; RaisePropertyChanged(); }
         }
 
         public int IntervallMinRefreshEntries
@@ -143,7 +164,7 @@ namespace GTRCLeagueManager
                 intervallminrefreshentries = value;
                 entriesupdateremtime = intervallminrefreshentries * 60;
                 EntriesUpdateRemTime = "?";
-                this.RaisePropertyChanged();
+                RaisePropertyChanged();
             }
         }
 
@@ -155,7 +176,7 @@ namespace GTRCLeagueManager
                 else if (entriesupdateremtime > 120) { return ((int)Math.Ceiling((double)entriesupdateremtime / 60)).ToString() + " min"; }
                 else { return entriesupdateremtime.ToString() + " sec"; }
             }
-            set { this.RaisePropertyChanged(); }
+            set { RaisePropertyChanged(); }
         }
 
         [JsonIgnore]
@@ -175,121 +196,121 @@ namespace GTRCLeagueManager
         public bool IsCheckedBallast
         {
             get { return ischeckedballast; }
-            set { ischeckedballast = value; this.RaisePropertyChanged(); }
+            set { ischeckedballast = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedRestriktor
         {
             get { return ischeckedrestriktor; }
-            set { ischeckedrestriktor = value; this.RaisePropertyChanged(); }
+            set { ischeckedrestriktor = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedRegisterLimit
         {
             get { return ischeckedregisterlimit; }
-            set { ischeckedregisterlimit = value; this.RaisePropertyChanged(); }
+            set { ischeckedregisterlimit = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedBoPFreeze
         {
             get { return ischeckedbopfreeze; }
-            set { ischeckedbopfreeze = value; this.RaisePropertyChanged(); }
+            set { ischeckedbopfreeze = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedGridSlotsLimit
         {
             get { return ischeckedgridslotslimit; }
-            set { ischeckedgridslotslimit = value; this.RaisePropertyChanged(); SlotsAvailable++; }
+            set { ischeckedgridslotslimit = value; RaisePropertyChanged(); SlotsAvailable++; }
         }
 
         public bool IsCheckedSignOutLimit
         {
             get { return ischeckedsignoutlimit; }
-            set { ischeckedsignoutlimit = value; this.RaisePropertyChanged(); }
+            set { ischeckedsignoutlimit = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedNoShowLimit
         {
             get { return ischeckednoshowlimit; }
-            set { ischeckednoshowlimit = value; this.RaisePropertyChanged(); }
+            set { ischeckednoshowlimit = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedCarChangeLimit
         {
             get { return ischeckedcarchangelimit; }
-            set { ischeckedcarchangelimit = value; this.RaisePropertyChanged(); }
+            set { ischeckedcarchangelimit = value; RaisePropertyChanged(); }
         }
 
         public int CarLimitBallast
         {
             get { return carlimitballast; }
-            set { carlimitballast = value; this.RaisePropertyChanged(); }
+            set { carlimitballast = value; RaisePropertyChanged(); }
         }
 
         public int CarLimitRestriktor
         {
             get { return carlimitrestriktor; }
-            set { carlimitrestriktor = value; this.RaisePropertyChanged(); }
+            set { carlimitrestriktor = value; RaisePropertyChanged(); }
         }
 
         public int CarLimitRegisterLimit
         {
             get { return carlimitregisterlimit; }
-            set { carlimitregisterlimit = value; this.RaisePropertyChanged(); }
+            set { carlimitregisterlimit = value; RaisePropertyChanged(); }
         }
 
         public int GridSlotsLimit
         {
             get { return gridslotslimit; }
-            set { gridslotslimit = value; this.RaisePropertyChanged(); SlotsAvailable++; }
+            set { gridslotslimit = value; RaisePropertyChanged(); SlotsAvailable++; }
         }
 
         public int SignOutLimit
         {
             get { return signoutlimit; }
-            set { signoutlimit = value; this.RaisePropertyChanged(); }
+            set { signoutlimit = value; RaisePropertyChanged(); }
         }
 
         public int NoShowLimit
         {
             get { return noshowlimit; }
-            set { noshowlimit = value; this.RaisePropertyChanged(); }
+            set { noshowlimit = value; RaisePropertyChanged(); }
         }
 
         public int CarChangeLimit
         {
             get { return carchangelimit; }
-            set { carchangelimit = value; this.RaisePropertyChanged(); }
+            set { carchangelimit = value; RaisePropertyChanged(); }
         }
 
         public int GainBallast
         {
             get { return gainballast; }
-            set { gainballast = value; this.RaisePropertyChanged(); }
+            set { gainballast = value; RaisePropertyChanged(); }
         }
 
         public int GainRestriktor
         {
             get { return gainrestriktor; }
-            set { gainrestriktor = value; this.RaisePropertyChanged(); }
+            set { gainrestriktor = value; RaisePropertyChanged(); }
         }
 
         public DateTime DateRegisterLimit
         {
             get { return dateregisterlimit; }
-            set { dateregisterlimit = value; this.RaisePropertyChanged(); }
+            set { dateregisterlimit = value; RaisePropertyChanged(); }
         }
 
         public DateTime DateBoPFreeze
         {
             get { return datebopfreeze; }
-            set { datebopfreeze = value; this.RaisePropertyChanged(); }
+            set { datebopfreeze = value; RaisePropertyChanged(); }
         }
 
         public DateTime DateCarChangeLimit
         {
             get { return datecarchangelimit; }
-            set { datecarchangelimit = value; this.RaisePropertyChanged(); }
+            set { datecarchangelimit = value; RaisePropertyChanged(); }
         }
 
         public int GetSlotsAvalable(Track track)
@@ -298,12 +319,26 @@ namespace GTRCLeagueManager
             else { return track.ServerSlotsCount; }
         }
 
+        public static void UpdateListSeries()
+        {
+            listSeries = new ObservableCollection<Series>();
+            foreach (Series _series in Series.Statics.List) { listSeries.Add(_series); }
+            if (Instance is not null)
+            {
+                int backupCurrentSeriesID = Instance.CurrentSeriesID;
+                Instance.RaisePropertyChanged(nameof(ListSeries));
+                Instance.CurrentSeriesID = Basics.NoID;
+                Instance.CurrentSeriesID = backupCurrentSeriesID;
+            }
+        }
+
         public static void UpdateListSeasons()
         {
             listSeasons = new ObservableCollection<Season>();
-            foreach (Season _season in Season.Statics.List) { listSeasons.Add(_season); }
-            if (Instance != null)
+            if (Instance is null) { foreach (Season _season in Season.Statics.List) { listSeasons.Add(_season); } }
+            else
             {
+                foreach (Season _season in Season.Statics.List) { if (_season.SeriesID == Instance.CurrentSeriesID) { listSeasons.Add(_season); } }
                 int backupCurrentSeasonID = Instance.CurrentSeasonID;
                 Instance.RaisePropertyChanged(nameof(ListSeasons));
                 Instance.CurrentSeasonID = Basics.NoID;
@@ -453,6 +488,7 @@ namespace GTRCLeagueManager
             try
             {
                 dynamic obj = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(PathSettings, Encoding.Unicode));
+                CurrentSeriesID = obj.CurrentSeriesID ?? currentSeriesID;
                 CurrentSeasonID = obj.CurrentSeasonID ?? currentSeasonID;
                 StateAutoUpdateEntries = obj.StateAutoUpdateEntries ?? stateautoupdateentries;
                 IntervallMinRefreshEntries = obj.IntervallMinRefreshEntries ?? intervallminrefreshentries;

@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -68,13 +67,14 @@ namespace GTRCLeagueManager.Database
         public string Table = "";
         public List<List<string>> UniquePropertiesNames = new();
         public List<string> ToStringPropertiesNames = new();
-        public Action ListSetter = () => Console.WriteLine("Error");
+        public Action PublishList = () => Console.WriteLine("Error");
 
         public Type VarDbType = typeof(DbType);
         public List<DbType> List = new();
         public List<PropertyInfo> AllProperties = new();
         public List<List<PropertyInfo>> UniqueProperties = new();
         public List<PropertyInfo> ToStringProperties = new();
+        public bool DelayPL = false;
 
         public string Path { get { return MainWindow.dataDirectory + Table.ToLower() + ".json"; } }
 
@@ -93,12 +93,13 @@ namespace GTRCLeagueManager.Database
             if (List.Count > index)
             {
                 if (forceDel) { List[index].RemoveAllChilds(); }
-                if (!List[index].IsChild()) { List.RemoveAt(index); ListSetter(); }
+                if (!List[index].IsChild()) { List.RemoveAt(index); if (!DelayPL) { PublishList(); } }
             }
         }
 
         public void ListClear(bool forceDel = false)
         {
+            bool _delayPL = DelayPL; DelayPL = true;
             List<DbType> iterateList = new();
             foreach (DbType _obj in List) { iterateList.Add(_obj); }
             foreach (DbType _obj in iterateList)
@@ -106,31 +107,38 @@ namespace GTRCLeagueManager.Database
                 if (forceDel) { _obj.RemoveAllChilds(); }
                 if (!_obj.IsChild()) { List.Remove(_obj); }
             }
-            ListSetter();
+            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public void ReadJson(bool forceDel = false)
         {
+            bool _delayPL = DelayPL; DelayPL = true;
             ListClear(forceDel);
             JsonConvert.DeserializeObject<DbType[]>(File.ReadAllText(Path, Encoding.Unicode));
+            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public void WriteJson()
         {
+            bool _delayPL = DelayPL; DelayPL = true;
             string text = JsonConvert.SerializeObject(List, Formatting.Indented);
             File.WriteAllText(Path, text, Encoding.Unicode);
+            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public void LoadSQL(bool forceDel = false)
         {
+            bool _delayPL = DelayPL; DelayPL = true;
             ListClear(forceDel);
             string SqlQry = "SELECT * FROM " + Table + ";";
             try { SQL.Connection.Query<DbType>(SqlQry); }
             catch { MainVM.List[0].LogCurrentText = "Loading SQL table '" + Table + "' failed!"; }
+            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public void WriteSQL()
         {
+            bool _delayPL = DelayPL; DelayPL = true;
             List<DbType> currentListSQL = new();
             List<dynamic> objList = SQL.LoadSQL(Table);
             for (int objNr = 0; objNr < objList.Count; objNr++)
@@ -164,13 +172,16 @@ namespace GTRCLeagueManager.Database
                 else { SQL.AddSQL(Table, newObj); }
             }
             LoadSQL();
+            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public void ResetSQL(bool forceDel = false)
         {
+            bool _delayPL = DelayPL; DelayPL = true;
             ListClear(forceDel);
             WriteSQL();
             if (List.Count == 0) { SQL.ReseedSQL(Table, 0); }
+            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public DbType GetByID(int id)
@@ -337,7 +348,7 @@ namespace GTRCLeagueManager.Database
                 int listIndex = StaticFields.List.IndexOf(oldObj);
                 if (oldObj.ID != Basics.NoID && StaticFields.List.Contains(This)) { This.ListRemove(); StaticFields.List[listIndex] = This; }
                 id = value;
-                StaticFields.ListSetter();
+                if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
             }
         }
 
@@ -384,13 +395,21 @@ namespace GTRCLeagueManager.Database
         }
 
         public void ListAdd() { ReadyForList = true; if (ReadyForList) { StaticFields.List.Add(This); } }
-        public void ListInsert(int index) { if (StaticFields.List.Count > index) { ReadyForList = true; StaticFields.List.Insert(index, This); StaticFields.ListSetter(); } }
+        public void ListInsert(int index)
+        {
+            if (StaticFields.List.Count > index)
+            {
+                ReadyForList = true;
+                StaticFields.List.Insert(index, This);
+                if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
+            }
+        }
         public void ListRemove(bool forceDel = false)
         {
             if (StaticFields.List.Contains(This))
             {
                 if (forceDel) { RemoveAllChilds(); }
-                if (!IsChild()) { StaticFields.List.Remove(This); StaticFields.ListSetter(); }
+                if (!IsChild()) { StaticFields.List.Remove(This); if (!StaticFields.DelayPL) { StaticFields.PublishList(); } }
             }
         }
 

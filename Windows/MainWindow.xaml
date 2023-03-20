@@ -486,29 +486,36 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
 
                                 <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="5">
-                                    <Label Content="Season" Style="{StaticResource LabelStyle}" Margin="0"/>
+                                    <Label Content="Series" Style="{StaticResource LabelStyle}" Margin="0"/>
                                     <Button Command="{Binding SaveSettingsCmd}" Style="{StaticResource SavButtonStyle}" Margin="1,5"/>
                                     <Button Command="{Binding RestoreSettingsCmd}" Style="{StaticResource ResButtonStyle}" Margin="1,5"/>
                                 </StackPanel>
                                 <ComboBox Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="5" Width="215"
+                                          ItemsSource="{Binding ListSeries, UpdateSourceTrigger=PropertyChanged}"
+                                          SelectedValue="{Binding CurrentSeries, UpdateSourceTrigger=PropertyChanged}"
+                                          DisplayMemberPath="Name" Style="{StaticResource ComboBoxStyle}" Margin="0,5" Cursor="Hand"/>
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="Season"
+                                       Style="{StaticResource LabelStyle}" Margin="5"/>
+                                <ComboBox Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="5" Width="215"
                                           ItemsSource="{Binding ListSeasons, UpdateSourceTrigger=PropertyChanged}"
                                           SelectedValue="{Binding CurrentSeason, UpdateSourceTrigger=PropertyChanged}"
                                           DisplayMemberPath="Name" Style="{StaticResource ComboBoxStyle}" Margin="0,5" Cursor="Hand"/>
-                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="Next Event"
+                                <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="Next Event"
                                        Style="{StaticResource LabelStyle}" Margin="5"/>
-                                <ComboBox Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="5" Width="215"
+                                <ComboBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="5" Width="215"
                                           ItemsSource="{Binding ListEvents, UpdateSourceTrigger=PropertyChanged}"
                                           SelectedValue="{Binding CurrentEvent, UpdateSourceTrigger=PropertyChanged}"
                                           DisplayMemberPath="Name" Style="{StaticResource ComboBoxStyle}" Margin="0,5" Cursor="Hand"/>
-                                <Label Grid.Row="1" Grid.Column="7" Content="{Binding SlotsTakenText}"
+                                <Label Grid.Row="2" Grid.Column="7" Content="{Binding SlotsTakenText}"
                                        Style="{StaticResource LabelStyle}" Margin="5"/>
-                                <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Content="G-Sheets Entries Sync"
+                                <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" Content="G-Sheets Entries Sync"
                                        Style="{StaticResource LabelStyle}" Margin="5"/>
-                                <Grid Grid.Row="2" Grid.Column="4" Grid.ColumnSpan="4" Margin="5">
+                                <Grid Grid.Row="3" Grid.Column="4" Grid.ColumnSpan="4" Margin="5">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
@@ -532,77 +539,75 @@
                                     <Label Grid.Column="5" Content="min"
                                            Style="{StaticResource LabelStyle}" Margin="1,0"/>
                                 </Grid>
-                                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Height="30" HorizontalAlignment="Left" Margin="0,5,0,-3">
+                                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Height="30" HorizontalAlignment="Left" Margin="0,5,0,-3">
                                     <Button Content="Update EL/BoP"
                                             Command="{Binding UpdateEntrylistBoPCmd}"
                                             Style="{StaticResource ExpTextButtonStyle}" Padding="7" Margin="5,0"/>
                                 </StackPanel>
-                                <Label Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" Content="Limit"
+                                <Label Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" Content="Limit"
                                        Style="{StaticResource LabelStyle}" Margin="-5,15,5,5"/>
-                                <Label Grid.Row="3" Grid.Column="4" Grid.ColumnSpan="2" Content="Gain/Car"
+                                <Label Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="2" Content="Gain/Car"
                                        Style="{StaticResource LabelStyle}" Margin="0,15,5,5"/>
-                                <Label Grid.Row="3" Grid.Column="6" Content="Date"
+                                <Label Grid.Row="4" Grid.Column="6" Content="Date"
                                        Style="{StaticResource LabelStyle}" Margin="5,15,5,5"/>
-                                <CheckBox Grid.Row="4" Grid.Column="0"
-                                          IsChecked="{Binding IsCheckedBallast}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
                                 <CheckBox Grid.Row="5" Grid.Column="0"
-                                          IsChecked="{Binding IsCheckedRestriktor}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
+                                          IsChecked="{Binding IsCheckedBallast}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
                                 <CheckBox Grid.Row="6" Grid.Column="0"
-                                          IsChecked="{Binding IsCheckedRegisterLimit}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
+                                          IsChecked="{Binding IsCheckedRestriktor}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
                                 <CheckBox Grid.Row="7" Grid.Column="0"
-                                          IsChecked="{Binding IsCheckedBoPFreeze}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
+                                          IsChecked="{Binding IsCheckedRegisterLimit}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
                                 <CheckBox Grid.Row="8" Grid.Column="0"
-                                          IsChecked="{Binding IsCheckedGridSlotsLimit}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
+                                          IsChecked="{Binding IsCheckedBoPFreeze}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
                                 <CheckBox Grid.Row="9" Grid.Column="0"
-                                          IsChecked="{Binding IsCheckedSignOutLimit}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
+                                          IsChecked="{Binding IsCheckedGridSlotsLimit}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
                                 <CheckBox Grid.Row="10" Grid.Column="0"
-                                          IsChecked="{Binding IsCheckedNoShowLimit}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
+                                          IsChecked="{Binding IsCheckedSignOutLimit}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
                                 <CheckBox Grid.Row="11" Grid.Column="0"
+                                          IsChecked="{Binding IsCheckedNoShowLimit}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
+                                <CheckBox Grid.Row="12" Grid.Column="0"
                                           IsChecked="{Binding IsCheckedCarChangeLimit}" Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
-                                <Label Grid.Row="4" Grid.Column="1" Content="Ballast"
+                                <Label Grid.Row="5" Grid.Column="1" Content="Ballast"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
-                                <Label Grid.Row="5" Grid.Column="1" Content="Restriktor"
+                                <Label Grid.Row="6" Grid.Column="1" Content="Restriktor"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
-                                <Label Grid.Row="6" Grid.Column="1" Content="Register Limit"
+                                <Label Grid.Row="7" Grid.Column="1" Content="Register Limit"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
-                                <Label Grid.Row="7" Grid.Column="1" Content="BoP Freeze"
+                                <Label Grid.Row="8" Grid.Column="1" Content="BoP Freeze"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
-                                <Label Grid.Row="8" Grid.Column="1" Content="Grid Slots"
+                                <Label Grid.Row="9" Grid.Column="1" Content="Grid Slots"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
-                                <Label Grid.Row="9" Grid.Column="1" Content="Sign-Outs"
+                                <Label Grid.Row="10" Grid.Column="1" Content="Sign-Outs"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
-                                <Label Grid.Row="10" Grid.Column="1" Content="No-Shows"
+                                <Label Grid.Row="11" Grid.Column="1" Content="No-Shows"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
-                                <Label Grid.Row="11" Grid.Column="1" Content="Car Changes"
+                                <Label Grid.Row="12" Grid.Column="1" Content="Car Changes"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
-                                <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding CarLimitBallast}" IsEnabled="{Binding IsCheckedBallast}"
+                                <TextBox Grid.Row="5" Grid.Column="2" Text="{Binding CarLimitBallast}" IsEnabled="{Binding IsCheckedBallast}"
                                          Style="{StaticResource TextBoxStyle}"
                                          Width="25" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
-                                <TextBox Grid.Row="5" Grid.Column="2" Text="{Binding CarLimitRestriktor}" IsEnabled="{Binding IsCheckedRestriktor}"
+                                <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding CarLimitRestriktor}" IsEnabled="{Binding IsCheckedRestriktor}"
                                          Style="{StaticResource TextBoxStyle}"
                                          Width="25" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
                                 <TextBox Grid.Row="7" Grid.Column="2" Text="{Binding CarLimitRegisterLimit}" IsEnabled="{Binding IsCheckedRegisterLimit}"
                                          Style="{StaticResource TextBoxStyle}"
                                          Width="25" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
-                                <TextBox Grid.Row="8" Grid.Column="2" Text="{Binding GridSlotsLimit}" IsEnabled="{Binding IsCheckedGridSlotsLimit}"
+                                <TextBox Grid.Row="9" Grid.Column="2" Text="{Binding GridSlotsLimit}" IsEnabled="{Binding IsCheckedGridSlotsLimit}"
                                          Style="{StaticResource TextBoxStyle}"
                                          Width="25" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
-                                <TextBox Grid.Row="9" Grid.Column="2" Text="{Binding SignOutLimit}" IsEnabled="{Binding IsCheckedSignOutLimit}"
+                                <TextBox Grid.Row="10" Grid.Column="2" Text="{Binding SignOutLimit}" IsEnabled="{Binding IsCheckedSignOutLimit}"
                                          Style="{StaticResource TextBoxStyle}"
                                          Width="25" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
-                                <TextBox Grid.Row="10" Grid.Column="2" Text="{Binding NoShowLimit}" IsEnabled="{Binding IsCheckedNoShowLimit}"
+                                <TextBox Grid.Row="11" Grid.Column="2" Text="{Binding NoShowLimit}" IsEnabled="{Binding IsCheckedNoShowLimit}"
                                          Style="{StaticResource TextBoxStyle}"
                                          Width="25" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
-                                <TextBox Grid.Row="11" Grid.Column="2" Text="{Binding CarChangeLimit}" IsEnabled="{Binding IsCheckedCarChangeLimit}"
+                                <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding CarChangeLimit}" IsEnabled="{Binding IsCheckedCarChangeLimit}"
                                          Style="{StaticResource TextBoxStyle}"
                                          Width="25" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
-                                <Label Grid.Row="4" Grid.Column="3" Content="x"
-                                       Style="{StaticResource LabelStyle}"/>
                                 <Label Grid.Row="5" Grid.Column="3" Content="x"
                                        Style="{StaticResource LabelStyle}"/>
                                 <Label Grid.Row="6" Grid.Column="3" Content="x"
                                        Style="{StaticResource LabelStyle}"/>
-                                <Label Grid.Row="8" Grid.Column="3" Content="x"
+                                <Label Grid.Row="7" Grid.Column="3" Content="x"
                                        Style="{StaticResource LabelStyle}"/>
                                 <Label Grid.Row="9" Grid.Column="3" Content="x"
                                        Style="{StaticResource LabelStyle}"/>
@@ -610,23 +615,25 @@
                                        Style="{StaticResource LabelStyle}"/>
                                 <Label Grid.Row="11" Grid.Column="3" Content="x"
                                        Style="{StaticResource LabelStyle}"/>
-                                <TextBox Grid.Row="4" Grid.Column="4" Text="{Binding GainBallast}" IsEnabled="{Binding IsCheckedBallast}"
+                                <Label Grid.Row="12" Grid.Column="3" Content="x"
+                                       Style="{StaticResource LabelStyle}"/>
+                                <TextBox Grid.Row="5" Grid.Column="4" Text="{Binding GainBallast}" IsEnabled="{Binding IsCheckedBallast}"
                                          Style="{StaticResource TextBoxStyle}" Margin="5,0,0,0"
                                          Width="20" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
-                                <TextBox Grid.Row="5" Grid.Column="4" Text="{Binding GainRestriktor}" IsEnabled="{Binding IsCheckedRestriktor}"
+                                <TextBox Grid.Row="6" Grid.Column="4" Text="{Binding GainRestriktor}" IsEnabled="{Binding IsCheckedRestriktor}"
                                          Style="{StaticResource TextBoxStyle}" Margin="5,0,0,0"
                                          Width="20" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
-                                <Label Grid.Row="4" Grid.Column="5" Content="kg"
+                                <Label Grid.Row="5" Grid.Column="5" Content="kg"
                                        Style="{StaticResource LabelStyle}"/>
-                                <Label Grid.Row="5" Grid.Column="5" Content="%"
+                                <Label Grid.Row="6" Grid.Column="5" Content="%"
                                        Style="{StaticResource LabelStyle}"/>
-                                <TextBox Grid.Row="6" Grid.Column="4" Grid.ColumnSpan="3" Text="{Binding DateRegisterLimit}" IsEnabled="{Binding IsCheckedRegisterLimit}"
+                                <TextBox Grid.Row="7" Grid.Column="4" Grid.ColumnSpan="3" Text="{Binding DateRegisterLimit}" IsEnabled="{Binding IsCheckedRegisterLimit}"
                                          Style="{StaticResource TextBoxStyle}" Margin="5,0,0,0"
                                          Width="175" HorizontalContentAlignment="Center"/>
-                                <TextBox Grid.Row="7" Grid.Column="4" Grid.ColumnSpan="3" Text="{Binding DateBoPFreeze}" IsEnabled="{Binding IsCheckedBoPFreeze}"
+                                <TextBox Grid.Row="8" Grid.Column="4" Grid.ColumnSpan="3" Text="{Binding DateBoPFreeze}" IsEnabled="{Binding IsCheckedBoPFreeze}"
                                          Style="{StaticResource TextBoxStyle}" Margin="5,0,0,0"
                                          Width="175" HorizontalContentAlignment="Center"/>
-                                <TextBox Grid.Row="11" Grid.Column="4" Grid.ColumnSpan="3" Text="{Binding DateCarChangeLimit}" IsEnabled="{Binding IsCheckedCarChangeLimit}"
+                                <TextBox Grid.Row="12" Grid.Column="4" Grid.ColumnSpan="3" Text="{Binding DateCarChangeLimit}" IsEnabled="{Binding IsCheckedCarChangeLimit}"
                                          Style="{StaticResource TextBoxStyle}" Margin="5,0,0,0"
                                          Width="175" HorizontalContentAlignment="Center"/>
                             </Grid>
@@ -719,17 +726,19 @@
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_10"/>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_11"/>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_12"/>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_13"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Grid.Column="2" Content="Name" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                                 <Label Grid.Column="3" Content="Online" Grid.ColumnSpan="2" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                                 <Label Grid.Column="5" Content="Results" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                                 <Label Grid.Column="6" Content="Type" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                                 <Label Grid.Column="7" Content="Entrylist" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
-                                <Label Grid.Column="8" Content="Season" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
-                                <Label Grid.Column="9" Content="fCM" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
-                                <Label Grid.Column="10" Content="fEL" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
-                                <Label Grid.Column="11" Content="BoP" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
-                                <Label Grid.Column="12" Content="Path" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="8" Content="Series" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="9" Content="Season" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="10" Content="fCM" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="11" Content="fEL" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="12" Content="BoP" Style="{StaticResource LabelStyle}" Margin="0,5" HorizontalAlignment="Center"/>
+                                <Label Grid.Column="13" Content="Path" Style="{StaticResource LabelStyle}" Margin="5" HorizontalAlignment="Center"/>
                             </Grid>
                             <Grid Grid.Row="2">
                                 <Grid.ColumnDefinitions>
@@ -746,6 +755,7 @@
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_10"/>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_11"/>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_12"/>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="ServerColumn_13"/>
                                 </Grid.ColumnDefinitions>
                                 <ItemsControl Grid.Column="1" ItemsSource="{Binding ListServer}" x:Name="ItemCtrlServerColumn_1">
                                     <ItemsControl.ItemTemplate>
@@ -822,8 +832,8 @@
                                 <ItemsControl Grid.Column="8" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding ListSeasonNames, UpdateSourceTrigger=PropertyChanged}"
-                                                      SelectedValue="{Binding SeasonName, UpdateSourceTrigger=PropertyChanged}"
+                                            <ComboBox ItemsSource="{Binding ListSeriesNames, UpdateSourceTrigger=PropertyChanged}"
+                                                      SelectedValue="{Binding SeriesName, UpdateSourceTrigger=PropertyChanged}"
                                                       Style="{StaticResource ComboBoxStyle}" Margin="5" Cursor="Hand"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -831,31 +841,40 @@
                                 <ItemsControl Grid.Column="9" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <CheckBox IsChecked="{Binding ForceCarModel}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
+                                            <ComboBox ItemsSource="{Binding ListSeasonNames, UpdateSourceTrigger=PropertyChanged}"
+                                                      SelectedValue="{Binding SeasonName, UpdateSourceTrigger=PropertyChanged}"
+                                                      Style="{StaticResource ComboBoxStyle}" Margin="5" Cursor="Hand"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <ItemsControl Grid.Column="10" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <CheckBox IsChecked="{Binding ForceEntrylist}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
+                                            <CheckBox IsChecked="{Binding ForceCarModel}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <ItemsControl Grid.Column="11" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <CheckBox IsChecked="{Binding WriteBoP}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
+                                            <CheckBox IsChecked="{Binding ForceEntrylist}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <ItemsControl Grid.Column="12" ItemsSource="{Binding ListServer}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBox x:Name="TextBoxSever_12" Text="{Binding Path}" Style="{StaticResource TextBoxStyle}" MaxWidth="150" Margin="5"/>
+                                            <CheckBox IsChecked="{Binding WriteBoP}" Style="{StaticResource CheckBoxStyle}" Margin="0,5"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <ItemsControl Grid.Column="13" ItemsSource="{Binding ListServer}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBox x:Name="TextBoxSever_13" Text="{Binding Path}" Style="{StaticResource TextBoxStyle}" MaxWidth="150" Margin="5"/>
                                             <DataTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding PathExists}" Value="False">
-                                                    <Setter TargetName="TextBoxSever_12" Property="BorderBrush" Value="{StaticResource color6}"/>
+                                                    <Setter TargetName="TextBoxSever_13" Property="BorderBrush" Value="{StaticResource color6}"/>
                                                 </DataTrigger>
                                             </DataTemplate.Triggers>
                                         </DataTemplate>
