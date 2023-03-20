@@ -15,8 +15,8 @@ namespace GTRCLeagueManager.Database
             Statics = new(true)
             {
                 Table = "Colors",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Alpha", "Red", "Green", "Blue" } },
-                ToStringPropertiesNames = new List<string>() { "Alpha", "Red", "Green", "Blue" },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(Alpha), nameof(Red), nameof(Green), nameof(Blue) } },
+                ToStringPropertiesNames = new List<string>() { nameof(Alpha), nameof(Red), nameof(Green), nameof(Blue) },
                 PublishList = () => PublishList()
             };
         }

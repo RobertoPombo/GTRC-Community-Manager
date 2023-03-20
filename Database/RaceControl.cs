@@ -13,8 +13,8 @@ namespace GTRCLeagueManager.Database
             Statics = new StaticDbField<RaceControl>(true)
             {
                 Table = "RaceControl",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "DriverID" } },
-                ToStringPropertiesNames = new List<string>() { "FullName" },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(DriverID) } },
+                ToStringPropertiesNames = new List<string>() { nameof(FullName) },
                 PublishList = () => PublishList()
             };
         }

@@ -13,8 +13,8 @@ namespace GTRCLeagueManager.Database
             Statics = new StaticDbField<PreQualiResultLine>(true)
             {
                 Table = "PreQualiResultLines",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "Position" }, new List<string>() { "EntryID" } },
-                ToStringPropertiesNames = new List<string>() { "Position", "EntryID" },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(Position) }, new List<string>() { nameof(EntryID) } },
+                ToStringPropertiesNames = new List<string>() { nameof(Position), nameof(EntryID) },
                 PublishList = () => PublishList()
             };
         }

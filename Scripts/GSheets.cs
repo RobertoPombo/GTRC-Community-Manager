@@ -116,7 +116,9 @@ namespace GTRCLeagueManager
         {
             if (VarMap.TryGetValue(strKey, out int intKey) && row.Count > intKey && row[intKey] is not null)
             {
-                return row[intKey].ToString();
+                string? strVal = row[intKey].ToString();
+                if (strVal is null) { return null; }
+                else { return Basics.RemoveSpaceStartEnd(strVal); }
             }
             else { return null; }
         }
@@ -175,7 +177,7 @@ namespace GTRCLeagueManager
                 if (entry.ID == Basics.NoID) { _ = new Entry { SeasonID = seasonID, RaceNumber = RaceNumber }; Entry.Statics.WriteSQL(); newEntry = true; }
                 entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { seasonID, RaceNumber });
                 DriverEntries driverEntry = DriverEntries.Statics.GetByUniqProp(driverTeam.DriverID);
-                if (driverEntry.ID == Basics.NoID) { driverEntry = new DriverEntries { DriverID = driverTeam.DriverID }; DriverEntries.Statics.WriteSQL(); }
+                if (driverEntry.ID == Basics.NoID) { _ = new DriverEntries { DriverID = driverTeam.DriverID }; DriverEntries.Statics.WriteSQL(); }
                 driverEntry = DriverEntries.Statics.GetByUniqProp(driverTeam.DriverID);
                 driverEntry.EntryID = entry.ID;
                 entry.TeamID = driverTeam.TeamID;

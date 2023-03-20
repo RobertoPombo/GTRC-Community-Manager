@@ -13,8 +13,8 @@ namespace GTRCLeagueManager.Database
             Statics = new StaticDbField<DriverEntries>(true)
             {
                 Table = "DriverEntries",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "DriverID" } },
-                ToStringPropertiesNames = new List<string>() { "DriverID" },
+                UniquePropertiesNames = new List<List<string>>() { },
+                ToStringPropertiesNames = new List<string>() { nameof(DriverID), nameof(EntryID) },
                 PublishList = () => PublishList()
             };
         }
@@ -29,7 +29,13 @@ namespace GTRCLeagueManager.Database
         public int DriverID
         {
             get { return driverID; }
-            set { driverID = value; if (ReadyForList) { SetNextAvailable(); } Name3Digits = Driver.Statics.GetByID(driverID).Name3DigitsOptions[0]; }
+            set
+            {
+                if (Driver.Statics.IDList.Count == 0) { _ = new Driver() { ID = 1 }; }
+                if (!Driver.Statics.ExistsID(value)) { value = Driver.Statics.IDList[0].ID; }
+                driverID = value;
+                Name3Digits = Driver.Statics.GetByID(driverID).Name3DigitsOptions[0];
+            }
         }
 
         public int EntryID
@@ -37,7 +43,7 @@ namespace GTRCLeagueManager.Database
             get { return entryID; }
             set
             {
-                if (Entry.Statics.IDList.Count == 0) { new Entry() { ID = 1 }; }
+                if (Entry.Statics.IDList.Count == 0) { _ = new Entry() { ID = 1 }; }
                 if (!Entry.Statics.ExistsID(value)) { value = Entry.Statics.IDList[0].ID; }
                 entryID = value;
             }
@@ -51,21 +57,7 @@ namespace GTRCLeagueManager.Database
 
         public static void PublishList() { }
 
-        public override void SetNextAvailable()
-        {
-            int driverNr = 0;
-            List<Driver> _idList = Driver.Statics.IDList;
-            if (_idList.Count == 0) { new Driver() { ID = 1 }; _idList = Driver.Statics.IDList; }
-            Driver _driver = Driver.Statics.GetByID(driverID);
-            if (_driver.ReadyForList) { driverNr = Driver.Statics.IDList.IndexOf(_driver); } else { driverID = _idList[0].ID; }
-            int startValue = driverNr;
-            while (!IsUnique())
-            {
-                if (driverNr + 1 < _idList.Count) { driverNr += 1; } else { driverNr = 0; }
-                driverID = _idList[driverNr].ID;
-                if (driverNr == startValue) { break; }
-            }
-        }
+        public override void SetNextAvailable() { }
 
         //TEMP: Converter
         [NotMapped] public string SteamID { set { DriverID = Driver.Statics.GetByUniqProp(value).ID; } }

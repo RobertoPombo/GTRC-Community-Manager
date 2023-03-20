@@ -20,8 +20,8 @@ namespace GTRCLeagueManager.Database
             Statics = new StaticDbField<Driver>(true)
             {
                 Table = "Drivers",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "SteamID" }, new List<string>() { "DiscordID" } },
-                ToStringPropertiesNames = new List<string>() { "FullName" },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(SteamID) }, new List<string>() { nameof(DiscordID) } },
+                ToStringPropertiesNames = new List<string>() { nameof(FullName) },
                 PublishList = () => PublishList()
             };
         }

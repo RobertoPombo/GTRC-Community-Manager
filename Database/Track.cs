@@ -15,8 +15,8 @@ namespace GTRCLeagueManager.Database
             Statics = new StaticDbField<Track>(true)
             {
                 Table = "Tracks",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { "AccTrackID" } },
-                ToStringPropertiesNames = new List<string>() { "Name" },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(AccTrackID) } },
+                ToStringPropertiesNames = new List<string>() { nameof(Name) },
                 PublishList = () => PublishList()
             };
         }
