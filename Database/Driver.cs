@@ -37,7 +37,7 @@ namespace GTRCLeagueManager.Database
         private DateTime banDate = Event.DateTimeMaxValue;
         private string name3Digits = "";
 
-        [NotMapped][JsonIgnore] public List<string> Name3DigitsOptions = new List<string>() { "" };
+        [NotMapped][JsonIgnore] public List<string> Name3DigitsOptions = new() { "" };
 
         public long SteamID
         {
@@ -188,10 +188,10 @@ namespace GTRCLeagueManager.Database
         public void UpdateName3DigitsOptions()
         {
             List<string> listFirstNames; List<string> listLastNames;
-            List<string> tempListN3D = new List<string>();
+            List<string> tempListN3D = new();
             listFirstNames = FilterLetters4N3D(FirstName);
             listLastNames = FilterLetters4N3D(LastName);
-            List<string> listAllNames = new List<string>();
+            List<string> listAllNames = new();
             foreach (string _name in listFirstNames) { listAllNames.Add(_name); }
             foreach (string _name in listLastNames) { listAllNames.Add(_name); }
             tempListN3D = AddN3D(tempListN3D, Name3Digits);
@@ -299,7 +299,7 @@ namespace GTRCLeagueManager.Database
             name = Basics.StrRemoveSpecialLetters(name);
             name = name.ToUpper();
             name = name.Replace("-", " ");
-            List<string> nameList = new List<string>();
+            List<string> nameList = new();
             foreach (string _name in name.Split(' ')) { if (_name.Length > 0) { nameList.Add(_name); } }
             return nameList;
         }

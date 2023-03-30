@@ -154,7 +154,7 @@ namespace GTRCLeagueManager
             _server.IsRunning = true;
             _server.WaitQueue--;
             Lap.Statics.LoadSQL();
-            for (int pathNr = 0; pathNr < paths.Count; pathNr++) { PreSeason.AddResultsJson(paths[pathNr]); _server.WaitQueue--; }
+            for (int pathNr = 0; pathNr < paths.Count; pathNr++) { PreSeason.AddResultsJson(paths[pathNr], _server.Server.SeasonID); _server.WaitQueue--; }
             Lap.Statics.WriteSQL();
             if (PreSeasonVM.Instance is not null)
             {

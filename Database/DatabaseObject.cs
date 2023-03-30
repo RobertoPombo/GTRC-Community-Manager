@@ -78,7 +78,9 @@ namespace GTRCLeagueManager.Database
 
         public string Path { get { return MainWindow.dataDirectory + Table.ToLower() + ".json"; } }
 
-        [NotMapped][JsonIgnore] public List<DbType> IDList
+        [NotMapped]
+        [JsonIgnore]
+        public List<DbType> IDList
         {
             get
             {
@@ -184,6 +186,13 @@ namespace GTRCLeagueManager.Database
             DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
+        public DbType GetByIdSQL(int id)
+        {
+            string SqlQry = "SELECT * FROM " + Table + " WHERE ID = " + id.ToString() + ";";
+            try { return SQL.Connection.Query<DbType>(SqlQry).ToList()[0]; }
+            catch { MainVM.List[0].LogCurrentText = "Loading object (ID = " + id.ToString() + ") from SQL table '" + Table + "' failed!"; return GetByID(id); }
+        }
+
         public DbType GetByID(int id)
         {
             if (id > Basics.NoID) { foreach (DbType _obj in List) { if (_obj.ID == id) { return _obj; } } }
@@ -213,7 +222,7 @@ namespace GTRCLeagueManager.Database
 
         public DbType GetByUniqProp(dynamic _value, int index = 0)
         {
-            if (UniqueProperties[index].Count == 1)
+            if (UniqueProperties.Count > index && UniqueProperties[index].Count == 1)
             {
                 return GetByUniqProp(new List<dynamic>() { _value }, index);
             }
@@ -325,7 +334,9 @@ namespace GTRCLeagueManager.Database
         private bool readyForList = false;
         private int id = Basics.NoID;
 
-        [NotMapped][JsonIgnore] public DbType This
+        [NotMapped]
+        [JsonIgnore]
+        public DbType This
         {
             get { return _this; }
             set { _this = value; }
@@ -333,13 +344,16 @@ namespace GTRCLeagueManager.Database
 
         [NotMapped][JsonIgnore] public List<DbType> List { get { return StaticFields.List; } }
 
-        [NotMapped][JsonIgnore] public bool ReadyForList
+        [NotMapped]
+        [JsonIgnore]
+        public bool ReadyForList
         {
             get { return readyForList; }
             set { if (value != readyForList) { if (value) { SetNextAvailable(); } if (!value || IsUnique()) { readyForList = value; } } }
         }
 
-        [JsonProperty(Order = int.MinValue)] public int ID
+        [JsonProperty(Order = int.MinValue)]
+        public int ID
         {
             get { return id; }
             set
@@ -352,7 +366,8 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        [JsonIgnore] public int Nr
+        [JsonIgnore]
+        public int Nr
         {
             get { if (StaticFields.List.Contains(This)) { return StaticFields.List.IndexOf(This) + 1; } else { return Basics.NoID; } }
         }

@@ -3,12 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Reflection;
+using System.Windows.Media;
+using System.Windows;
 
 namespace GTRCLeagueManager
 {
     public static class Basics
     {
         public static readonly int NoID = -1;
+        public static readonly Brush StateOff = (Brush)Application.Current.FindResource("color1");
+        public static readonly Brush StateOn = (Brush)Application.Current.FindResource("color3");
+        public static readonly Brush StateWait = (Brush)Application.Current.FindResource("color6");
+        public static readonly Brush StateRun = (Brush)Application.Current.FindResource("color5");
+        public static readonly Brush StateRunWait = (Brush)Application.Current.FindResource("color4");
 
         public static dynamic CastValue(PropertyInfo property, dynamic Value)
         {
@@ -108,7 +115,7 @@ namespace GTRCLeagueManager
 
         public static string StrRemoveVocals(string str)
         {
-            List<string> vocals = new List<string>() { "a", "e", "i", "o", "u" };
+            List<string> vocals = new() { "a", "e", "i", "o", "u" };
             foreach (string vocal in vocals)
             {
                 str = str.Replace(vocal.ToLower(), "");
@@ -117,7 +124,7 @@ namespace GTRCLeagueManager
             return str;
         }
 
-        public static string ms2laptime(int ms)
+        public static string Ms2Laptime(int ms)
         {
             if (ms == int.MinValue) { ms = int.MaxValue; }
             float flo_input = (float)Math.Abs(ms);
@@ -148,12 +155,59 @@ namespace GTRCLeagueManager
             return str_std + str_min + str_sek + str_ms;
         }
 
+        public static int Laptime2Ms(string laptime)
+        {
+            int ms = 0;
+            string msStr = "0";
+            string secStr = "0";
+            string minStr = "0";
+            string hStr = "0";
+            string[] inputArray = laptime.Split(':');
+            List<string> inputList1 = new();
+            foreach (string input in inputArray) { inputList1.Add(input); }
+            if (inputList1.Count > 2)
+            {
+                hStr = inputList1[^3];
+                if (hStr.Length == 0) { hStr = "0"; }
+            }
+            if (inputList1.Count > 1)
+            {
+                minStr = inputList1[^2];
+                if (minStr.Length == 0) { minStr = "0"; }
+            }
+            if (inputList1.Count > 0)
+            {
+                string[] inputSecArray = inputList1[^1].Split('.', ',');
+                List<string> inputList2 = new();
+                foreach (string input in inputSecArray) { inputList2.Add(input); }
+                if (inputList2.Count == 1)
+                {
+                    secStr = inputList2[^1];
+                    if (secStr.Length == 0) { secStr = "0"; }
+                }
+                else if (inputList2.Count > 1)
+                {
+                    secStr = inputList2[^2];
+                    if (secStr.Length == 0) { secStr = "0"; }
+                    msStr = inputList2[^1];
+                    if (msStr.Length == 0) { msStr = "0"; }
+                    else if (msStr.Length == 1) { msStr += "00"; }
+                    else if (msStr.Length == 2) { msStr += "0"; }
+                }
+            }
+            if (int.TryParse(msStr, out int msInt) && int.TryParse(secStr, out int secInt) && int.TryParse(minStr, out int minInt) && int.TryParse(hStr, out int hInt))
+            {
+                ms = msInt + 1000 * (secInt + 60 * (minInt + 60 * hInt));
+            }
+            return ms;
+        }
+
         public static string ValidatedPath(string path0, string path)
         {
 
             string pathStart;
             string pathName;
-            List<char> BlacklistPathChar = new List<char> { '/', ':', '*', '?', '"', '<', '>', '|' };
+            List<char> BlacklistPathChar = new() { '/', ':', '*', '?', '"', '<', '>', '|' };
 
             if (path == null) { path = path0; }
 
@@ -164,8 +218,8 @@ namespace GTRCLeagueManager
             }
             else
             {
-                pathStart = path.Substring(0, 3);
-                pathName = path.Substring(pathStart.Length);
+                pathStart = path[..3];
+                pathName = path[pathStart.Length..];
                 if (!Directory.Exists(pathStart))
                 {
                     pathStart = "//";
@@ -187,7 +241,7 @@ namespace GTRCLeagueManager
 
             while (pathName.Length > 0 && pathName.Substring(0, 1) == "\\")
             {
-                pathName = pathName.Substring(1);
+                pathName = pathName[1..];
             }
 
             while (pathName.Contains("\\\\"))
@@ -199,7 +253,7 @@ namespace GTRCLeagueManager
 
             if (path.Length >= path0.Length && path.Substring(0, path0.Length) == path0)
             {
-                path = "//" + path.Substring(path0.Length);
+                path = "//" + path[path0.Length..];
             }
 
             return path;
@@ -207,9 +261,9 @@ namespace GTRCLeagueManager
 
         public static string RelativePath2AbsolutePath(string path0, string path)
         {
-            if (path.Length > 0 && path.Substring(0, 2) == "//")
+            if (path.Length > 0 && path[..2] == "//")
             {
-                path = path0 + path.Substring(2);
+                path = path0 + path[2..];
             }
             return path;
         }
@@ -261,6 +315,43 @@ namespace GTRCLeagueManager
                     case 'D': daydigitcount++; if (daydigitcount <= daystr.Length) { text = daystr.Substring(daystr.Length - daydigitcount, 1) + text; } break;
                     case 'M': monthdigitcount++; if (monthdigitcount <= monthstr.Length) { text = monthstr.Substring(monthstr.Length - monthdigitcount, 1) + text; } break;
                     case 'Y': yeardigitcount++; if (yeardigitcount <= yearstr.Length) { text = yearstr.Substring(yearstr.Length - yeardigitcount, 1) + text; } break;
+                    default: text = currentChar + text; break;
+                }
+            }
+            return text;
+        }
+
+        public static string Ms2String(int ms, string parseType)
+        {
+            if (ms == int.MinValue) { ms = int.MaxValue; }
+            float flo_input = Math.Abs(ms);
+            flo_input /= 1000;
+            int hInt = Convert.ToInt32(Math.Floor(flo_input / 3600));
+            int minInt = Convert.ToInt32(Math.Floor((flo_input / 60) - 60 * hInt));
+            int secInt = Convert.ToInt32(Math.Floor(flo_input - 60 * (minInt + 60 * hInt)));
+            int msInt = Convert.ToInt32(Math.Round((flo_input - secInt - 60 * (minInt + 60 * hInt)) * 1000));
+            string msStr = msInt.ToString();
+            string secStr = secInt.ToString();
+            string minStr = minInt.ToString();
+            string hStr = hInt.ToString();
+            if (msInt < 10) { msStr = "0" + msStr; }
+            if (msInt < 100) { msStr = "0" + msStr; }
+            if (secInt < 10) { secStr = "0" + secStr; }
+            if (minInt < 10) { minStr = "0" + minStr; }
+            if (hInt < 10) { hStr = "0" + hStr; }
+            int msDigitCount = 0;
+            int secDigitCount = 0;
+            int minDigitCount = 0;
+            int hDigitCount = 0;
+            string text = "";
+            foreach (char currentChar in parseType.Reverse())
+            {
+                switch (currentChar)
+                {
+                    case 'x': msDigitCount++; if (msDigitCount <= msStr.Length) { text = msStr.Substring(msDigitCount - 1, 1) + text; } break;
+                    case 's': secDigitCount++; if (secDigitCount <= secStr.Length) { text = secStr.Substring(secStr.Length - secDigitCount, 1) + text; } break;
+                    case 'm': minDigitCount++; if (minDigitCount <= minStr.Length) { text = minStr.Substring(minStr.Length - minDigitCount, 1) + text; } break;
+                    case 'h': hDigitCount++; if (hDigitCount <= hStr.Length) { text = hStr.Substring(hStr.Length - hDigitCount, 1) + text; } break;
                     default: text = currentChar + text; break;
                 }
             }

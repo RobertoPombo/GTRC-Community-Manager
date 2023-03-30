@@ -25,7 +25,7 @@ namespace GTRCLeagueManager
             return true;
         }
 
-        public static void AddResultsJson(string path)
+        public static void AddResultsJson(string path, int seasonID)
         {
             //Sollte dynamisch sein:
             int attemptMax = 1000;
@@ -92,7 +92,9 @@ namespace GTRCLeagueManager
                             }
                         }
                     }
-                    int _entryID = DriverEntries.Statics.GetByUniqProp(Driver.Statics.GetByUniqProp(Driver.String2LongSteamID(steamID)).ID).EntryID;
+                    int _entryID = Basics.NoID;
+                    Driver driver = Driver.Statics.GetByUniqProp(Driver.String2LongSteamID(steamID));
+                    _entryID = DriversEntries.GetByDriverIDSeasonID(driver.ID, seasonID).EntryID;
                     if (_entryID != Basics.NoID) { lap.EntryID = _entryID; }
                 }
             }
@@ -459,57 +461,58 @@ namespace GTRCLeagueManager
         public static void UpdateName3Digits(int _seasonID)
         {
             bool allUnique = false; int number = 0;
-            List<Driver> driverList = new();
+            List<DriversEntries> driverEntryList = new();
             foreach (Entry _entry in Entry.Statics.List)
             {
-                if (_entry.SeasonID == _seasonID)
-                {
-                    foreach (DriverEntries _driverEntries in DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), _entry.ID))
-                    {
-                        driverList.Add(Driver.Statics.GetByID(_driverEntries.DriverID));
-                    }
-                }
+                if (_entry.SeasonID == _seasonID) { driverEntryList = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID); }
             }
-            foreach (Driver _driver in driverList) { DriverEntries.Statics.GetByUniqProp(_driver.ID).Name3Digits = _driver.Name3DigitsOptions[0]; }
+            foreach (DriversEntries _driverEntry in driverEntryList)
+            {
+                _driverEntry.Name3Digits = Driver.Statics.GetByID(_driverEntry.DriverID).Name3DigitsOptions[0];
+            }
             while (!allUnique)
             {
                 allUnique = true;
-                foreach (Driver _driver in driverList)
+                foreach (DriversEntries _driverEntry in driverEntryList)
                 {
-                    List<Driver> identicalN3D = new List<Driver>();
-                    string currentN3D = DriverEntries.Statics.GetByUniqProp(_driver.ID).Name3Digits;
-                    foreach (Driver _driver2 in driverList)
+                    List<DriversEntries> identicalN3D = new();
+                    string currentN3D = _driverEntry.Name3Digits;
+                    foreach (DriversEntries _driverEntry2 in driverEntryList)
                     {
-                        if (currentN3D == DriverEntries.Statics.GetByUniqProp(_driver2.ID).Name3Digits) { identicalN3D.Add(_driver2); }
+                        if (currentN3D == _driverEntry2.Name3Digits) { identicalN3D.Add(_driverEntry2); }
                     }
                     if (identicalN3D.Count > 1)
                     {
                         int lvlsMax = -1;
-                        List<Driver> identicalN3D_0 = new();
-                        List<Driver> identicalN3D_1 = new();
-                        foreach (Driver _driver2 in identicalN3D)
+                        List<DriversEntries> identicalN3D_0 = new();
+                        List<DriversEntries> identicalN3D_1 = new();
+                        foreach (DriversEntries _driverEntry2 in identicalN3D)
                         {
-                            if (_driver2.Name3DigitsOptions.IndexOf(currentN3D) == 0) { identicalN3D_0.Add(_driver2); }
+                            Driver _driver2 = Driver.Statics.GetByID(_driverEntry2.DriverID);
+                            if (_driver2.Name3DigitsOptions.IndexOf(currentN3D) == 0) { identicalN3D_0.Add(_driverEntry2); }
                             int lvlsMaxTemp = _driver2.Name3DigitsOptions.Count - _driver2.Name3DigitsOptions.IndexOf(currentN3D);
-                            if (lvlsMaxTemp > lvlsMax) { lvlsMax = lvlsMaxTemp; identicalN3D_1 = new List<Driver>() { _driver2 }; }
+                            if (lvlsMaxTemp > lvlsMax) { lvlsMax = lvlsMaxTemp; identicalN3D_1 = new List<DriversEntries>() { _driverEntry2 }; }
                         }
                         if (identicalN3D_0.Count > 0) { identicalN3D = identicalN3D_0; } else { identicalN3D = identicalN3D_1; }
-                        foreach (Driver _driver2 in identicalN3D)
+                        foreach (DriversEntries _driverEntry2 in identicalN3D)
                         {
+                            Driver _driver2 = Driver.Statics.GetByID(_driverEntry2.DriverID);
                             int currentLvl = _driver2.Name3DigitsOptions.IndexOf(currentN3D) + 1;
                             int lvlMax = _driver2.Name3DigitsOptions.Count;
-                            if (currentLvl == lvlMax) { DriverEntries.Statics.GetByUniqProp(_driver2.ID).Name3Digits = number.ToString(); number++; }
-                            else { DriverEntries.Statics.GetByUniqProp(_driver2.ID).Name3Digits = _driver2.Name3DigitsOptions[currentLvl]; }
+                            if (currentLvl == lvlMax) { _driverEntry2.Name3Digits = number.ToString(); number++; }
+                            else { _driverEntry2.Name3Digits = _driver2.Name3DigitsOptions[currentLvl]; }
                         }
                         allUnique = false;
                         break;
                     }
                 }
             }
-            foreach (Driver _driver in driverList)
+            foreach (DriversEntries _driverEntry in driverEntryList)
             {
-                DriverEntries _driverEntries = DriverEntries.Statics.GetByUniqProp(_driver.ID);
-                if (Int32.TryParse(_driverEntries.Name3Digits, out number)) { _driverEntries.Name3Digits = _driver.Name3DigitsOptions[0]; }
+                if (Int32.TryParse(_driverEntry.Name3Digits, out number))
+                {
+                    _driverEntry.Name3Digits = Driver.Statics.GetByID(_driverEntry.DriverID).Name3DigitsOptions[0];
+                }
             }
         }
     }

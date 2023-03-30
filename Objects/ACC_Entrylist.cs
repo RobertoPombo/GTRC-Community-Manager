@@ -55,8 +55,8 @@ namespace GTRCLeagueManager.Database
                     ACC_Entry accEntry = new();
                     entries.Add(accEntry);
                     accEntry.drivers = new List<ACC_Driver>();
-                    List<DriverEntries> ListDriverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), entry.ID);
-                    foreach (DriverEntries _driverEntries in ListDriverEntries)
+                    List<DriversEntries> ListDriverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), entry.ID);
+                    foreach (DriversEntries _driverEntries in ListDriverEntries)
                     {
                         Driver driver = Driver.Statics.GetByID(_driverEntries.DriverID);
                         ACC_Driver accDriver = new();
@@ -82,7 +82,7 @@ namespace GTRCLeagueManager.Database
             foreach (RaceControl admin in RaceControl.Statics.List)
             {
                 Driver _driverAdmin = Driver.Statics.GetByID(admin.DriverID);
-                DriverEntries _driverEntriesAdmin = DriverEntries.Statics.GetByUniqProp(_driverAdmin.ID);
+                DriversEntries _driverEntriesAdmin = DriversEntries.GetByDriverIDSeasonID(_driverAdmin.ID, _event.SeasonID);
                 EventsEntries _eventsEntriesAdmin = EventsEntries.GetAnyByUniqProp(_driverEntriesAdmin.EntryID, _event.ID);
                 if (!_eventsEntriesAdmin.IsOnEntrylist)
                 {

@@ -46,8 +46,8 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
-    
+
+
 
     <Style BasedOn="{StaticResource {x:Type CheckBox}}"
            TargetType="{x:Type CheckBox}"
@@ -177,6 +177,65 @@
                 </Setter>
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+
+
+    <Style BasedOn="{StaticResource {x:Type CheckBox}}"
+           TargetType="{x:Type CheckBox}"
+           x:Key="ShowHideTextCheckBoxStyle">
+
+        <Setter Property="Focusable" Value="false"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="UIElement.SnapsToDevicePixels" Value="True"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type CheckBox}">
+                    <Border x:Name="border" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="5"
+                            BorderThickness="0" BorderBrush="Transparent">
+                        <StackPanel Orientation="Horizontal">
+                            <Image x:Name="icon" Source="/Icons/icon_sho1.png" Stretch="Uniform" Margin="0,0,5,0"/>
+                            <TextBlock x:Name="text" VerticalAlignment="Bottom" Foreground="{StaticResource color2}" Height="{TemplateBinding Height}"
+                                       Text="{Binding Path=Content, RelativeSource={RelativeSource AncestorType={x:Type CheckBox}}}"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="False">
+                            <Setter TargetName="border" Property="Background" Value="Transparent"/>
+                            <Setter TargetName="icon" Property="Source" Value="/Icons/icon_hid1.png"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource color4}"/>
+                            <Setter TargetName="icon" Property="Source" Value="/Icons/icon_sho1.png"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                                <Condition Property="IsChecked" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource color3}"/>
+                            <Setter TargetName="icon" Property="Source" Value="/Icons/icon_sho0.png"/>
+                            <Setter TargetName="text" Property="Foreground" Value="{StaticResource color1}"/>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                                <Condition Property="IsChecked" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource color3}"/>
+                            <Setter TargetName="icon" Property="Source" Value="/Icons/icon_hid0.png"/>
+                            <Setter TargetName="text" Property="Foreground" Value="{StaticResource color1}"/>
+                        </MultiTrigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="text" Property="Margin" Value="0,0,0,-1"/>
+                            <Setter TargetName="border" Property="BorderThickness" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
 </ResourceDictionary>

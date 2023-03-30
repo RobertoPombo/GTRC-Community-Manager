@@ -287,9 +287,9 @@ namespace GTRCLeagueManager
                     }
                 }
                 PublishGSheetListIDs();
-                MainVM.List[0].LogCurrentText = "G-Sheet settings restored.";
+                MainVM.List[0].LogCurrentText = "Google-Sheets settings restored.";
             }
-            catch { MainVM.List[0].LogCurrentText = "Restore g-sheet settings failed!"; }
+            catch { MainVM.List[0].LogCurrentText = "Restore Google-Sheets settings failed!"; }
         }
 
         public void SaveGSSettings()
@@ -297,7 +297,7 @@ namespace GTRCLeagueManager
             PublishGSheetListIDs();
             string text = JsonConvert.SerializeObject(GSList, Formatting.Indented);
             File.WriteAllText(GSPathSettings, text, Encoding.Unicode);
-            MainVM.List[0].LogCurrentText = "Entries settings saved.";
+            MainVM.List[0].LogCurrentText = "Google-Sheets settings saved.";
         }
 
         public void PublishGSheetListIDs()

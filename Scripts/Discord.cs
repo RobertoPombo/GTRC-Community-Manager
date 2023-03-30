@@ -396,7 +396,7 @@ namespace GTRCLeagueManager
                     }
                     else
                     {
-                        Entry entry = Entry.Statics.GetByID(DriverEntries.Statics.GetByUniqProp(_driver.ID).EntryID);
+                        Entry entry = Entry.Statics.GetByID(DriversEntries.Statics.GetByUniqProp(_driver.ID).EntryID);
                         if (entry.ID == Basics.NoID)
                         {
                             if (DiscordID_Driver == DiscordID_Author) { LogText = "Du bist noch nicht für die Meisterschaft registriert. Falls du dich gerade erst angemeldet hast, versuche es doch bitte in " + iPreSVM.EntriesUpdateRemTime + " erneut. " + adminRoleTag + " schaut euch das Problem bitte an."; await ErrorResponse(); }
@@ -417,8 +417,8 @@ namespace GTRCLeagueManager
 
         public void CheckAuthorInEntry()
         {
-            List<DriverEntries> _driverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), EntryID);
-            foreach (DriverEntries _driverEntry in _driverEntries)
+            List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), EntryID);
+            foreach (DriversEntries _driverEntry in _driverEntries)
             {
                 Driver _driver = Driver.Statics.GetByID(_driverEntry.DriverID);
                 if (_driver.DiscordID == DiscordID_Author) { DiscordID_Driver = DiscordID_Author; break; }
@@ -427,8 +427,8 @@ namespace GTRCLeagueManager
 
         public void SetDiscordIDs_Drivers()
         {
-            List<DriverEntries> _driverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), EntryID);
-            foreach (DriverEntries _driverEntry in _driverEntries)
+            List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), EntryID);
+            foreach (DriversEntries _driverEntry in _driverEntries)
             {
                 Driver _driver = Driver.Statics.GetByID(_driverEntry.DriverID);
                 if (_driver.ID != Basics.NoID) { DiscordIDs_Drivers.Add(_driver.DiscordID); }
@@ -845,8 +845,8 @@ namespace GTRCLeagueManager
             if (printPos) { text += pos.ToString() + ".\t"; }
             text += entry.RaceNumber.ToString() + "\t";
             List<Driver> listDrivers = new();
-            List<DriverEntries> listDriverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), entry.ID);
-            foreach (DriverEntries driverEntry in listDriverEntries) { listDrivers.Add(Driver.Statics.GetByID(driverEntry.DriverID)); }
+            List<DriversEntries> listDriverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), entry.ID);
+            foreach (DriversEntries driverEntry in listDriverEntries) { listDrivers.Add(Driver.Statics.GetByID(driverEntry.DriverID)); }
             text += Driver.DriverList2String(listDrivers, nameof(Driver.FullName));
             if (!eventEntry.ScorePoints) { if (entry.ScorePoints) { text += " (Gaststarter | wg. Fzglimit)"; } else { text += " (Gaststarter)"; } }
             if (printCar) { text += "\t" + Car.Statics.GetByID(eventEntry.CarID).Name; }

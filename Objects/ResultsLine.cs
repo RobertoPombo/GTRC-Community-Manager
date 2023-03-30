@@ -131,7 +131,7 @@ namespace GTRCLeagueManager
 
         public string Time
         {
-            get { if (time != 0) { return Basics.ms2laptime(time); } else { return ""; } }
+            get { if (time != 0) { return Basics.Ms2Laptime(time); } else { return ""; } }
             set
             {
                 if (value != null && value != Int32.MaxValue.ToString() && value != Int32.MinValue.ToString()) { Int32.TryParse(value, out time); }
@@ -150,7 +150,7 @@ namespace GTRCLeagueManager
             get
             {
                 if (timegapleader[0] > 0) { return "+" + timegapleader[0].ToString() + 'L'; }
-                else if (timegapleader[0] == 0 && timegapleader[1] > 0) { return "+" + Basics.ms2laptime(timegapleader[1]); }
+                else if (timegapleader[0] == 0 && timegapleader[1] > 0) { return "+" + Basics.Ms2Laptime(timegapleader[1]); }
                 else { return ""; }
             }
         }
@@ -159,14 +159,14 @@ namespace GTRCLeagueManager
             get
             {
                 if (timegapintervall[0] > 0) { return "+" + timegapintervall[0].ToString() + 'L'; }
-                else if (timegapintervall[0] == 0 && timegapintervall[1] > 0) { return "+" + Basics.ms2laptime(timegapintervall[1]); }
+                else if (timegapintervall[0] == 0 && timegapintervall[1] > 0) { return "+" + Basics.Ms2Laptime(timegapintervall[1]); }
                 else { return ""; }
             }
         }
 
         public string BestLap
         {
-            get { if (bestlap != 0) { return Basics.ms2laptime(bestlap); } else { return ""; } }
+            get { if (bestlap != 0) { return Basics.Ms2Laptime(bestlap); } else { return ""; } }
             set
             {
                 if (value != null && value != Int32.MaxValue.ToString() && value != Int32.MinValue.ToString()) { Int32.TryParse(value, out bestlap); }
@@ -184,7 +184,7 @@ namespace GTRCLeagueManager
         {
             get
             {
-                if (bestlapgapleader > 0) { return "+" + Basics.ms2laptime(bestlapgapleader); }
+                if (bestlapgapleader > 0) { return "+" + Basics.Ms2Laptime(bestlapgapleader); }
                 else { return ""; }
             }
         }
@@ -193,7 +193,7 @@ namespace GTRCLeagueManager
         {
             get
             {
-                if (bestlapgapintervall > 0) { return "+" + Basics.ms2laptime(bestlapgapintervall); }
+                if (bestlapgapintervall > 0) { return "+" + Basics.Ms2Laptime(bestlapgapintervall); }
                 else { return ""; }
             }
         }

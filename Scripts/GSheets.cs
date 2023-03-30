@@ -176,9 +176,8 @@ namespace GTRCLeagueManager
                 Entry entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { seasonID, RaceNumber });
                 if (entry.ID == Basics.NoID) { _ = new Entry { SeasonID = seasonID, RaceNumber = RaceNumber }; Entry.Statics.WriteSQL(); newEntry = true; }
                 entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { seasonID, RaceNumber });
-                DriverEntries driverEntry = DriverEntries.Statics.GetByUniqProp(driverTeam.DriverID);
-                if (driverEntry.ID == Basics.NoID) { _ = new DriverEntries { DriverID = driverTeam.DriverID }; DriverEntries.Statics.WriteSQL(); }
-                driverEntry = DriverEntries.Statics.GetByUniqProp(driverTeam.DriverID);
+                DriversEntries driverEntry = DriversEntries.GetByDriverIDSeasonID(driverTeam.DriverID, entry.SeasonID);
+                if (driverEntry.ID == Basics.NoID) { _ = new DriversEntries { DriverID = driverTeam.DriverID }; DriversEntries.Statics.WriteSQL(); }
                 driverEntry.EntryID = entry.ID;
                 entry.TeamID = driverTeam.TeamID;
                 if ((newEntry || entry.CarID == Basics.NoID) && CarID != Basics.NoID) { entry.CarID = CarID; }
@@ -223,7 +222,7 @@ namespace GTRCLeagueManager
                 }
                 EventsEntries.Statics.WriteSQL();
                 DriversTeams.Statics.WriteSQL();
-                DriverEntries.Statics.WriteSQL();
+                DriversEntries.Statics.WriteSQL();
                 Entry.Statics.WriteSQL();
                 Team.Statics.WriteSQL();
                 Driver.Statics.WriteSQL();
@@ -250,9 +249,9 @@ namespace GTRCLeagueManager
                     PreQualiResultLine _resultsLine = PreQualiResultLine.Statics.List[rowNr];
                     int _id = _resultsLine.EntryID;
                     Entry _entry = Entry.Statics.GetByID(_id);
-                    List<DriverEntries> _driverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), _entry.ID);
+                    List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
                     string driverText = "";
-                    foreach (DriverEntries _driverEntry in _driverEntries) { driverText += Driver.Statics.GetByID(_driverEntry.DriverID).FullName + ", "; }
+                    foreach (DriversEntries _driverEntry in _driverEntries) { driverText += Driver.Statics.GetByID(_driverEntry.DriverID).FullName + ", "; }
                     driverText = driverText.Substring(0, Math.Max(0, driverText.Length - 2));
                     int average = _resultsLine.Average;
                     int average1 = PreQualiResultLine.Statics.List[Math.Max(0, rowNr - 1)].Average;
@@ -264,16 +263,16 @@ namespace GTRCLeagueManager
                     values.Add(Car.Statics.GetByID(EventsEntries.GetLatestEventsEntries(_entry, DateTime.Now).CarID).Name);
                     if (average < int.MaxValue)
                     {
-                        values.Add(Basics.ms2laptime(average));
-                        if (average != average0 && average0 < Int32.MaxValue) { values.Add("'+" + Basics.ms2laptime(average - average0)); }
+                        values.Add(Basics.Ms2Laptime(average));
+                        if (average != average0 && average0 < Int32.MaxValue) { values.Add("'+" + Basics.Ms2Laptime(average - average0)); }
                         else { values.Add(""); }
-                        if (average != average1 && average1 < Int32.MaxValue) { values.Add("'+" + Basics.ms2laptime(average - average1)); }
+                        if (average != average1 && average1 < Int32.MaxValue) { values.Add("'+" + Basics.Ms2Laptime(average - average1)); }
                         else { values.Add(""); }
                     }
                     else { values.Add(""); values.Add(""); values.Add(""); }
-                    if (_resultsLine.Average1 < int.MaxValue) { values.Add(Basics.ms2laptime(_resultsLine.Average1)); }
+                    if (_resultsLine.Average1 < int.MaxValue) { values.Add(Basics.Ms2Laptime(_resultsLine.Average1)); }
                     else { values.Add(""); }
-                    if (_resultsLine.Average2 < int.MaxValue) { values.Add(Basics.ms2laptime(_resultsLine.Average2)); }
+                    if (_resultsLine.Average2 < int.MaxValue) { values.Add(Basics.Ms2Laptime(_resultsLine.Average2)); }
                     else { values.Add(""); }
                     if (_resultsLine.DiffAverage > 0 && _resultsLine.DiffAverage < int.MaxValue) { values.Add(Math.Round((double)_resultsLine.DiffAverage / 100000, 3).ToString() + "%"); }
                     else { values.Add(""); }
@@ -283,9 +282,9 @@ namespace GTRCLeagueManager
                     values.Add(_resultsLine.ValidLapsCount.ToString() + "L");
                     values.Add(_resultsLine.ValidLapsCount1.ToString() + "L");
                     values.Add(_resultsLine.ValidLapsCount2.ToString() + "L");
-                    if (_resultsLine.BestLap1 < int.MaxValue) { values.Add(Basics.ms2laptime(_resultsLine.BestLap1)); }
+                    if (_resultsLine.BestLap1 < int.MaxValue) { values.Add(Basics.Ms2Laptime(_resultsLine.BestLap1)); }
                     else { values.Add(""); }
-                    if (_resultsLine.BestLap2 < int.MaxValue) { values.Add(Basics.ms2laptime(_resultsLine.BestLap2)); }
+                    if (_resultsLine.BestLap2 < int.MaxValue) { values.Add(Basics.Ms2Laptime(_resultsLine.BestLap2)); }
                     else { values.Add(""); }
                     if (_resultsLine.DiffBestLap > 0 && _resultsLine.DiffBestLap < int.MaxValue) { values.Add(Math.Round((double)_resultsLine.DiffBestLap / 100000, 3).ToString() + "%"); }
                     else { values.Add(""); }
@@ -353,7 +352,7 @@ namespace GTRCLeagueManager
             foreach (Entry _entry in listEntries)
             {
                 values = new List<object>();
-                List<DriverEntries> _driverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), _entry.ID);
+                List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
                 if (_driverEntries.Count > 0)
                 {
                     Driver _driver = Driver.Statics.GetByID(_driverEntries[0].DriverID);
@@ -392,7 +391,7 @@ namespace GTRCLeagueManager
             rows.Add(values);
             foreach (Entry _entry in listEntries)
             {
-                List<DriverEntries> _driverEntries = DriverEntries.Statics.GetBy(nameof(DriverEntries.EntryID), _entry.ID);
+                List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
                 if (_driverEntries.Count > 0)
                 {
                     Driver _driver = Driver.Statics.GetByID(_driverEntries[0].DriverID);

@@ -23,22 +23,22 @@ namespace GTRCLeagueManager
         public DatabaseVM()
         {
             Instance = this;
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Colors", typeof(ThemeColor)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Cars", typeof(Car)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Tracks", typeof(Track)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Drivers", typeof(Driver)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("RaceControl", typeof(RaceControl)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Series", typeof(Series)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Seasons", typeof(Season)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Servers", typeof(Server)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Teams", typeof(Team)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Entries", typeof(Entry)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("Events", typeof(Event)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("DriverEntries", typeof(DriverEntries)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("DriversTeams", typeof(DriversTeams)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("EventsEntries", typeof(EventsEntries)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("EventsCars", typeof(EventsCars)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>("PreQualiResultLines", typeof(PreQualiResultLine)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(ThemeColor.Statics.Table, typeof(ThemeColor)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Car.Statics.Table, typeof(Car)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Track.Statics.Table, typeof(Track)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Driver.Statics.Table, typeof(Driver)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(RaceControl.Statics.Table, typeof(RaceControl)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Series.Statics.Table, typeof(Series)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Season.Statics.Table, typeof(Season)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Server.Statics.Table, typeof(Server)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Team.Statics.Table, typeof(Team)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Entry.Statics.Table, typeof(Entry)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Event.Statics.Table, typeof(Event)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(DriversEntries.Statics.Table, typeof(DriversEntries)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(DriversTeams.Statics.Table, typeof(DriversTeams)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(EventsEntries.Statics.Table, typeof(EventsEntries)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(EventsCars.Statics.Table, typeof(EventsCars)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(PreQualiResultLine.Statics.Table, typeof(PreQualiResultLine)));
             DataType = ListDataTypes[0].Value;
             AddCmd = new UICmd((o) => Add());
             DelCmd = new UICmd((o) => Del());
