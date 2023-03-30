@@ -64,7 +64,7 @@ namespace GTRCLeagueManager
             UpdateEntrylistBoPCmd = new UICmd((o) => UpdateEntrylistBoP());
             if (!File.Exists(PathSettings)) { SaveSettings(); }
             RestoreSettings();
-            StateEntries = ServerM.StateOff;
+            StateEntries = Basics.StateOff;
             BackgroundWorkerResetEntries.DoWork += InfiniteLoopResetEntries;
             BackgroundWorkerResetEntries.RunWorkerAsync();
         }
@@ -141,8 +141,8 @@ namespace GTRCLeagueManager
             {
                 stateautoupdateentries = value;
                 RaisePropertyChanged();
-                if (stateautoupdateentries && StateEntries == ServerM.StateOff) { StateEntries = ServerM.StateOn; }
-                else if (!stateautoupdateentries && StateEntries == ServerM.StateOn) { StateEntries = ServerM.StateOff; }
+                if (stateautoupdateentries && StateEntries == Basics.StateOff) { StateEntries = Basics.StateOn; }
+                else if (!stateautoupdateentries && StateEntries == Basics.StateOn) { StateEntries = Basics.StateOff; }
                 entriesupdateremtime = intervallminrefreshentries * 60;
                 EntriesUpdateRemTime = "?";
             }
@@ -407,13 +407,13 @@ namespace GTRCLeagueManager
         {
             if (IsRunningEntries)
             {
-                if (WaitQueueEntries > 0) { StateEntries = ServerM.StateRunWait; }
-                else { StateEntries = ServerM.StateRun; }
+                if (WaitQueueEntries > 0) { StateEntries = Basics.StateRunWait; }
+                else { StateEntries = Basics.StateRun; }
             }
             else
             {
-                if (WaitQueueEntries > 0) { StateEntries = ServerM.StateWait; }
-                else { if (StateAutoUpdateEntries) { StateEntries = ServerM.StateOn; } else { StateEntries = ServerM.StateOff; } }
+                if (WaitQueueEntries > 0) { StateEntries = Basics.StateWait; }
+                else { if (StateAutoUpdateEntries) { StateEntries = Basics.StateOn; } else { StateEntries = Basics.StateOff; } }
             }
         }
 

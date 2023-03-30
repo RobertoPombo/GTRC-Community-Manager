@@ -15,11 +15,6 @@ namespace GTRCLeagueManager
 {
     public class ServerM : ObservableObject
     {
-        public static readonly Brush StateOff = (Brush)Application.Current.FindResource("color1");
-        public static readonly Brush StateOn = (Brush)Application.Current.FindResource("color3");
-        public static readonly Brush StateWait = (Brush)Application.Current.FindResource("color6");
-        public static readonly Brush StateRun = (Brush)Application.Current.FindResource("color5");
-        public static readonly Brush StateRunWait = (Brush)Application.Current.FindResource("color4");
         public static ObservableCollection<ServerM> List = new();
 
         [JsonIgnore] public Process AccServerProcess;
@@ -41,7 +36,7 @@ namespace GTRCLeagueManager
             ResultsWatcher = new FileSystemWatcher() { Filter = "*.json", NotifyFilter = NotifyFilters.FileName };
             ServerID = _serverID;
             ResultsWatcher.Created += new FileSystemEventHandler(ServerVM.Instance.EventNewResultsJson);
-            State = ServerM.StateOff;
+            State = Basics.StateOff;
         }
 
         public int ServerID
@@ -93,8 +88,8 @@ namespace GTRCLeagueManager
             set
             {
                 if (!Server.PathExistsExe()) { SetOnline = false; }
-                if (Server.PathExists()) { ResultsWatcher.Path = Server.AbsolutePath; if (DetectResults && State == ServerM.StateOff) { State = ServerM.StateOn; } }
-                else { DetectResults = false; if (State == ServerM.StateOn) { State = ServerM.StateOff; } }
+                if (Server.PathExists()) { ResultsWatcher.Path = Server.AbsolutePath; if (DetectResults && State == Basics.StateOff) { State = Basics.StateOn; } }
+                else { DetectResults = false; if (State == Basics.StateOn) { State = Basics.StateOff; } }
                 RaisePropertyChanged();
             }
         }
@@ -210,8 +205,8 @@ namespace GTRCLeagueManager
                     {
                         detectResults = value;
                         ResultsWatcher.EnableRaisingEvents = detectResults;
-                        if (detectResults && State == ServerM.StateOff) { State = ServerM.StateOn; }
-                        else if (!detectResults && State == ServerM.StateOn) { State = ServerM.StateOff; }
+                        if (detectResults && State == Basics.StateOff) { State = Basics.StateOn; }
+                        else if (!detectResults && State == Basics.StateOn) { State = Basics.StateOff; }
                         RaisePropertyChanged();
                     }
                 }
@@ -272,13 +267,13 @@ namespace GTRCLeagueManager
         {
             if (IsRunning)
             {
-                if (WaitQueue > 1) { State = StateRunWait; }
-                else { State = StateRun; }
+                if (WaitQueue > 1) { State = Basics.StateRunWait; }
+                else { State = Basics.StateRun; }
             }
             else
             {
-                if (WaitQueue > 1) { State = StateWait; }
-                else { if (DetectResults) { State = StateOn; } else { State = StateOff; } }
+                if (WaitQueue > 1) { State = Basics.StateWait; }
+                else { if (DetectResults) { State = Basics.StateOn; } else { State = Basics.StateOff; } }
             }
         }
 
