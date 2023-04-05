@@ -415,7 +415,7 @@ namespace Database
                         {
                             if (_filter.Filter != "")
                             {
-                                if (!Basics.GetCastedValue(_obj, property).ToString().Contains(_filter.Filter)) { notFiltered = false; }
+                                if (!Basics.GetCastedValue(_obj, property).ToString().ToLower().Contains(_filter.Filter.ToLower())) { notFiltered = false; }
                             }
                             break;
                         }
