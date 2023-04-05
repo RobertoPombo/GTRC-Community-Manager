@@ -415,7 +415,7 @@ namespace Database
                         {
                             if (_filter.Filter != "")
                             {
-                                if (Basics.GetCastedValue(_obj, property).ToString() != _filter.Filter) { notFiltered = false; }
+                                if (!Basics.GetCastedValue(_obj, property).ToString().Contains(_filter.Filter)) { notFiltered = false; }
                             }
                             break;
                         }
@@ -510,7 +510,7 @@ namespace Database
                         if (property.Name == nameof(DatabaseObject<DbType>.ID))
                         {
                             StaticFields.AllProperties.Insert(0, property);
-                            StaticFields.Filter.Insert(0, new StaticDbFilter(typeof(DbType), property) { Filter = "0" });
+                            StaticFields.Filter.Insert(0, new StaticDbFilter(typeof(DbType), property) { Filter = Basics.NoID.ToString() });
                         }
                         else
                         {
@@ -743,9 +743,9 @@ namespace Database
                         {
                             bool noFilter = true;
                             foreach (StaticDbFilter _staticDbFilter in _statics.Filter) { if (_staticDbFilter.Filter != filter) { noFilter = false; break; } }
-                            if (noFilter) { _statics.Filter[0].Filter = "0"; }
+                            if (noFilter) { _statics.Filter[0].Filter = Basics.NoID.ToString(); RaisePropertyChanged_Filter0(); }
                         }
-                        else { if (_statics.Filter[0].Filter == "0") { _statics.Filter[0].Filter = ""; } }
+                        else { if (_statics.Filter[0].Filter == Basics.NoID.ToString()) { _statics.Filter[0].Filter = ""; RaisePropertyChanged_Filter0(); } }
                     }
                     PublishFilter();
                 }
@@ -766,6 +766,11 @@ namespace Database
                 _statics.SortFilteredList(property);
                 if (DatabaseVM.Instance is not null) { DatabaseVM.Instance.ResetList(); }
             }
+        }
+
+        public void RaisePropertyChanged_Filter0()
+        {
+            if (DatabaseVM.Instance is not null) { DatabaseVM.Instance.RaisePropertyChanged_Filter(0); }
         }
 
         public UICmd SortCmd { get; set; }

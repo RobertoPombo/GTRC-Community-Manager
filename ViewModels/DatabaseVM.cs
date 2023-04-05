@@ -131,13 +131,16 @@ namespace GTRC_Community_Manager
 
         public void RaisePropertyChanged_Filter(int index = 0)
         {
-            if (Filter.Count > index) { Filter.RemoveAt(index); Filter.Insert(index, Statics.Filter[index]); RaisePropertyChanged(nameof(Filter)); }
+            if (Filter?.Count > index && Statics?.Filter?.Count > index)
+            {
+                Filter.RemoveAt(index);
+                Filter.Insert(index, Statics.Filter[index]);
+                RaisePropertyChanged(nameof(Filter));
+            }
         }
 
         public void ResetList(int index = 0)
         {
-            if (Filter?.Count > 0 && Statics?.Filter?.Count > 0) { RaisePropertyChanged_Filter(0); }
-            RaisePropertyChanged(nameof(Filter));
             List.Clear();
             if (Statics is not null) { foreach (var _obj in Statics.FilteredList) { List.Add(new DataRowVM(_obj, true, true)); } SetSelected(index); }
         }
