@@ -1,13 +1,14 @@
-﻿using GTRC_Community_Manager;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
-using System.Windows;
+using Scripts;
+using Enums;
 
-namespace GTRCLeagueManager.Database
+using GTRC_Community_Manager;
+
+namespace Database
 {
     public class Server : DatabaseObject<Server>
     {

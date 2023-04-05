@@ -1,4 +1,7 @@
 ﻿using Newtonsoft.Json;
+using Core;
+using Database;
+using Scripts;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,9 +11,9 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
-using GTRCLeagueManager.Database;
+using System.Reflection;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public class PreSeasonVM : ObservableObject
     {
@@ -42,6 +45,7 @@ namespace GTRCLeagueManager
         private bool ischeckedsignoutlimit = false;
         private bool ischeckednoshowlimit = false;
         private bool ischeckedcarchangelimit = false;
+        private bool isCheckedUnlimitedCarVersionChanges = false;
         private int carlimitballast = 0;
         private int carlimitrestriktor = 0;
         private int carlimitregisterlimit = 0;
@@ -239,6 +243,12 @@ namespace GTRCLeagueManager
         {
             get { return ischeckedcarchangelimit; }
             set { ischeckedcarchangelimit = value; RaisePropertyChanged(); }
+        }
+
+        public bool IsCheckedUnlimitedCarVersionChanges
+        {
+            get { return isCheckedUnlimitedCarVersionChanges; }
+            set { isCheckedUnlimitedCarVersionChanges = value; RaisePropertyChanged(); }
         }
 
         public int CarLimitBallast
@@ -475,15 +485,16 @@ namespace GTRCLeagueManager
             {
                 List<EventsEntries> eventList = EventsEntries.GetAnyBy(nameof(EventsEntries.EntryID), entry.ID);
                 eventList = EventsEntries.SortByDate(eventList);
-                int currentCarID = entry.CarID;
+                Car currentCar = Car.Statics.GetByID(entry.CarID);
                 for (int index = 0; index < eventList.Count; index++)
                 {
                     Event _event = Event.Statics.GetByID(eventList[index].EventID);
-                    if (eventList[index].CarChangeDate > DateCarChangeLimit && _event.EventDate < maxEventDate && eventList[index].CarID != currentCarID)
-                    {
-                        carChangeCount++;
-                    }
-                    currentCarID = eventList[index].CarID;
+                    Car _eventCar = Car.Statics.GetByID(eventList[index].CarID);
+                    bool carChange = _eventCar.ID != currentCar.ID;
+                    bool isVersionChange = _eventCar.Manufacturer == currentCar.Manufacturer && _eventCar.Category == currentCar.Category;
+                    carChange = carChange && (!IsCheckedUnlimitedCarVersionChanges || !isVersionChange);
+                    if (eventList[index].CarChangeDate > DateCarChangeLimit && _event.EventDate < maxEventDate && carChange) { carChangeCount++; }
+                    currentCar = Car.Statics.GetByID(eventList[index].CarID);
                 }
             }
             return carChangeCount;
@@ -506,6 +517,7 @@ namespace GTRCLeagueManager
                 IsCheckedSignOutLimit = obj.IsCheckedSignOutLimit ?? ischeckedsignoutlimit;
                 IsCheckedNoShowLimit = obj.IsCheckedNoShowLimit ?? ischeckednoshowlimit;
                 IsCheckedCarChangeLimit = obj.IsCheckedCarChangeLimit ?? ischeckedcarchangelimit;
+                IsCheckedUnlimitedCarVersionChanges = obj.IsCheckedUnlimitedCarVersionChanges ?? isCheckedUnlimitedCarVersionChanges;
                 CarLimitBallast = obj.CarLimitBallast ?? carlimitballast;
                 CarLimitRestriktor = obj.CarLimitRestriktor ?? carlimitrestriktor;
                 CarLimitRegisterLimit = obj.CarLimitRegisterLimit ?? carlimitregisterlimit;

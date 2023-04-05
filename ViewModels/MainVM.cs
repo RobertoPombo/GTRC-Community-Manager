@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Core;
+using System;
 using System.Collections.Generic;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public class MainVM : ObservableObject
     {

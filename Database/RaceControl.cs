@@ -2,8 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class RaceControl : DatabaseObject<RaceControl>
     {

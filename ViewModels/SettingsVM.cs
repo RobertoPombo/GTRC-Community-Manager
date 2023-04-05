@@ -1,20 +1,18 @@
-﻿using Google.Apis.Sheets.v4.Data;
-using GTRCLeagueManager.Database;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using Core;
+using Database;
+using Scripts;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
 using System.Data.SqlClient;
-using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public class SettingsVM : ObservableObject
     {

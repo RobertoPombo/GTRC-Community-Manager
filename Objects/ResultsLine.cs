@@ -1,13 +1,14 @@
 ﻿using Newtonsoft.Json;
+using Database;
+using Scripts;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Windows.Controls;
-using GTRCLeagueManager.Database;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public class ResultsLine
     {

@@ -6,7 +6,9 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 
-namespace GTRCLeagueManager
+using GTRC_Community_Manager;
+
+namespace Scripts
 {
     public class SQL
     {
@@ -15,7 +17,8 @@ namespace GTRCLeagueManager
         public static SqlConnection Connection = new(ConVal(SettingsVM.Instance.ActiveDBConnection));
         private static SqlCommand SqlCmd;
         private static string SqlQry;
-        private static Dictionary<Type, SqlDbType> SQLTypes = new Dictionary<Type, SqlDbType> {
+        private static Dictionary<Type, SqlDbType> SQLTypes = new()
+        {
             { typeof(string), SqlDbType.NVarChar },
             { typeof(Int16), SqlDbType.SmallInt },
             { typeof(Int32), SqlDbType.Int },

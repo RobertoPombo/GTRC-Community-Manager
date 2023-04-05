@@ -2,8 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class Team : DatabaseObject<Team>
     {
@@ -68,8 +69,5 @@ namespace GTRCLeagueManager.Database
                 }
             }
         }
-
-        //TEMP: Converter
-        [NotMapped] public string TeamID { set { Name = value; } }
     }
 }

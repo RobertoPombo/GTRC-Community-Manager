@@ -3,8 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class EventsCars : DatabaseObject<EventsCars>
     {
@@ -76,10 +77,15 @@ namespace GTRCLeagueManager.Database
             }
         }
 
-        public static void PublishList() { }
+        public static void PublishList()
+        {
+            if (!Statics.DelayPL) { Statics.DeleteNotUnique(); }
+        }
 
         public override void SetNextAvailable()
         {
+            if (Statics.DelayPL) { return; }
+
             int eventNr = 0;
             List<Event> _idListEvent = Event.Statics.IDList;
             if (_idListEvent.Count == 0) { _ = new Event() { ID = 1 }; _idListEvent = Event.Statics.IDList; }
@@ -105,6 +111,16 @@ namespace GTRCLeagueManager.Database
                     if (carNr == startValueCar) { break; }
                 }
             }
+        }
+
+        public static void ForceIsUnique()
+        {
+            bool _delayPL = Statics.DelayPL; Statics.DelayPL = true;
+            for (int nr = Statics.List.Count - 1; nr >= 0; nr--)
+            {
+                if (!Statics.List[nr].IsUnique()) { Statics.List[nr].ListRemove(); }
+            }
+            Statics.DelayPL = _delayPL;
         }
 
         public static EventsCars GetAnyByUniqProp(int _carID, int _eventID)

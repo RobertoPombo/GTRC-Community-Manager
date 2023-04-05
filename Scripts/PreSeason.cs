@@ -1,14 +1,15 @@
-﻿using System;
+﻿using Database;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using GTRCLeagueManager.Database;
 using Newtonsoft.Json.Linq;
 using System.Collections;
 using Newtonsoft.Json;
 using System.Text;
 using System.Threading;
-namespace GTRCLeagueManager
+
+namespace Scripts
 {
     public static class PreSeason
     {

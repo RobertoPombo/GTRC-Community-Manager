@@ -2,14 +2,14 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace GTRCLeagueManager
+namespace Core
 {
     public class ObservableObject : INotifyPropertyChanged
     {
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        public void RaisePropertyChanged([CallerMemberName] string propertyName = null)
+        public void RaisePropertyChanged([CallerMemberName] string? propertyName = null)
         {
             if (!string.IsNullOrEmpty(propertyName))
             {

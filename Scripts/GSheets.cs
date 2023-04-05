@@ -1,13 +1,14 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
+using Database;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using GTRCLeagueManager.Database;
-using Newtonsoft.Json.Linq;
 
-namespace GTRCLeagueManager
+using GTRC_Community_Manager;
+
+namespace Scripts
 {
     public static class GSheets
     {
@@ -133,8 +134,7 @@ namespace GTRCLeagueManager
             if (Driver.IsValidSteamID(SteamID))
             {
                 Driver driver = Driver.Statics.GetByUniqProp(SteamID);
-                if (driver.ID == Basics.NoID) { _ = new Driver { SteamID = SteamID }; Driver.Statics.WriteSQL(); }
-                driver = Driver.Statics.GetByUniqProp(SteamID);
+                if (driver.ID == Basics.NoID) { driver = Driver.Statics.WriteSQL(new Driver { SteamID = SteamID }); }
                 if (driver.SteamID == Driver.SteamIDMinValue) { driver.SteamID = SteamID; }
                 if (driver.DiscordID == Basics.NoID) { driver.DiscordID = DiscordID; }
                 if (driver.FirstName == "") { driver.FirstName = FirstName; }
@@ -152,11 +152,9 @@ namespace GTRCLeagueManager
             if (driver.ID != Basics.NoID && TeamName != Team.DefaultName)
             {
                 Team team = Team.Statics.GetByUniqProp(new List<dynamic>() { seasonID, TeamName });
-                if (team.ID == Basics.NoID) { _ = new Team { SeasonID = seasonID, Name = TeamName }; Team.Statics.WriteSQL(); }
-                team = Team.Statics.GetByUniqProp(new List<dynamic>() { seasonID, TeamName });
+                if (team.ID == Basics.NoID) { team = Team.Statics.WriteSQL(new Team { SeasonID = seasonID, Name = TeamName }); }
                 DriversTeams driverTeam = DriversTeams.Statics.GetByUniqProp(new List<dynamic>() { driver.ID, team.ID });
-                if (driverTeam.ID == Basics.NoID) { _ = new DriversTeams { DriverID = driver.ID, TeamID = team.ID }; DriversTeams.Statics.WriteSQL(); }
-                driverTeam = DriversTeams.Statics.GetByUniqProp(new List<dynamic>() { driver.ID, team.ID });
+                if (driverTeam.ID == Basics.NoID) { driverTeam = DriversTeams.Statics.WriteSQL(new DriversTeams { DriverID = driver.ID, TeamID = team.ID }); }
                 return driverTeam;
             }
             else { return new DriversTeams(false); }
@@ -174,10 +172,9 @@ namespace GTRCLeagueManager
             if (driverTeam.ID != Basics.NoID && RaceNumber != Basics.NoID)
             {
                 Entry entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { seasonID, RaceNumber });
-                if (entry.ID == Basics.NoID) { _ = new Entry { SeasonID = seasonID, RaceNumber = RaceNumber }; Entry.Statics.WriteSQL(); newEntry = true; }
-                entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { seasonID, RaceNumber });
+                if (entry.ID == Basics.NoID) { entry = Entry.Statics.WriteSQL(new Entry { SeasonID = seasonID, RaceNumber = RaceNumber }); newEntry = true; }
                 DriversEntries driverEntry = DriversEntries.GetByDriverIDSeasonID(driverTeam.DriverID, entry.SeasonID);
-                if (driverEntry.ID == Basics.NoID) { _ = new DriversEntries { DriverID = driverTeam.DriverID }; DriversEntries.Statics.WriteSQL(); }
+                if (driverEntry.ID == Basics.NoID) { driverEntry = DriversEntries.Statics.WriteSQL(new DriversEntries { DriverID = driverTeam.DriverID }); }
                 driverEntry.EntryID = entry.ID;
                 entry.TeamID = driverTeam.TeamID;
                 if ((newEntry || entry.CarID == Basics.NoID) && CarID != Basics.NoID) { entry.CarID = CarID; }

@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using Core;
+using Dapper;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -8,8 +9,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Documents;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+using GTRC_Community_Manager;
+
+namespace Database
 {
     public interface IDatabaseObject
     {
@@ -20,12 +24,14 @@ namespace GTRCLeagueManager.Database
         void ListAdd();
         void ListInsert(int index);
         void ListRemove(bool forceDel = false);
+        void WriteSQL();
+        void DeleteSQL();
         void SetNextAvailable();
         Dictionary<PropertyInfo, dynamic> ReturnAsDict(bool retID, bool retJsonIgnore, bool retCanNotWrite, bool retNotUnique);
         bool IsUnique();
         bool IsUnique(int index);
         bool IsChild();
-        void RemoveAllChilds();
+        void RemoveAllChilds(int newID = -1);
         string ToString();
     }
 
@@ -71,16 +77,17 @@ namespace GTRCLeagueManager.Database
 
         public Type VarDbType = typeof(DbType);
         public List<DbType> List = new();
+        public List<DbType> FilteredList = new();
+        public static SortState CurrentSortState = new();
         public List<PropertyInfo> AllProperties = new();
         public List<List<PropertyInfo>> UniqueProperties = new();
         public List<PropertyInfo> ToStringProperties = new();
+        public List<StaticDbFilter> Filter = new();
         public bool DelayPL = false;
 
         public string Path { get { return MainWindow.dataDirectory + Table.ToLower() + ".json"; } }
 
-        [NotMapped]
-        [JsonIgnore]
-        public List<DbType> IDList
+        [NotMapped][JsonIgnore] public List<DbType> IDList
         {
             get
             {
@@ -90,12 +97,50 @@ namespace GTRCLeagueManager.Database
             }
         }
 
+        public void DeleteNotUnique()
+        {
+            bool _delayPL = DelayPL; DelayPL = true;
+            for (int objIndex0 = List.Count - 1; objIndex0 >= 0; objIndex0--)
+            {
+                int newID = Basics.NoID;
+                for (int index = 0; index < UniqueProperties.Count; index++)
+                {
+                    if (UniqueProperties.Count > index && UniqueProperties[index].Count > 0)
+                    {
+                        for (int objIndex = 0; objIndex < List.Count; objIndex++)
+                        {
+                            if (objIndex != objIndex0)
+                            {
+                                bool identical = true;
+                                foreach (PropertyInfo property in UniqueProperties[index])
+                                {
+                                    if (Basics.GetCastedValue(List[objIndex0], property) != Basics.GetCastedValue(List[objIndex], property))
+                                    {
+                                        identical = false;
+                                        break;
+                                    }
+                                }
+                                if (identical) { newID = List[objIndex].ID; break; }
+                            }
+                        }
+                    }
+                    if (newID != Basics.NoID) { break; }
+                }
+                if (newID != Basics.NoID)
+                {
+                    List[objIndex0].RemoveAllChilds(newID);
+                    if (!List[objIndex0].IsChild()) { List.Remove(List[objIndex0]); }
+                }
+            }
+            FilterList(); if (!_delayPL) { PublishList(); } DelayPL = _delayPL;
+        }
+
         public void ListRemoveAt(int index, bool forceDel = false)
         {
             if (List.Count > index)
             {
                 if (forceDel) { List[index].RemoveAllChilds(); }
-                if (!List[index].IsChild()) { List.RemoveAt(index); if (!DelayPL) { PublishList(); } }
+                if (!List[index].IsChild()) { List.RemoveAt(index); FilterList(); if (!DelayPL) { PublishList(); } }
             }
         }
 
@@ -109,7 +154,7 @@ namespace GTRCLeagueManager.Database
                 if (forceDel) { _obj.RemoveAllChilds(); }
                 if (!_obj.IsChild()) { List.Remove(_obj); }
             }
-            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public void ReadJson(bool forceDel = false)
@@ -117,7 +162,7 @@ namespace GTRCLeagueManager.Database
             bool _delayPL = DelayPL; DelayPL = true;
             ListClear(forceDel);
             JsonConvert.DeserializeObject<DbType[]>(File.ReadAllText(Path, Encoding.Unicode));
-            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public void WriteJson()
@@ -125,7 +170,7 @@ namespace GTRCLeagueManager.Database
             bool _delayPL = DelayPL; DelayPL = true;
             string text = JsonConvert.SerializeObject(List, Formatting.Indented);
             File.WriteAllText(Path, text, Encoding.Unicode);
-            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public void LoadSQL(bool forceDel = false)
@@ -135,7 +180,27 @@ namespace GTRCLeagueManager.Database
             string SqlQry = "SELECT * FROM " + Table + ";";
             try { SQL.Connection.Query<DbType>(SqlQry); }
             catch { MainVM.List[0].LogCurrentText = "Loading SQL table '" + Table + "' failed!"; }
-            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+        }
+
+        public List<DbType> GetBySQL(List<string> propertyNames, List<dynamic> values)
+        {
+            bool _delayPL = DelayPL; DelayPL = true;
+            List<DbType> listObj = new();
+            string SqlQry = "SELECT * FROM " + Table + " WHERE ";
+            if (propertyNames.Count == values.Count && propertyNames.Count > 0)
+            {
+                for (int index = 0; index < propertyNames.Count; index++)
+                {
+                    SqlQry += propertyNames[index] + " = '" + values[index] + "' AND ";
+                }
+                SqlQry = SqlQry[..^5] + ";";
+                try { listObj = SQL.Connection.Query<DbType>(SqlQry).ToList(); }
+                catch { MainVM.List[0].LogCurrentText = "Loading object from SQL table '" + Table + "' failed!"; }
+            }
+            else { MainVM.List[0].LogCurrentText = "Loading object from SQL table '" + Table + "' failed!"; }
+            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            return listObj;
         }
 
         public void WriteSQL()
@@ -174,7 +239,20 @@ namespace GTRCLeagueManager.Database
                 else { SQL.AddSQL(Table, newObj); }
             }
             LoadSQL();
-            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+        }
+
+        public DbType WriteSQL(DbType _obj)
+        {
+            bool _delayPL = DelayPL; DelayPL = true;
+            if (List.Contains(_obj)) { List.Remove(_obj); }
+            _obj.WriteSQL();
+            Dictionary<PropertyInfo, dynamic> _dict = _obj.ReturnAsDict(false, false, false, false);
+            List<string> propertyNames = new(); List<dynamic> values = new();
+            foreach (PropertyInfo prop in _dict.Keys) { propertyNames.Add(prop.Name); values.Add(_dict[prop]); }
+            List<DbType> listObj = GetBySQL(propertyNames, values);
+            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            if (listObj.Count > 0) { return listObj[0]; } else { return _obj; }
         }
 
         public void ResetSQL(bool forceDel = false)
@@ -183,14 +261,13 @@ namespace GTRCLeagueManager.Database
             ListClear(forceDel);
             WriteSQL();
             if (List.Count == 0) { SQL.ReseedSQL(Table, 0); }
-            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public DbType GetByIdSQL(int id)
         {
-            string SqlQry = "SELECT * FROM " + Table + " WHERE ID = " + id.ToString() + ";";
-            try { return SQL.Connection.Query<DbType>(SqlQry).ToList()[0]; }
-            catch { MainVM.List[0].LogCurrentText = "Loading object (ID = " + id.ToString() + ") from SQL table '" + Table + "' failed!"; return GetByID(id); }
+            List<DbType> listObj = GetBySQL(new List<string> { "ID" }, new List <dynamic> { id });
+            if (listObj.Count > 0) { return listObj[0]; } else { return GetByID(id); }
         }
 
         public DbType GetByID(int id)
@@ -279,7 +356,7 @@ namespace GTRCLeagueManager.Database
 
         public bool ExistsID(int id)
         {
-            if (GetByID(id).ID == Basics.NoID) { return false; } else { return true; }
+            if (id != Basics.NoID && GetByID(id).ID == id) { return true; } else { return false; }
         }
 
         public bool ExistsUniqProp(List<dynamic> values, int index = 0)
@@ -323,6 +400,55 @@ namespace GTRCLeagueManager.Database
             }
             return false;
         }
+
+        public void FilterList()
+        {
+            FilteredList = new();
+            foreach (var _obj in List)
+            {
+                bool notFiltered = true;
+                foreach (PropertyInfo property in AllProperties)
+                {
+                    foreach (StaticDbFilter _filter in Filter)
+                    {
+                        if (_filter.PropertyName == property.Name)
+                        {
+                            if (_filter.Filter != "")
+                            {
+                                if (Basics.GetCastedValue(_obj, property).ToString() != _filter.Filter) { notFiltered = false; }
+                            }
+                            break;
+                        }
+                    }
+                    if (!notFiltered) { break; }
+                }
+                if (notFiltered) { FilteredList.Add(_obj); }
+            }
+        }
+
+        public void SortFilteredList(PropertyInfo property)
+        {
+            List<string> numericalTypes = new() { "System.Int16", "System.Int32", "System.Int64", "System.UInt16", "System.UInt32", "System.UInt64", "System.Single", "System.Double", "System.Decimal", "System.DateTime" };
+            bool stringCompare = true;
+            if (numericalTypes.Contains(property.PropertyType.ToString())) { stringCompare = false; }
+            if (CurrentSortState.Property == property) { CurrentSortState.SortAscending = !CurrentSortState.SortAscending; }
+            else { CurrentSortState = new SortState { Property = property }; }
+            for (int rowNr1 = 0; rowNr1 < FilteredList.Count - 1; rowNr1++)
+            {
+                for (int rowNr2 = rowNr1 + 1; rowNr2 < FilteredList.Count; rowNr2++)
+                {
+                    bool smallerValueIsFirst;
+                    dynamic val1 = Basics.GetCastedValue(FilteredList[rowNr1], property);
+                    dynamic val2 = Basics.GetCastedValue(FilteredList[rowNr2], property);
+                    if (stringCompare) { smallerValueIsFirst = String.Compare(val1.ToString(), val2.ToString()) < 0; }
+                    else { smallerValueIsFirst = val1 < val2; }
+                    if ((CurrentSortState.SortAscending && !smallerValueIsFirst) || (!CurrentSortState.SortAscending && smallerValueIsFirst))
+                    {
+                        (FilteredList[rowNr1], FilteredList[rowNr2]) = (FilteredList[rowNr2], FilteredList[rowNr1]);
+                    }
+                }
+            }
+        }
     }
 
 
@@ -334,9 +460,7 @@ namespace GTRCLeagueManager.Database
         private bool readyForList = false;
         private int id = Basics.NoID;
 
-        [NotMapped]
-        [JsonIgnore]
-        public DbType This
+        [NotMapped][JsonIgnore] public DbType This
         {
             get { return _this; }
             set { _this = value; }
@@ -344,32 +468,34 @@ namespace GTRCLeagueManager.Database
 
         [NotMapped][JsonIgnore] public List<DbType> List { get { return StaticFields.List; } }
 
-        [NotMapped]
-        [JsonIgnore]
-        public bool ReadyForList
+        [NotMapped][JsonIgnore] public bool ReadyForList
         {
             get { return readyForList; }
             set { if (value != readyForList) { if (value) { SetNextAvailable(); } if (!value || IsUnique()) { readyForList = value; } } }
         }
 
-        [JsonProperty(Order = int.MinValue)]
-        public int ID
+        [JsonProperty(Order = int.MinValue)] public int ID
         {
             get { return id; }
             set
             {
+                bool _delayPL = StaticFields.DelayPL; StaticFields.DelayPL = true;
                 DbType oldObj = StaticFields.GetByID(value);
                 int listIndex = StaticFields.List.IndexOf(oldObj);
                 if (oldObj.ID != Basics.NoID && StaticFields.List.Contains(This)) { This.ListRemove(); StaticFields.List[listIndex] = This; }
                 id = value;
-                if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
+                StaticFields.DelayPL = _delayPL; if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
             }
         }
 
-        [JsonIgnore]
-        public int Nr
+        [JsonIgnore] public int Nr
         {
-            get { if (StaticFields.List.Contains(This)) { return StaticFields.List.IndexOf(This) + 1; } else { return Basics.NoID; } }
+            get
+            {
+                if (StaticFields.FilteredList.Contains(This)) { return StaticFields.FilteredList.IndexOf(This) + 1; }
+                else if (StaticFields.List.Contains(This)) { return StaticFields.List.IndexOf(This) + 1; }
+                else { return Basics.NoID; }
+            }
         }
 
         public void Initialize(bool _readyForList, bool inList)
@@ -381,13 +507,21 @@ namespace GTRCLeagueManager.Database
                 {
                     if (property.GetCustomAttributes(typeof(NotMappedAttribute), true).Count() == 0)
                     {
-                        if (property.Name == "ID") { StaticFields.AllProperties.Insert(0, property); }
-                        else { StaticFields.AllProperties.Add(property); }
+                        if (property.Name == nameof(DatabaseObject<DbType>.ID))
+                        {
+                            StaticFields.AllProperties.Insert(0, property);
+                            StaticFields.Filter.Insert(0, new StaticDbFilter(typeof(DbType), property) { Filter = "0" });
+                        }
+                        else
+                        {
+                            StaticFields.AllProperties.Add(property);
+                            StaticFields.Filter.Add(new StaticDbFilter(typeof(DbType), property));
+                        }
                     }
                 }
                 foreach (List<string> propertyNameList in StaticFields.UniquePropertiesNames)
                 {
-                    List<PropertyInfo> propertyList = new List<PropertyInfo>();
+                    List<PropertyInfo> propertyList = new();
                     foreach (string propertyName in propertyNameList)
                     {
                         foreach (PropertyInfo property in StaticFields.AllProperties)
@@ -409,23 +543,51 @@ namespace GTRCLeagueManager.Database
             else if (_readyForList) { ReadyForList = true; } else { ReadyForList = false; }
         }
 
-        public void ListAdd() { ReadyForList = true; if (ReadyForList) { StaticFields.List.Add(This); } }
+        public void ListAdd()
+        {
+            ReadyForList = true;
+            if (ReadyForList && !StaticFields.List.Contains(This))
+            {
+                StaticFields.List.Add(This);
+                StaticFields.FilterList(); if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
+            }
+        }
+
         public void ListInsert(int index)
         {
             if (StaticFields.List.Count > index)
             {
                 ReadyForList = true;
-                StaticFields.List.Insert(index, This);
-                if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
+                if (ReadyForList && !StaticFields.List.Contains(This))
+                {
+                    StaticFields.List.Insert(index, This);
+                    StaticFields.FilterList(); if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
+                }
             }
         }
+
         public void ListRemove(bool forceDel = false)
         {
             if (StaticFields.List.Contains(This))
             {
                 if (forceDel) { RemoveAllChilds(); }
-                if (!IsChild()) { StaticFields.List.Remove(This); if (!StaticFields.DelayPL) { StaticFields.PublishList(); } }
+                if (!IsChild()) { StaticFields.List.Remove(This); StaticFields.FilterList(); if (!StaticFields.DelayPL) { StaticFields.PublishList(); } }
             }
+        }
+
+        public void WriteSQL()
+        {
+            bool _delayPL = StaticFields.DelayPL; StaticFields.DelayPL = true;
+            SQL.AddSQL(StaticFields.Table, this);
+            StaticFields.DelayPL = _delayPL; StaticFields.FilterList(); if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
+        }
+
+        public void DeleteSQL()
+        {
+            bool _delayPL = StaticFields.DelayPL; StaticFields.DelayPL = true;
+            SQL.DelSQL(StaticFields.Table, this);
+            ListRemove(true);
+            StaticFields.DelayPL = _delayPL; StaticFields.FilterList();if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
         }
 
         public abstract void SetNextAvailable();
@@ -501,10 +663,13 @@ namespace GTRCLeagueManager.Database
             return false;
         }
 
-        public void RemoveAllChilds()
+        public void RemoveAllChilds(int newID = -1)
         {
             if (ID != Basics.NoID)
             {
+                bool delete;
+                if (newID == -1) { delete = true; }
+                else { if (StaticFields.ExistsID(newID)) { delete = false; } else { delete = true; } }
                 string idPropertyName = StaticFields.VarDbType.Name + "ID";
                 foreach (dynamic _type in StaticFieldList.List)
                 {
@@ -515,7 +680,11 @@ namespace GTRCLeagueManager.Database
                             if (property.Name == idPropertyName)
                             {
                                 var listParents = _type.GetBy(idPropertyName, ID);
-                                foreach (dynamic _parent in listParents) { _parent.ListRemove(true); }
+                                foreach (dynamic _parent in listParents)
+                                {
+                                    if (delete) { _parent.ListRemove(true); }
+                                    else { property.SetValue(_parent, newID); }
+                                }
                             }
                         }
                     }
@@ -545,5 +714,71 @@ namespace GTRCLeagueManager.Database
             }
             return Basics.SubStr(str, 0, str.Length - 2);
         }
+    }
+
+
+
+    public class StaticDbFilter
+    {
+        private Type dbType;
+        private PropertyInfo property;
+        private string filter = "";
+
+        public StaticDbFilter(Type _type, PropertyInfo _property) { dbType = _type; property = _property; SortCmd = new UICmd((o) => Sort()); }
+
+        public string PropertyName { get { if (property is not null) { return property.Name; } else { return ""; } } }
+
+        public string Filter
+        {
+            get { return filter; }
+            set
+            {
+                if (filter != value)
+                {
+                    filter = value;
+                    var _statics = StaticFieldList.GetByType(dbType);
+                    if (_statics is not null && _statics.Filter[0].PropertyName != PropertyName)
+                    {
+                        if (filter == "")
+                        {
+                            bool noFilter = true;
+                            foreach (StaticDbFilter _staticDbFilter in _statics.Filter) { if (_staticDbFilter.Filter != filter) { noFilter = false; break; } }
+                            if (noFilter) { _statics.Filter[0].Filter = "0"; }
+                        }
+                        else { if (_statics.Filter[0].Filter == "0") { _statics.Filter[0].Filter = ""; } }
+                    }
+                    PublishFilter();
+                }
+            }
+        }
+
+        public void PublishFilter()
+        {
+            StaticFieldList.GetByType(dbType)?.FilterList();
+            if (DatabaseVM.Instance is not null) { DatabaseVM.Instance.ResetList(); }
+        }
+
+        public void Sort()
+        {
+            var _statics = StaticFieldList.GetByType(dbType);
+            if (_statics is not null)
+            {
+                _statics.SortFilteredList(property);
+                if (DatabaseVM.Instance is not null) { DatabaseVM.Instance.ResetList(); }
+            }
+        }
+
+        public UICmd SortCmd { get; set; }
+    }
+
+
+
+    public class SortState
+    {
+        public SortState() { }
+
+        public bool SortAscending = true;
+        public PropertyInfo? Property = null;
+
     }
 }

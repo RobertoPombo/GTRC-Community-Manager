@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Windows.Media;
 using System.Windows;
 
-namespace GTRCLeagueManager
+namespace Scripts
 {
     public static class Basics
     {
@@ -177,7 +177,7 @@ namespace GTRCLeagueManager
             }
             if (inputList1.Count > 0)
             {
-                string[] inputSecArray = inputList1[^1].Split('.', ',');
+                string[] inputSecArray = inputList1[^1].Split('.',',');
                 List<string> inputList2 = new();
                 foreach (string input in inputSecArray) { inputList2.Add(input); }
                 if (inputList2.Count == 1)

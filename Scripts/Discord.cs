@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using System.Linq;
+using Database;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,15 +8,15 @@ using System.Reflection;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using GTRCLeagueManager.Database;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.IO;
 using System.Text;
 using System.Collections;
 
+using GTRC_Community_Manager;
 
-namespace GTRCLeagueManager
+namespace Scripts
 {
     public class SignInOutBot
     {
@@ -32,9 +33,11 @@ namespace GTRCLeagueManager
             Settings = settings;
             _client = new DiscordSocketClient();
             _commands = new CommandService();
+            _interactions = new InteractionService(_client);
             _services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
+                .AddSingleton(_interactions)
                 .BuildServiceProvider();
             _client.Log += _client_Log;
         }
@@ -142,19 +145,94 @@ namespace GTRCLeagueManager
 
 
         [Command("abmelden")]
-        public async Task SignOutCmd()
+        public async Task SignInOutCmd()
         {
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                RegisterType = false;
                 await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
-                await SignInOut();
+                var component = new ComponentBuilder();
+                List<dynamic> ListMenuEvents = new() { new SelectMenuBuilder() { CustomId = "MenuEvents0", Placeholder = "Event auswählen" } };
+                List<dynamic> ListMenuEntries = new() { new SelectMenuBuilder() { CustomId = "MenuEntries0", Placeholder = "Entry auswählen" } };
+                List<Event> listEvents = Event.Statics.GetBy(nameof(Event.SeasonID), iPreSVM.CurrentSeasonID);
+                int optionCount = 0;
+                int eventNr0 = 0;
+                for (int nr = 0; nr < listEvents.Count; nr++) { if (listEvents[nr].ID == EventID) { eventNr0 = nr; break; } }
+                for (int nr = eventNr0; nr < listEvents.Count; nr++)
+                {
+                    (ListMenuEvents, optionCount, component) = AddOption2Menu(listEvents[nr].Name, listEvents[nr].ID.ToString(), ListMenuEvents, optionCount, component, "MenuEvents", "Event auswählen");
+                }
+                Entry _entry = Entry.Statics.GetByID(EntryID);
+                if (IsAdmin)
+                {
+                    for (int nr = 0; nr < eventNr0; nr++)
+                    {
+                        (ListMenuEvents, optionCount, component) = AddOption2Menu(listEvents[nr].Name, listEvents[nr].ID.ToString(), ListMenuEvents, optionCount, component, "MenuEvents", "Event auswählen");
+                    }
+                    component.WithSelectMenu(ListMenuEvents[^1]);
+                    var linqList = from _linqEntry in Entry.Statics.List
+                                   where _linqEntry.SeasonID == iPreSVM.CurrentSeasonID
+                                   orderby _linqEntry.RaceNumber
+                                   select _linqEntry;
+                    List<Entry> listEntries = linqList.Cast<Entry>().ToList();
+                    optionCount = 0;
+                    int entryNr0 = 0;
+                    for (int nr = 0; nr < listEntries.Count; nr++) { if (listEntries[nr].ID == _entry.ID) { entryNr0 = nr; break; } }
+                    for (int nr = entryNr0; nr < listEntries.Count; nr++)
+                    {
+                        List<DriversEntries> listDriversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), listEntries[nr].ID);
+                        List<Driver> listDrivers = new();
+                        foreach(DriversEntries _driverEntry in listDriversEntries) { listDrivers.Add(Driver.Statics.GetByID(_driverEntry.DriverID)); }
+                        string value = "#" + listEntries[nr].RaceNumber.ToString() + " - " + Driver.DriverList2String(listDrivers, nameof(Driver.FullName));
+                        (ListMenuEntries, optionCount, component) = AddOption2Menu(value, listEntries[nr].ID.ToString(), ListMenuEntries, optionCount, component, "MenuEntries", "Entry auswählen");
+                    }
+                    for (int nr = 0; nr < entryNr0; nr++)
+                    {
+                        (ListMenuEntries, optionCount, component) = AddOption2Menu("#" + listEntries[nr].RaceNumber.ToString(), listEntries[nr].ID.ToString(), ListMenuEntries, optionCount, component, "MenuEntries", "Entry auswählen");
+                    }
+                    component.WithSelectMenu(ListMenuEntries[^1]);
+                }
+                else { component.WithSelectMenu(ListMenuEvents[^1]); }
+                var ButtonSignIn = new ButtonBuilder() { Label = "Anmelden", CustomId = "ButtonSignIn", Style = ButtonStyle.Primary };
+                var ButtonSignOut = new ButtonBuilder() { Label = "Abmelden", CustomId = "ButtonSignOut", Style = ButtonStyle.Secondary };
+                component.WithButton(ButtonSignIn);
+                component.WithButton(ButtonSignOut);
+                string text = "Von einem Event an-/abmelden";
+                if (_entry.ID == Basics.NoID) { text = "#" + _entry.RaceNumber.ToString() + " v" + text[1..]; }
+                await ReplyAsync(text, components: component.Build());
             }
         }
 
-        [Command("anmelden")]
+        [ComponentInteraction("ButtonSignIn")]
         public async Task SignInCmd()
+        {
+            RegisterType = true;
+            await SignInOut();
+        }
+
+        [ComponentInteraction("ButtonSignOut")]
+        public async Task SignOutCmd()
+        {
+            RegisterType = false;
+            await SignInOut();
+        }
+
+        public (List<dynamic>, int, ComponentBuilder) AddOption2Menu(string value, string name, List<dynamic> ListMenu, int optionCount, ComponentBuilder component, string id, string placeholder)
+        {
+            int countListMenu = ListMenu.Count;
+            optionCount++;
+            if (optionCount > 25)
+            {
+                ListMenu.Add(new SelectMenuBuilder() { CustomId = id + countListMenu.ToString(), Placeholder = placeholder });
+                optionCount = 1; countListMenu++;
+                component.WithSelectMenu(ListMenu[countListMenu - 2]);
+            }
+            ListMenu[countListMenu - 1].AddOption(value, name);
+            return (ListMenu, optionCount, component);
+        }
+
+        [Command("anmelden")]
+        public async Task SignInCmd_alt()
         {
             if (iPreSVM is not null)
             {
@@ -166,7 +244,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("abmelden")]
-        public async Task SignOutCmd(string strEventNr)
+        public async Task SignOutCmd_alt(string strEventNr)
         {
             SetDefaultProperties();
             RegisterType = false;
@@ -175,7 +253,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("anmelden")]
-        public async Task SignInCmd(string strEventNr)
+        public async Task SignInCmd_alt(string strEventNr)
         {
             SetDefaultProperties();
             RegisterType = true;
@@ -184,7 +262,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("abmelden")]
-        public async Task SignOutCmd(string strEventNr, string strDiscordID)
+        public async Task SignOutCmd_alt(string strEventNr, string strDiscordID)
         {
             SetDefaultProperties();
             RegisterType = false;
@@ -193,7 +271,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("anmelden")]
-        public async Task SignInCmd(string strEventNr, string strDiscordID)
+        public async Task SignInCmd_alt(string strEventNr, string strDiscordID)
         {
             SetDefaultProperties();
             RegisterType = true;
@@ -202,7 +280,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("zurückziehen")]
-        public async Task PullOutCmd()
+        public async Task PullOutCmd_alt()
         {
             if (iPreSVM is not null)
             {
@@ -214,7 +292,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("zurückziehen")]
-        public async Task PullOutCmd(string strDiscordID)
+        public async Task PullOutCmd_alt(string strDiscordID)
         {
             if (iPreSVM is not null)
             {
@@ -227,7 +305,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("dochnichtzurückziehen")]
-        public async Task UndoPullOutCmd(string strDiscordID)
+        public async Task UndoPullOutCmd_alt(string strDiscordID)
         {
             if (iPreSVM is not null)
             {
@@ -240,7 +318,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("fahrzeugwechsel")]
-        public async Task ChangeCarCmd(string strCarNr)
+        public async Task ChangeCarCmd_alt(string strCarNr)
         {
             if (iPreSVM is not null)
             {
@@ -252,7 +330,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("fahrzeugwechsel")]
-        public async Task ChangeCarCmd(string strCarNr, string strEventNr)
+        public async Task ChangeCarCmd_alt(string strCarNr, string strEventNr)
         {
             SetDefaultProperties();
             await ParseCarID(strCarNr); await ParseEventID(strEventNr);
@@ -260,7 +338,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("fahrzeugwechsel")]
-        public async Task ChangeCarCmd(string strCarNr, string strEventNr, string strDiscordID)
+        public async Task ChangeCarCmd_alt(string strCarNr, string strEventNr, string strDiscordID)
         {
             SetDefaultProperties();
             await ParseCarID(strCarNr); await ParseEventID(strEventNr); await ParseDiscordID(strDiscordID);
@@ -268,7 +346,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("kalender")]
-        public async Task ShowEventsCmd()
+        public async Task ShowEventsCmd_alt()
         {
             SetDefaultProperties();
             await ShowEvents();
@@ -276,7 +354,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("fahrzeugliste")]
-        public async Task ShowCarsCmd()
+        public async Task ShowCarsCmd_alt()
         {
             if (iPreSVM is not null)
             {
@@ -288,7 +366,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("bop")]
-        public async Task ShowBoPCmd()
+        public async Task ShowBoPCmd_alt()
         {
             if (iPreSVM is not null)
             {
@@ -300,7 +378,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("bop")]
-        public async Task ShowBoPCmd(string strEventNr)
+        public async Task ShowBoPCmd_alt(string strEventNr)
         {
             SetDefaultProperties();
             await ParseEventID(strEventNr);
@@ -309,7 +387,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("starterfeld")]
-        public async Task ShowStarterfeldCmd()
+        public async Task ShowStarterfeldCmd_alt()
         {
             if (iPreSVM is not null)
             {
@@ -321,7 +399,7 @@ namespace GTRCLeagueManager
         }
 
         [Command("starterfeld")]
-        public async Task ShowStarterfeldCmd(string strEventNr)
+        public async Task ShowStarterfeldCmd_alt(string strEventNr)
         {
             SetDefaultProperties();
             await ParseEventID(strEventNr);
@@ -496,7 +574,7 @@ namespace GTRCLeagueManager
                         else { LogText = "Der Teilnehmer hat sich aus der Meisterschaft zurückgezogen."; }
                         await ErrorResponse();
                     }
-                    else if (_event.EventDate < DateTime.Now)
+                    else if (_event.EventDate < DateTime.Now && !IsAdmin)
                     {
                         await ReplyAsync("Das Rennen ist doch schon vorbei.");
                         await UserMessage.AddReactionAsync(emojiThinking);
@@ -555,7 +633,7 @@ namespace GTRCLeagueManager
 
         public async Task SignInOut()
         {
-            await ParseEntryID();
+            //await ParseEntryID();
             if (EntryID != Basics.NoID && EventID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
             {
                 if (DiscordID_Author == DiscordID_Driver || IsAdmin)

@@ -2,13 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+using GTRC_Community_Manager;
+
+namespace Database
 {
     public class Car : DatabaseObject<Car>
     {
-        public static readonly string PathLogos = MainWindow.dataDirectory + "logos\\";
+        public static readonly string PathLogos = MainWindow.dataDirectory + "Logos\\";
         [NotMapped][JsonIgnore] public static StaticDbField<Car> Statics { get; set; }
         static Car()
         {
@@ -77,7 +79,7 @@ namespace GTRCLeagueManager.Database
         [JsonIgnore]
         public string Logo
         {
-            get { return "/Logos/" + manufacturer + ".png"; }
+            get { return "\\Logos\\" + manufacturer + ".png"; }
         }
 
         [JsonIgnore]

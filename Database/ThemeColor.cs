@@ -2,10 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class ThemeColor : DatabaseObject<ThemeColor>
     {

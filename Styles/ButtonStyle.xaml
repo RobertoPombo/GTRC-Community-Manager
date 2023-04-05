@@ -333,6 +333,25 @@
 
 
 
+    <Style TargetType="{x:Type Button}" x:Key="ShoButtonStyle" BasedOn="{StaticResource ResButtonStyle}">
+        <Setter Property="Background">
+            <Setter.Value>
+                <ImageBrush ImageSource="/Icons/icon_sho1.png" Stretch="Uniform" />
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <ImageBrush ImageSource="/Icons/icon_sho2.png" Stretch="Uniform" />
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+
+
     <Style TargetType="{x:Type Button}" x:Key="SavTextButtonStyle">
         <Setter Property="Template">
             <Setter.Value>

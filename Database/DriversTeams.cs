@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class DriversTeams : DatabaseObject<DriversTeams>
     {
@@ -67,9 +67,5 @@ namespace GTRCLeagueManager.Database
                 }
             }
         }
-
-        //TEMP: Converter
-        [NotMapped] public string SteamID { set { DriverID = Driver.Statics.GetByUniqProp(value).ID; } }
-        [NotMapped] public string TeamID2 { set { TeamID = Team.Statics.GetByUniqProp(new List<dynamic>() { 4, value }).ID; } }
     }
 }

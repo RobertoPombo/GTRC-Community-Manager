@@ -88,5 +88,39 @@
         </Style.Triggers>
 
     </Style>
-    
+
+    <Style TargetType="{x:Type TextBox}" x:Key="TextBoxStyle3">
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type TextBoxBase}">
+                    <Border x:Name="border" BorderBrush="Transparent" BorderThickness="0"
+                            Background="{TemplateBinding Background}" SnapsToDevicePixels="True" CornerRadius="5">
+                        <ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Setter Property="Background" Value="{StaticResource color1}"/>
+        <Setter Property="Foreground" Value="{StaticResource color2}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource color2}"/>
+        <Setter Property="Height" Value="22"/>
+        <Setter Property="Padding" Value="5"/>
+        <Setter Property="SelectionBrush" Value="{StaticResource color1}"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+
+        <Style.Triggers>
+
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource color3}"/>
+                <Setter Property="Foreground" Value="{StaticResource color1}"/>
+            </Trigger>
+
+        </Style.Triggers>
+
+    </Style>
+
 </ResourceDictionary>

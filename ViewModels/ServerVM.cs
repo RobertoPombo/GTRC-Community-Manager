@@ -1,20 +1,18 @@
-﻿using System;
+﻿using Core;
+using Enums;
+using Database;
+using Scripts;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using System.Reactive;
 using System.Text;
 using System.Threading;
-using System.Windows;
-using System.Windows.Input;
-using Discord;
-using GTRC_Community_Manager;
-using GTRCLeagueManager.Database;
 using Newtonsoft.Json;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public class ServerVM : ObservableObject
     {

@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class Driver : DatabaseObject<Driver>
     {

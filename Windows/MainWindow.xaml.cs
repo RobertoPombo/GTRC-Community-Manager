@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Scripts;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -11,7 +12,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Controls;
 using System.Collections;
 using Newtonsoft.Json.Linq;
-using GTRCLeagueManager.Database;
 using System.Linq;
 using System.Data.SqlClient;
 using Dapper;
@@ -20,7 +20,7 @@ using System.Threading;
 using System.Windows.Documents;
 using System.Globalization;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public partial class MainWindow : Window
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GTRC_Community_Manager
+namespace Enums
 {
     public enum SessionTypeEnum
     {
@@ -22,5 +22,33 @@ namespace GTRC_Community_Manager
         RaceControl = 1,
         AllDrivers = 2,
         Season = 3
+    }
+
+    public enum IncidentsStatusEnum
+    {
+        Open = 0,
+        DoneLive = 1,
+        DonePostRace = 2,
+        Discarded = 3
+    }
+
+    public enum ReportReasonEnum
+    {
+        ManualReport = 0,
+        Collision = 1,
+        ReturnToGarage = 2,
+        WrongStartingPos = 3,
+        OvertakeQuali = 4,
+        OvertakeOffTrack = 5,
+        DriverReport = 6
+    }
+
+    public enum IncidentPropCategoryEnum
+    {
+        OriginalReport = 0,
+        Report = 1,
+        Description = 2,
+        Decision = 3,
+        Status = 4
     }
 }

@@ -2,8 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class DriversEntries : DatabaseObject<DriversEntries>
     {
@@ -96,9 +97,5 @@ namespace GTRCLeagueManager.Database
             }
             return new DriversEntries(false);
         }
-
-        //TEMP: Converter
-        [NotMapped] public string SteamID { set { DriverID = Driver.Statics.GetByUniqProp(value).ID; } }
-        [NotMapped] public string RaceNumber { set { EntryID = Entry.Statics.GetByUniqProp(new List<dynamic>() { 4, value }).ID; } }
     }
 }

@@ -2,8 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+using GTRC_Community_Manager;
+
+namespace Database
 {
     public class Event : DatabaseObject<Event>
     {

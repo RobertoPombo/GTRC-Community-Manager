@@ -83,4 +83,38 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+
+
+    <Style x:Key="ListBoxFilterStyle" TargetType="{x:Type ListBox}">
+        <Setter Property="SnapsToDevicePixels" Value="true"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ListBox}">
+                    <Border Name="Border" Background="Transparent" CornerRadius="0"
+                            BorderBrush="{StaticResource color3}" BorderThickness="1,0">
+                        <StackPanel Orientation="Horizontal" IsItemsHost="True"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+
+    <Style x:Key="ListBoxFilterItemStyle" TargetType="{x:Type ListBoxItem}">
+        <Setter Property="SnapsToDevicePixels" Value="true" />
+        <Setter Property="Foreground" Value="{StaticResource color1}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                    <Grid>
+                        <Border Background="Transparent" Padding="0" BorderThickness="0" BorderBrush="Transparent" CornerRadius="0" SnapsToDevicePixels="True">
+                            <ContentPresenter/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

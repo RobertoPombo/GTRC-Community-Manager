@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Core;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,9 +8,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows;
-using GTRCLeagueManager.Database;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public class TableDesign : ObservableObject
     {

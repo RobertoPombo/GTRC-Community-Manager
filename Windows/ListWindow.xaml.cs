@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Scripts;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public partial class ListWindow : Window
     {

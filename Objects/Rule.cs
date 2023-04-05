@@ -1,13 +1,14 @@
 ﻿using Newtonsoft.Json;
+using Core;
+using Database;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using GTRCLeagueManager.Database;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public class Rule : ObservableObject
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace GTRCLeagueManager.Windows
+namespace GTRC_Community_Manager.Windows
 {
     public partial class ColumnDesignUIModel : UserControl
     {

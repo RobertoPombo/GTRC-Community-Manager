@@ -3,8 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class Entry : DatabaseObject<Entry>
     {
@@ -201,9 +202,5 @@ namespace GTRCLeagueManager.Database
                 }
             }
         }
-
-        //TEMP: Converter
-        [NotMapped] public string TeamID2 { set { TeamID = Team.Statics.GetByUniqProp(new List<dynamic>() { 4, value }).ID; } }
-        [NotMapped] public string CarID2 { set { CarID = Car.Statics.GetByUniqProp(value).ID; } }
     }
 }

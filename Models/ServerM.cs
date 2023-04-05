@@ -1,4 +1,7 @@
-﻿using GTRC_Community_Manager;
+﻿using Core;
+using Enums;
+using Database;
+using Scripts;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -7,11 +10,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Windows;
 using System.Windows.Media;
-using GTRCLeagueManager.Database;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public class ServerM : ObservableObject
     {

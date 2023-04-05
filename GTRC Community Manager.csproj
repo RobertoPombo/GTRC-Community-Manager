@@ -6,6 +6,7 @@
     <RootNamespace>GTRC_Community_Manager</RootNamespace>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>Icons\icon_gtrc.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -83,6 +84,29 @@
     <None Remove="Icons\icon_sho0.png" />
     <None Remove="Icons\icon_sho1.png" />
     <None Remove="Icons\icon_sho2.png" />
+    <None Remove="Logos\Alfa Romeo.png" />
+    <None Remove="Logos\Alpine.png" />
+    <None Remove="Logos\Aston Martin.png" />
+    <None Remove="Logos\Audi.png" />
+    <None Remove="Logos\Bentley.png" />
+    <None Remove="Logos\BMW.png" />
+    <None Remove="Logos\Chevrolet.png" />
+    <None Remove="Logos\Ferrari.png" />
+    <None Remove="Logos\Ginetta.png" />
+    <None Remove="Logos\Honda.png" />
+    <None Remove="Logos\Jaguar.png" />
+    <None Remove="Logos\KTM.png" />
+    <None Remove="Logos\Lamborghini.png" />
+    <None Remove="Logos\Lexus.png" />
+    <None Remove="Logos\Maserati.png" />
+    <None Remove="Logos\McLaren.png" />
+    <None Remove="Logos\Mercedes.png" />
+    <None Remove="Logos\Nissan.png" />
+    <None Remove="Logos\Porsche.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Icons\icon_gtrc.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -315,6 +339,63 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\icon_sho2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Alfa Romeo.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Alpine.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Aston Martin.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Audi.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Bentley.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\BMW.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Chevrolet.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Ferrari.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Ginetta.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Honda.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Jaguar.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\KTM.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Lamborghini.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Lexus.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Maserati.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\McLaren.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Mercedes.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Nissan.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Logos\Porsche.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

@@ -1,24 +1,28 @@
-﻿using System;
+﻿using Core;
+using Database;
+using Scripts;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
-using GTRCLeagueManager.Database;
 
-namespace GTRCLeagueManager
+namespace GTRC_Community_Manager
 {
     public class DatabaseVM : ObservableObject
     {
         public static DatabaseVM? Instance;
-        public static SortState CurrentSortState = new();
 
         private static Type dataType = typeof(ThemeColor);
         private static List<KeyValuePair<string, Type>> listDataTypes = new();
 
         private bool forceDel = false;
         private ObservableCollection<DataRowVM> list = new();
-        private DataRowVM current;
-        private DataRowVM selected;
+        private DataRowVM? current;
+        private DataRowVM? selected;
+        private int SelectedID = Basics.NoID;
+        private dynamic? Statics;
+        private ObservableCollection<StaticDbFilter> filter;
 
         public DatabaseVM()
         {
@@ -39,6 +43,8 @@ namespace GTRCLeagueManager
             ListDataTypes.Add(new KeyValuePair<string, Type>(EventsEntries.Statics.Table, typeof(EventsEntries)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(EventsCars.Statics.Table, typeof(EventsCars)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(PreQualiResultLine.Statics.Table, typeof(PreQualiResultLine)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Incident.Statics.Table, typeof(Incident)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(IncidentsEntries.Statics.Table, typeof(IncidentsEntries)));
             DataType = ListDataTypes[0].Value;
             AddCmd = new UICmd((o) => Add());
             DelCmd = new UICmd((o) => Del());
@@ -51,13 +57,15 @@ namespace GTRCLeagueManager
             ClearListCmd = new UICmd((o) => ClearList());
             ClearSQLCmd = new UICmd((o) => ClearSQL());
             ClearJsonCmd = new UICmd((o) => ClearJson());
+            CleanUpListCmd = new UICmd((o) => CleanUpList());
+            ClearFilterCmd = new UICmd((o) => ClearFilter());
         }
 
         public void InitializeDatabase()
         {
             Type backupDataType = DataType;
             foreach (KeyValuePair<string, Type> _dataType in ListDataTypes) { DataType = _dataType.Value; forceDel = true; ClearList(); }
-            foreach (KeyValuePair<string, Type> _dataType in ListDataTypes) { DataType = _dataType.Value; LoadSQL(); }
+            foreach (KeyValuePair<string, Type> _dataType in ListDataTypes) { DataType = _dataType.Value; if (_dataType.Key == "EventsEntries") { } LoadSQL(); }
             DataType = backupDataType;
         }
 
@@ -81,7 +89,11 @@ namespace GTRCLeagueManager
             set
             {
                 dataType = value;
+                Statics = StaticFieldList.GetByType(dataType);
                 ClearCurrent();
+                filter = new();
+                if (Statics is not null) { foreach (StaticDbFilter _staticDbFilter in Statics.Filter) { filter.Add(_staticDbFilter); } }
+                RaisePropertyChanged(nameof(Filter));
                 ResetList();
                 ClearCurrent();
                 RaisePropertyChanged();
@@ -94,25 +106,40 @@ namespace GTRCLeagueManager
             set { list = value; RaisePropertyChanged(); }
         }
 
-        public DataRowVM Current
+        public DataRowVM? Current
         {
             get { return current; }
             set { current = value; RaisePropertyChanged(); }
         }
 
-        public DataRowVM Selected
+        public DataRowVM? Selected
         {
             get { return selected; }
-            set { if (value != null) { selected = value; Current = new DataRowVM(Selected.Object, false, false); RaisePropertyChanged(); } }
+            set
+            {
+                if (value != null)
+                {
+                    selected = value;
+                    SelectedID = selected.Object.ID;
+                    Current = new DataRowVM(selected.Object, false, false);
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public ObservableCollection<StaticDbFilter> Filter { get { return filter; } set { filter = value; RaisePropertyChanged(); } }
+
+        public void RaisePropertyChanged_Filter(int index = 0)
+        {
+            if (Filter.Count > index) { Filter.RemoveAt(index); Filter.Insert(index, Statics.Filter[index]); RaisePropertyChanged(nameof(Filter)); }
         }
 
         public void ResetList(int index = 0)
         {
+            if (Filter?.Count > 0 && Statics?.Filter?.Count > 0) { RaisePropertyChanged_Filter(0); }
+            RaisePropertyChanged(nameof(Filter));
             List.Clear();
-            List<dynamic> iterateObj = new();
-            foreach (var _obj in Current.Object.List) { iterateObj.Add(_obj); }
-            foreach (var _obj in iterateObj) { List.Add(new DataRowVM(_obj, true, true)); }
-            SetSelected(index);
+            if (Statics is not null) { foreach (var _obj in Statics.FilteredList) { List.Add(new DataRowVM(_obj, true, true)); } SetSelected(index); }
         }
 
         public static void DataRow2Object(dynamic _obj, DataRowVM _dataRow)
@@ -136,8 +163,16 @@ namespace GTRCLeagueManager
 
         public void SetSelected(int index = 0)
         {
-            if (List.Count > index && index >= 0) { Selected = List[index]; }
-            else if (List.Count > 0) { Selected = List[0]; }
+            if (Statics?.FilteredList?.Count > 0)
+            {
+                index = Math.Min(Math.Max(0, index), Statics.FilteredList.Count - 1);
+                if (index == 0 && SelectedID != Basics.NoID)
+                {
+                    var _obj = Statics.GetByID(SelectedID);
+                    if (Statics.FilteredList.Contains(_obj)) { index = Statics.FilteredList.IndexOf(_obj); }
+                }
+                foreach (DataRowVM _dataRow in List) { if (_dataRow.Object.ID == Statics.FilteredList[index].ID) { Selected = _dataRow; break; } }
+            }
         }
 
         public void ClearCurrent()
@@ -155,91 +190,61 @@ namespace GTRCLeagueManager
             DataRow2Object(Current.Object, Current);
             Current.Object.ID = Basics.NoID;
             Current = new DataRowVM(Current.Object, false, false);
-            if (Enumerable.SequenceEqual(backupValues, Current.Values)) { Current.Object.ListAdd(); ResetList(List.Count); }
+            if (Enumerable.SequenceEqual(backupValues, Current.Values)) { Current.Object.ListAdd(); ResetList(Current.Object.ID); }
         }
 
         public void Del()
         {
-            if (Selected is not null && Current.Object.List.Contains(Selected.Object))
+            if (Selected is not null && Statics?.FilteredList.Contains(Selected.Object))
             {
-                int index = Selected.Object.List.IndexOf(Selected.Object);
+                int index = Statics.FilteredList.IndexOf(Selected.Object);
                 Selected.Object.ListRemove(UseForceDel());
-                if (index == Selected.Object.List.Count) { index -= 1; }
                 ResetList(index);
             }
         }
 
         public void Update()
         {
-            DataRowVM backupSelected = new DataRowVM(Selected.Object, false, false);
+            DataRowVM backupSelected = new(Selected.Object, false, false);
             List<dynamic> backupValues = Current.Values;
             DataRow2Object(Selected.Object, Current);
             Current = new DataRowVM(Selected.Object, false, false);
-            if (CompareLists(backupValues, Current.Values))
-            {
-                Selected = new DataRowVM(Selected.Object, true, true);
-                if (Selected.Object.List.Contains(Selected.Object)) { ResetList(Selected.Object.List.IndexOf(Selected.Object)); }
-            }
+            if (CompareLists(backupValues, Current.Values)) { Selected = new DataRowVM(Selected.Object, true, true); ResetList(); }
             else { DataRow2Object(Selected.Object, backupSelected); }
-        }
-
-        public void Sort(PropertyInfo property)
-        {
-            List<string> numericalTypes = new List<string>() { "System.Int16", "System.Int32", "System.Int64", "System.UInt16", "System.UInt32", "System.UInt64", "System.Single", "System.Double", "System.Decimal", "System.DateTime" };
-            bool stringCompare = true;
-            if (numericalTypes.Contains(property.PropertyType.ToString())) { stringCompare = false; }
-            if (CurrentSortState.Property == property) { CurrentSortState.SortAscending = !CurrentSortState.SortAscending; }
-            else { CurrentSortState = new SortState { Property = property }; }
-            for (int rowNr1 = 0; rowNr1 < Current.Object.List.Count - 1; rowNr1++)
-            {
-                for (int rowNr2 = rowNr1 + 1; rowNr2 < Current.Object.List.Count; rowNr2++)
-                {
-                    bool smallerValueIsFirst;
-                    dynamic val1 = Basics.GetCastedValue(Current.Object.List[rowNr1], property);
-                    dynamic val2 = Basics.GetCastedValue(Current.Object.List[rowNr2], property);
-                    if (stringCompare) { smallerValueIsFirst = String.Compare(val1.ToString(), val2.ToString()) < 0; }
-                    else { smallerValueIsFirst = val1 < val2; }
-                    if ((CurrentSortState.SortAscending && !smallerValueIsFirst) || (!CurrentSortState.SortAscending && smallerValueIsFirst))
-                    {
-                        (Current.Object.List[rowNr1], Current.Object.List[rowNr2]) = (Current.Object.List[rowNr2], Current.Object.List[rowNr1]);
-                    }
-                }
-            }
-            ResetList(Selected.Object.List.IndexOf(Selected.Object));
         }
 
         public void ReadJson()
         {
-            StaticFieldList.GetByType(DataType).ReadJson(UseForceDel());
+            Statics.ReadJson(UseForceDel());
             ResetList();
         }
 
         public void WriteJson()
         {
-            StaticFieldList.GetByType(DataType).WriteJson();
+            Statics.WriteJson();
         }
 
         public void LoadSQL()
         {
-            StaticFieldList.GetByType(DataType).LoadSQL(UseForceDel());
+            Statics.LoadSQL(UseForceDel());
             ResetList();
         }
 
         public void WriteSQL()
         {
-            StaticFieldList.GetByType(dataType).WriteSQL();
+            Statics.WriteSQL();
             ResetList();
         }
 
         public void ClearList()
         {
-            StaticFieldList.GetByType(DataType).ListClear(UseForceDel());
+            Statics.ListClear(UseForceDel());
             ResetList();
         }
 
         public void ClearSQL()
         {
-            StaticFieldList.GetByType(dataType).ResetSQL(UseForceDel());
+            Statics.ResetSQL(UseForceDel());
             ResetList();
         }
 
@@ -247,6 +252,17 @@ namespace GTRCLeagueManager
         {
             ClearList();
             WriteJson();
+        }
+
+        public void CleanUpList()
+        {
+            Statics.DeleteNotUnique();
+            ResetList();
+        }
+
+        public void ClearFilter()
+        {
+            for (int filterNr = Filter.Count - 1; filterNr >= 0; filterNr--) { Filter[filterNr].Filter = ""; RaisePropertyChanged_Filter(filterNr); }
         }
 
         public UICmd AddCmd { get; set; }
@@ -260,6 +276,8 @@ namespace GTRCLeagueManager
         public UICmd ClearListCmd { get; set; }
         public UICmd ClearSQLCmd { get; set; }
         public UICmd ClearJsonCmd { get; set; }
+        public UICmd CleanUpListCmd { get; set; }
+        public UICmd ClearFilterCmd { get; set; }
     }
 
 
@@ -284,7 +302,7 @@ namespace GTRCLeagueManager
         {
             get
             {
-                List<string> _list = new List<string>();
+                List<string> _list = new();
                 foreach (DataFieldVM _dataField in List) { _list.Add(_dataField.Name); }
                 return _list;
             }
@@ -294,7 +312,7 @@ namespace GTRCLeagueManager
         {
             get
             {
-                List<dynamic> _list = new List<dynamic>();
+                List<dynamic> _list = new();
                 foreach (DataFieldVM _dataField in List) { _list.Add(Basics.CastValue(_dataField.Property, _dataField.Value)); }
                 return _list;
             }
@@ -314,56 +332,30 @@ namespace GTRCLeagueManager
 
     public class DataFieldVM : ObservableObject
     {
-        private string name;
-        private dynamic val;
+        private string name = "";
+        private dynamic val = Basics.NoID;
         private List<KeyValuePair<string, int>> idList = new();
-        private string path;
+        private string? path;
 
-        public DataRowVM DataRow;
+        public DataRowVM? DataRow;
         public PropertyInfo Property;
 
-        public DataFieldVM(DataRowVM _dataRow, KeyValuePair<PropertyInfo, dynamic> item)
+        public DataFieldVM(DataRowVM? _dataRow, KeyValuePair<PropertyInfo, dynamic> item)
         {
             DataRow = _dataRow;
             Property = item.Key;
             Name = Property.Name;
             Value = item.Value;
             idList.Clear();
-            dynamic _statics = StaticFieldList.GetByIDProperty(Name);
-            if (_statics != null)
+            dynamic? _statics = StaticFieldList.GetByIDProperty(Name);
+            if (_statics is not null)
             {
                 foreach (var _obj in _statics.IDList)
                 {
                     idList.Add(new KeyValuePair<string, int>(_obj.ToString(), _obj.ID));
                 }
             }
-            /*
-            if (Basics.SubStr(Name, -2, 2) == "ID")
-            {
-                string _dataTypeName = Basics.SubStr(Name, 0, Name.Length - 2);
-                if (_dataTypeName.Length > 0)
-                {
-                    foreach (var _obj in StaticFieldList.GetByType(_dataTypeName).IDList)
-                    {
-                        idList.Add(new KeyValuePair<string, int>(_obj.ToString(), _obj.ID));
-                    }
-                    /*
-                    foreach (KeyValuePair<string, Type> _dataType in DatabaseVM.Instance.ListDataTypes)
-                    {
-                        if (_dataType.Value.Name == _dataTypeName)
-                        {
-                            foreach (var _obj in StaticFieldList.GetByType(_dataType.Value).IDList)
-                            {
-                                idList.Add(new KeyValuePair<string, int>(_obj.ToString(), _obj.ID));
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            */
             if (Name == "Logo") { Path = Value.ToString(); } else { Path = null; }
-            SortCmd = new UICmd((o) => DatabaseVM.Instance.Sort(Property));
         }
 
         public string Name { get { return name; } set { name = value; RaisePropertyChanged(); } }
@@ -372,17 +364,6 @@ namespace GTRCLeagueManager
 
         public List<KeyValuePair<string, int>> IDList { get { return idList; } set { idList = value; RaisePropertyChanged(); } }
 
-        public dynamic Path { get { return path; } set { path = value; RaisePropertyChanged(); } }
-
-        public UICmd SortCmd { get; set; }
-    }
-
-    public class SortState
-    {
-        public SortState() { }
-
-        public bool SortAscending = true;
-        public PropertyInfo Property = null;
-
+        public dynamic? Path { get { return path; } set { path = value; RaisePropertyChanged(); } }
     }
 }

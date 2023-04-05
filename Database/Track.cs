@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class Track : DatabaseObject<Track>
     {

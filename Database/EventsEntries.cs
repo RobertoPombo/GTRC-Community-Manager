@@ -4,10 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
-using Newtonsoft.Json.Linq;
-using System.Reflection;
+using Scripts;
 
-namespace GTRCLeagueManager.Database
+namespace Database
 {
     public class EventsEntries : DatabaseObject<EventsEntries>
     {
@@ -129,10 +128,15 @@ namespace GTRCLeagueManager.Database
             get { return Event.Statics.GetByID(EventID).EventNr; }
         }
 
-        public static void PublishList() { }
+        public static void PublishList()
+        {
+            //if (!Statics.DelayPL) { Statics.DeleteNotUnique(); }
+        }
 
         public override void SetNextAvailable()
         {
+            if (Statics.DelayPL) { return; }
+
             List<Entry> _idListEntry = Entry.Statics.IDList;
             if (_idListEntry.Count == 0) { Entry _newEntry = new() { ID = 1 }; _idListEntry.Add(_newEntry); }
             Entry _entry = Entry.Statics.GetByID(entryID);
@@ -256,10 +260,5 @@ namespace GTRCLeagueManager.Database
             }
             return eventsEntries;
         }
-
-        //TEMP: Converter
-        [NotMapped] public DateTime EventDate { set { EventID = Event.Statics.GetByUniqProp(new List<dynamic>() { 4, value }).ID; } }
-        [NotMapped] public string RaceNumber { set { EntryID = Entry.Statics.GetByUniqProp(new List<dynamic>() { 4, value }).ID; } }
-        [NotMapped] public string CarID2 { set { CarID = Car.Statics.GetByUniqProp(value).ID; } }
     }
 }
