@@ -94,7 +94,6 @@ namespace Scripts
                 ["LastName"] = new Driver(false).LastName,
                 ["TeamName"] = Team.DefaultName,
                 ["CarID"] = Basics.NoID,
-                ["Category"] = new Entry(false).Category,
                 ["ScorePoints"] = new Entry(false).ScorePoints,
                 ["RegisterDate"] = DateTime.Now
             };
@@ -108,7 +107,7 @@ namespace Scripts
             List<Car> cars = Car.Statics.GetBy(nameof(Car.Name_GTRC), ReadValueFromColumn(VarMap, row, "Fahrzeug"));
             if (cars.Count > 0) { values["CarID"] = cars[0].ID; }
             string? scorePoints = ReadValueFromColumn(VarMap, row, "Stammfahrer oder Gaststarter");
-            if (scorePoints == "Stammfahrer") { values["Category"] = 3; values["ScorePoints"] = true; } else { values["Category"] = 1; values["ScorePoints"] = false; }
+            if (scorePoints == "Stammfahrer") { values["ScorePoints"] = true; } else { values["ScorePoints"] = false; }
             if (DateTime.TryParse(ReadValueFromColumn(VarMap, row, "Zeitstempel"), out DateTime registerDate)) { values["RegisterDate"] = registerDate; }
             return values;
         }
@@ -166,7 +165,6 @@ namespace Scripts
             DriversTeams driverTeam = SyncTeam(values, seasonID);
             int RaceNumber = values["RaceNumber"];
             int CarID = values["CarID"];
-            int Category = values["Category"];
             bool ScorePoints = values["ScorePoints"];
             DateTime RegisterDate = values["RegisterDate"];
             if (driverTeam.ID != Basics.NoID && RaceNumber != Basics.NoID)
@@ -178,7 +176,6 @@ namespace Scripts
                 driverEntry.EntryID = entry.ID;
                 entry.TeamID = driverTeam.TeamID;
                 if ((newEntry || entry.CarID == Basics.NoID) && CarID != Basics.NoID) { entry.CarID = CarID; }
-                entry.Category = Category;
                 entry.ScorePoints = ScorePoints;
                 if (RegisterDate < entry.RegisterDate) { entry.RegisterDate = RegisterDate; }
             }

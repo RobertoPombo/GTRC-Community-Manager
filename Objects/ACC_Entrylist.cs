@@ -48,6 +48,16 @@ namespace GTRC_Community_Manager
         {
             entries = new List<ACC_Entry>();
             List<EventsEntries> ListEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EventID), _event.ID);
+            for (int i = 0; i < ListEntries.Count - 1; i++)
+            {
+                for (int i2 = i; i2 < ListEntries.Count; i2++)
+                {
+                    if (Entry.Statics.GetByID(ListEntries[i].EntryID).RaceNumber > Entry.Statics.GetByID(ListEntries[i2].EntryID).RaceNumber)
+                    {
+                        (ListEntries[i], ListEntries[i2]) = (ListEntries[i2], ListEntries[i]);
+                    }
+                }
+            }
             foreach (EventsEntries _eventsEntries in ListEntries)
             {
                 if (_eventsEntries.IsOnEntrylist)
@@ -71,7 +81,8 @@ namespace GTRC_Community_Manager
                         accDriver.playerID = "S" + driver.SteamID.ToString();
                     }
                     accEntry.raceNumber = entry.RaceNumber;
-                    if (_forceCarModel) { accEntry.forcedCarModel = _eventsEntries.CarID; ; } else { accEntry.forcedCarModel = -1; }
+                    Car car = Car.Statics.GetByID(_eventsEntries.CarID);
+                    if (_forceCarModel && car.ID != Basics.NoID) { accEntry.forcedCarModel = car.AccCarID; ; } else { accEntry.forcedCarModel = -1; }
                     accEntry.overrideDriverInfo = 1;
                     accEntry.defaultGridPosition = -1;
                     accEntry.ballastKg = _eventsEntries.Ballast;

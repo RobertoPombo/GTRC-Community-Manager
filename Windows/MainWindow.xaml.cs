@@ -48,7 +48,8 @@ namespace GTRC_Community_Manager
 
         public void CloseWindow()
         {
-            if (instanceListWindow != null) { instanceListWindow.Close(); }
+            if (instanceListWindow is not null) { instanceListWindow.Close(); }
+            if (DatabaseVM.Instance is not null) { DatabaseVM.Instance.SaveFilter(); }
             foreach (ServerM _server in ServerM.List) { _server.SetOnline = false; }
             try { SQL.Connection.Close(); } catch { }
             if (SignInOutBot.Instance?._client is not null)

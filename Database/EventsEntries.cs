@@ -52,7 +52,13 @@ namespace Database
         public DateTime SignInDate
         {
             get { return signindate; }
-            set { signindate = value; }
+            set
+            {
+                Entry _entry = Entry.Statics.GetByID(EntryID);
+                Event _event = Event.Statics.GetByID(EventID);
+                if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate) { signindate = value; }
+                else { signindate = Event.DateTimeMaxValue; }
+            }
         }
 
         [JsonIgnore] public bool SignInState
@@ -97,13 +103,41 @@ namespace Database
         public int Category
         {
             get { return category; }
-            set { if (value >= 0 && value <= 4) { category = value; } }
+            set
+            {
+                if (value >= 0 && value <= 4 && category != value)
+                {
+                    category = value;
+                    if (category == 3) { ScorePoints = true; } else if (category == 1) { ScorePoints = false; }
+                }
+            }
         }
 
         public bool ScorePoints
         {
             get { return scorepoints; }
-            set { scorepoints = value; }
+            set
+            {
+                if (scorepoints != value)
+                {
+                    scorepoints = value;
+                    Entry _entry = Entry.Statics.GetByID(EntryID);
+                    Event _event = Event.Statics.GetByID(EventID);
+                    if (scorepoints)
+                    {
+                        if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate && SignInDate >= Event.DateTimeMaxValue)
+                        {
+                            SignInDate = Event.DateTimeMinValue;
+                        }
+                        Category = 3;
+                    }
+                    else
+                    {
+                        if (SignInDate <= Event.DateTimeMinValue) { SignInDate = Event.DateTimeMaxValue; }
+                        Category = 1;
+                    }
+                }
+            }
         }
 
         public int CarID
@@ -120,7 +154,7 @@ namespace Database
         public DateTime CarChangeDate
         {
             get { return carchangedate; }
-            set { carchangedate = value; }
+            set { if (Entry.Statics.GetByID(EntryID).RegisterDate <= value) { carchangedate = value; } }
         }
 
         [JsonIgnore] public int EventNr
@@ -191,7 +225,7 @@ namespace Database
         public static EventsEntries GetAnyByUniqProp(int _entryID, int _eventID)
         {
             EventsEntries eventEntry = Statics.GetByUniqProp(new List<dynamic>() { _entryID, _eventID });
-            if (!eventEntry.ReadyForList && _entryID != Basics.NoID && _eventID != Basics.NoID)
+            if (!eventEntry.ReadyForList && _entryID >= Basics.ID0 && _eventID >= Basics.ID0)
             {
                 eventEntry.EntryID = _entryID;
                 eventEntry.EventID = _eventID;
@@ -203,7 +237,7 @@ namespace Database
         public static List<EventsEntries> GetAnyBy(string propName, int id)
         {
             List<EventsEntries> eventsEntries = new();
-            if (propName == nameof(EntryID) && id != Basics.NoID)
+            if (propName == nameof(EntryID) && id >= Basics.ID0)
             {
                 List<Event> listEvents = Event.Statics.GetBy(nameof(Event.SeasonID), Entry.Statics.GetByID(id).SeasonID);
                 foreach (Event _event in listEvents)
@@ -212,7 +246,7 @@ namespace Database
                     if (eventEntry.ReadyForList) { eventsEntries.Add(eventEntry); }
                 }
             }
-            else if (propName == nameof(EventID) && id != Basics.NoID)
+            else if (propName == nameof(EventID) && id >= Basics.ID0)
             {
                 List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), Event.Statics.GetByID(id).SeasonID);
                 foreach (Entry _entry in listEntries)

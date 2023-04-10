@@ -152,12 +152,12 @@ namespace GTRC_Community_Manager
             _server.IsRunning = true;
             _server.WaitQueue--;
             Lap.Statics.LoadSQL();
-            for (int pathNr = 0; pathNr < paths.Count; pathNr++) { PreSeason.AddResultsJson(paths[pathNr], _server.Server.SeasonID); _server.WaitQueue--; }
+            for (int pathNr = 0; pathNr < paths.Count; pathNr++) { /*PreSeason.AddResultsJson(paths[pathNr], _server.Server.SeasonID);*/ _server.WaitQueue--; }
             Lap.Statics.WriteSQL();
             if (PreSeasonVM.Instance is not null)
             {
-                PreSeason.UpdatePreQResults(PreSeasonVM.Instance.CurrentSeasonID);
-                GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
+                //PreSeason.UpdatePreQResults(PreSeasonVM.Instance.CurrentSeasonID);
+                //GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
             }
             _server.IsRunning = false;
         }
@@ -290,6 +290,7 @@ namespace GTRC_Community_Manager
         public void SaveSettings()
         {
             string text = JsonConvert.SerializeObject(this, Formatting.Indented);
+            foreach (ServerM _server in ServerM.List) { _server.SetOnline = false; }
             File.WriteAllText(PathSettings, text, Encoding.Unicode);
             Server.Statics.WriteSQL();
             MainVM.List[0].LogCurrentText = "Server settings saved.";

@@ -68,7 +68,7 @@ namespace Scripts
             SqlQry = "";
             SqlQry += "UPDATE " + table + " SET ";
             foreach (PropertyInfo key in dict.Keys) { SqlQry += key.Name + " = @" + key.Name + ", "; }
-            SqlQry = SqlQry.Substring(0, SqlQry.Length - 2) + " WHERE ID = @ID;";
+            SqlQry = SqlQry[..^2] + " WHERE ID = @ID;";
             try
             {
                 SqlCmd = new SqlCommand(SqlQry, Connection);
@@ -121,6 +121,7 @@ namespace Scripts
 
         public static void ReseedSQL(string table, int value)
         {
+            if (value == Basics.NoID) { value = Basics.ID0; }
             SqlQry = "DBCC CHECKIDENT(" + table + ", RESEED, " + value.ToString() + ");";
             try
             {

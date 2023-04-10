@@ -309,11 +309,11 @@ namespace GTRC_Community_Manager
             {
                 foreach (string message in messageBlacklist)
                 {
-                    if (accServerOutput.Length > message.Length && accServerOutput.Substring(0, message.Length) == message) { break; }
+                    if (accServerOutput.Length > message.Length && accServerOutput[..message.Length] == message) { break; }
                 }
                 foreach (string prefix in prefixes)
                 {
-                    if (accServerOutput.Length > prefix.Length && accServerOutput.Substring(0, prefix.Length) == prefix)
+                    if (accServerOutput.Length > prefix.Length && accServerOutput[..prefix.Length] == prefix)
                     {
                         for (int charCount = 1; charCount <= accServerOutput.Length - prefix.Length; charCount++)
                         {

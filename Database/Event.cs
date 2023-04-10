@@ -41,15 +41,15 @@ namespace Database
                 if (List.Contains(this) && ID != Basics.NoID)
                 {
                     SortByDate();
-                    int nr = 0;
+                    int nr = 1;
                     foreach (Event _event in Statics.List)
                     {
                         if (_event == this) { return nr; }
                         if (_event.SeasonID == SeasonID) { nr++; }
                     }
-                    return -1;
+                    return Basics.NoID;
                 }
-                else { return -1; }
+                else { return Basics.NoID; }
             }
         }
 

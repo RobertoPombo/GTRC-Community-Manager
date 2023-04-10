@@ -1,18 +1,22 @@
 ﻿using Core;
 using Database;
+using Newtonsoft.Json;
 using Scripts;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace GTRC_Community_Manager
 {
     public class DatabaseVM : ObservableObject
     {
         public static DatabaseVM? Instance;
-
+        private static readonly string PathFilter = MainWindow.dataDirectory + "config filter.json";
         private static Type dataType = typeof(ThemeColor);
         private static List<KeyValuePair<string, Type>> listDataTypes = new();
 
@@ -22,7 +26,7 @@ namespace GTRC_Community_Manager
         private DataRowVM? selected;
         private int SelectedID = Basics.NoID;
         private dynamic? Statics;
-        private ObservableCollection<StaticDbFilter> filter;
+        private ObservableCollection<StaticDbFilter> filter = new();
 
         public DatabaseVM()
         {
@@ -45,6 +49,8 @@ namespace GTRC_Community_Manager
             ListDataTypes.Add(new KeyValuePair<string, Type>(PreQualiResultLine.Statics.Table, typeof(PreQualiResultLine)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Incident.Statics.Table, typeof(Incident)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(IncidentsEntries.Statics.Table, typeof(IncidentsEntries)));
+            if (!File.Exists(PathFilter)) { File.WriteAllText(PathFilter, "", Encoding.Unicode); }
+            RestoreFilter();
             DataType = ListDataTypes[0].Value;
             AddCmd = new UICmd((o) => Add());
             DelCmd = new UICmd((o) => Del());
@@ -266,6 +272,54 @@ namespace GTRC_Community_Manager
         public void ClearFilter()
         {
             for (int filterNr = Filter.Count - 1; filterNr >= 0; filterNr--) { Filter[filterNr].Filter = ""; RaisePropertyChanged_Filter(filterNr); }
+        }
+
+        public void RestoreFilter()
+        {
+            try
+            {
+                dynamic obj = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(PathFilter, Encoding.Unicode));
+                foreach (KeyValuePair<string, Type> _dataType in ListDataTypes)
+                {
+                    dynamic? _tempStatics = StaticFieldList.GetByType(_dataType.Value);
+                    var _filter = obj?[_dataType.Key] ?? null;
+                    if (_tempStatics is not null && _filter is not null && _filter is IList)
+                    {
+                        DataType = _dataType.Value;
+                        for (int filterNr = 0; filterNr < _tempStatics.Filter.Count; filterNr++)
+                        {
+                            foreach (var _property in _filter)
+                            {
+                                string? _name = _property.PropertyName?.ToString() ?? null;
+                                string? _value = _property.Filter?.ToString() ?? null;
+                                if (_name == _tempStatics.Filter[filterNr].PropertyName && _value is not null)
+                                {
+                                    _tempStatics.Filter[filterNr].Filter = _value;
+                                    RaisePropertyChanged_Filter(filterNr);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                MainVM.List[0].LogCurrentText = "Filter settings restored.";
+            }
+            catch { MainVM.List[0].LogCurrentText = "Restore filter settings failed!"; }
+        }
+
+        public void SaveFilter()
+        {
+            Dictionary<string, List<StaticDbFilter>> filterList = new();
+            foreach (KeyValuePair<string, Type> _dataType in ListDataTypes)
+            {
+                List<StaticDbFilter> tempFilterList = new();
+                dynamic? _tempStatics = StaticFieldList.GetByType(_dataType.Value);
+                if (_tempStatics is not null) { foreach (StaticDbFilter _staticDbFilter in _tempStatics.Filter) { tempFilterList.Add(_staticDbFilter); } }
+                filterList[_dataType.Key] = tempFilterList;
+            }
+            string text = JsonConvert.SerializeObject(filterList, Formatting.Indented);
+            File.WriteAllText(PathFilter, text, Encoding.Unicode);
+            MainVM.List[0].LogCurrentText = "Filter settings saved.";
         }
 
         public UICmd AddCmd { get; set; }

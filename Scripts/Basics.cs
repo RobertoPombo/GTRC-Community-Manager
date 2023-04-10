@@ -11,6 +11,7 @@ namespace Scripts
     public static class Basics
     {
         public static readonly int NoID = -1;
+        public static readonly int ID0 = 1;
         public static readonly Brush StateOff = (Brush)Application.Current.FindResource("color1");
         public static readonly Brush StateOn = (Brush)Application.Current.FindResource("color3");
         public static readonly Brush StateWait = (Brush)Application.Current.FindResource("color6");

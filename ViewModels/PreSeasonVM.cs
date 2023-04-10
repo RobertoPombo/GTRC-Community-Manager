@@ -9,9 +9,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Windows;
 using System.Windows.Media;
-using System.Reflection;
 
 namespace GTRC_Community_Manager
 {
@@ -32,7 +30,7 @@ namespace GTRC_Community_Manager
         private int slotstaken = 0;
         private string slotstakentext = "0/0";
         private bool stateautoupdateentries;
-        private Brush stateentries;
+        private Brush stateentries = Basics.StateOff;
         private int intervallminrefreshentries = 0;
         private int entriesupdateremtime = 0;
         private bool isrunningentries = false;
@@ -68,7 +66,6 @@ namespace GTRC_Community_Manager
             UpdateEntrylistBoPCmd = new UICmd((o) => UpdateEntrylistBoP());
             if (!File.Exists(PathSettings)) { SaveSettings(); }
             RestoreSettings();
-            StateEntries = Basics.StateOff;
             BackgroundWorkerResetEntries.DoWork += InfiniteLoopResetEntries;
             BackgroundWorkerResetEntries.RunWorkerAsync();
         }
@@ -400,11 +397,11 @@ namespace GTRC_Community_Manager
             WaitQueueEntries--;
             Lap.Statics.LoadSQL();
             ResetEntries();
-            PreSeason.UpdatePreQResults(CurrentSeasonID);
+            //PreSeason.UpdatePreQResults(CurrentSeasonID);
             PreSeason.CountCars(CurrentEvent, DateRegisterLimit, CarLimitRegisterLimit, DateBoPFreeze, IsCheckedRegisterLimit, IsCheckedBoPFreeze);
             PreSeason.CalcBoP(CurrentEvent, CarLimitBallast, CarLimitRestriktor, GainBallast, GainRestriktor, IsCheckedBallast, IsCheckedRestriktor);
             GSheets.UpdateBoPStandings(CurrentEvent, GSheet.ListIDs[2].DocID, GSheet.ListIDs[2].SheetID);
-            GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
+            //GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
             IsRunningEntries = false;
         }
 
@@ -453,6 +450,7 @@ namespace GTRC_Community_Manager
 
         public int ThreadUpdateEntrylistBoP_Int(Event _event)
         {
+            PreSeason.UpdateEntryPriority(_event.SeasonID);
             PreSeason.UpdateName3Digits(_event.SeasonID);
             PreSeason.EntryAutoSignOut(_event, SignOutLimit, NoShowLimit);
             UpdateBoPForEvent(_event);
@@ -505,31 +503,31 @@ namespace GTRC_Community_Manager
             try
             {
                 dynamic obj = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(PathSettings, Encoding.Unicode));
-                CurrentSeriesID = obj.CurrentSeriesID ?? currentSeriesID;
-                CurrentSeasonID = obj.CurrentSeasonID ?? currentSeasonID;
-                StateAutoUpdateEntries = obj.StateAutoUpdateEntries ?? stateautoupdateentries;
-                IntervallMinRefreshEntries = obj.IntervallMinRefreshEntries ?? intervallminrefreshentries;
-                IsCheckedBallast = obj.IsCheckedBallast ?? ischeckedballast;
-                IsCheckedRestriktor = obj.IsCheckedRestriktor ?? ischeckedrestriktor;
-                IsCheckedRegisterLimit = obj.IsCheckedRegisterLimit ?? ischeckedregisterlimit;
-                IsCheckedBoPFreeze = obj.IsCheckedBoPFreeze ?? ischeckedbopfreeze;
-                IsCheckedGridSlotsLimit = obj.IsCheckedGridSlotsLimit ?? ischeckedgridslotslimit;
-                IsCheckedSignOutLimit = obj.IsCheckedSignOutLimit ?? ischeckedsignoutlimit;
-                IsCheckedNoShowLimit = obj.IsCheckedNoShowLimit ?? ischeckednoshowlimit;
-                IsCheckedCarChangeLimit = obj.IsCheckedCarChangeLimit ?? ischeckedcarchangelimit;
-                IsCheckedUnlimitedCarVersionChanges = obj.IsCheckedUnlimitedCarVersionChanges ?? isCheckedUnlimitedCarVersionChanges;
-                CarLimitBallast = obj.CarLimitBallast ?? carlimitballast;
-                CarLimitRestriktor = obj.CarLimitRestriktor ?? carlimitrestriktor;
-                CarLimitRegisterLimit = obj.CarLimitRegisterLimit ?? carlimitregisterlimit;
-                GridSlotsLimit = obj.GridSlotsLimit ?? gridslotslimit;
-                SignOutLimit = obj.SignOutLimit ?? signoutlimit;
-                NoShowLimit = obj.NoShowLimit ?? noshowlimit;
-                CarChangeLimit = obj.CarChangeLimit ?? carchangelimit;
-                GainBallast = obj.GainBallast ?? gainballast;
-                GainRestriktor = obj.GainRestriktor ?? gainrestriktor;
-                DateRegisterLimit = obj.DateRegisterLimit ?? dateregisterlimit;
-                DateBoPFreeze = obj.DateBoPFreeze ?? datebopfreeze;
-                DateCarChangeLimit = obj.DateCarChangeLimit ?? datecarchangelimit;
+                CurrentSeriesID = obj?.CurrentSeriesID ?? currentSeriesID;
+                CurrentSeasonID = obj?.CurrentSeasonID ?? currentSeasonID;
+                StateAutoUpdateEntries = obj?.StateAutoUpdateEntries ?? stateautoupdateentries;
+                IntervallMinRefreshEntries = obj?.IntervallMinRefreshEntries ?? intervallminrefreshentries;
+                IsCheckedBallast = obj?.IsCheckedBallast ?? ischeckedballast;
+                IsCheckedRestriktor = obj?.IsCheckedRestriktor ?? ischeckedrestriktor;
+                IsCheckedRegisterLimit = obj?.IsCheckedRegisterLimit ?? ischeckedregisterlimit;
+                IsCheckedBoPFreeze = obj?.IsCheckedBoPFreeze ?? ischeckedbopfreeze;
+                IsCheckedGridSlotsLimit = obj?.IsCheckedGridSlotsLimit ?? ischeckedgridslotslimit;
+                IsCheckedSignOutLimit = obj?.IsCheckedSignOutLimit ?? ischeckedsignoutlimit;
+                IsCheckedNoShowLimit = obj?.IsCheckedNoShowLimit ?? ischeckednoshowlimit;
+                IsCheckedCarChangeLimit = obj?.IsCheckedCarChangeLimit ?? ischeckedcarchangelimit;
+                IsCheckedUnlimitedCarVersionChanges = obj?.IsCheckedUnlimitedCarVersionChanges ?? isCheckedUnlimitedCarVersionChanges;
+                CarLimitBallast = obj?.CarLimitBallast ?? carlimitballast;
+                CarLimitRestriktor =    obj?.CarLimitRestriktor ?? carlimitrestriktor;
+                CarLimitRegisterLimit = obj?.CarLimitRegisterLimit ?? carlimitregisterlimit;
+                GridSlotsLimit = obj?.GridSlotsLimit ?? gridslotslimit;
+                SignOutLimit = obj?.SignOutLimit ?? signoutlimit;
+                NoShowLimit = obj?.NoShowLimit ?? noshowlimit;
+                CarChangeLimit = obj?.CarChangeLimit ?? carchangelimit;
+                GainBallast = obj?.GainBallast ?? gainballast;
+                GainRestriktor = obj?.GainRestriktor ?? gainrestriktor;
+                DateRegisterLimit = obj?.DateRegisterLimit ?? dateregisterlimit;
+                DateBoPFreeze = obj?.DateBoPFreeze ?? datebopfreeze;
+                DateCarChangeLimit = obj?.DateCarChangeLimit ?? datecarchangelimit;
                 MainVM.List[0].LogCurrentText = "Pre-Season settings restored.";
             }
             catch { MainVM.List[0].LogCurrentText = "Restore pre-Season settings failed!"; }

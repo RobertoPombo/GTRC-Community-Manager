@@ -24,7 +24,6 @@ namespace Database
         void ListAdd();
         void ListInsert(int index);
         void ListRemove(bool forceDel = false);
-        void WriteSQL();
         void DeleteSQL();
         void SetNextAvailable();
         Dictionary<PropertyInfo, dynamic> ReturnAsDict(bool retID, bool retJsonIgnore, bool retCanNotWrite, bool retNotUnique);
@@ -246,11 +245,12 @@ namespace Database
         {
             bool _delayPL = DelayPL; DelayPL = true;
             if (List.Contains(_obj)) { List.Remove(_obj); }
-            _obj.WriteSQL();
+            if (_obj.ID == Basics.NoID) { SQL.AddSQL(Table, _obj); } else { SQL.UpdateSQL(Table, _obj); }
             Dictionary<PropertyInfo, dynamic> _dict = _obj.ReturnAsDict(false, false, false, false);
             List<string> propertyNames = new(); List<dynamic> values = new();
             foreach (PropertyInfo prop in _dict.Keys) { propertyNames.Add(prop.Name); values.Add(_dict[prop]); }
-            List<DbType> listObj = GetBySQL(propertyNames, values);
+            List<DbType> listObj = new();
+            if (_obj.ID == Basics.NoID) { listObj = GetBySQL(propertyNames, values); } else { listObj.Add(GetByIdSQL(_obj.ID)); }
             FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
             if (listObj.Count > 0) { return listObj[0]; } else { return _obj; }
         }
@@ -415,7 +415,12 @@ namespace Database
                         {
                             if (_filter.Filter != "")
                             {
-                                if (!Basics.GetCastedValue(_obj, property).ToString().ToLower().Contains(_filter.Filter.ToLower())) { notFiltered = false; }
+                                string[] limits = _filter.Filter.Split(':');
+                                if (limits.Length == 2 && int.TryParse(limits[0], out int _minValue) && int.TryParse(limits[1], out int _maxValue) && int.TryParse(property.GetValue(_obj)?.ToString(), out int _value))
+                                {
+                                    if (_value > _maxValue || _value < _minValue) { notFiltered = false; }
+                                }
+                                else if (!Basics.GetCastedValue(_obj, property).ToString().ToLower().Contains(_filter.Filter.ToLower())) { notFiltered = false; }
                             }
                             break;
                         }
@@ -573,13 +578,6 @@ namespace Database
                 if (forceDel) { RemoveAllChilds(); }
                 if (!IsChild()) { StaticFields.List.Remove(This); StaticFields.FilterList(); if (!StaticFields.DelayPL) { StaticFields.PublishList(); } }
             }
-        }
-
-        public void WriteSQL()
-        {
-            bool _delayPL = StaticFields.DelayPL; StaticFields.DelayPL = true;
-            SQL.AddSQL(StaticFields.Table, this);
-            StaticFields.DelayPL = _delayPL; StaticFields.FilterList(); if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
         }
 
         public void DeleteSQL()
@@ -773,7 +771,7 @@ namespace Database
             if (DatabaseVM.Instance is not null) { DatabaseVM.Instance.RaisePropertyChanged_Filter(0); }
         }
 
-        public UICmd SortCmd { get; set; }
+        [JsonIgnore] public UICmd SortCmd { get; set; }
     }
 
 

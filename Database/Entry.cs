@@ -31,12 +31,12 @@ namespace Database
         private int raceNumber = DefaultRaceNumber;
         private int teamID = Basics.NoID;
         private int carID = 1;
-        private DateTime registerdate = DateTime.Now;
-        private DateTime signoutdate = Event.DateTimeMaxValue;
+        private DateTime registerDate = DateTime.Now;
+        private DateTime signOutDate = Event.DateTimeMaxValue;
         private int ballast = 0;
         private int restrictor = 0;
         private int category = 3;
-        private bool scorepoints = true;
+        private bool scorePoints = true;
         private int priority = int.MaxValue;
 
         public int SeasonID
@@ -70,44 +70,51 @@ namespace Database
             {
                 if (Car.Statics.IDList.Count == 0) { _ = new Car() { ID = 1 }; }
                 if (!Car.Statics.ExistsID(value)) { value = Car.Statics.IDList[0].ID; }
-                List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                foreach (EventsEntries _eventsEntries in listEventsEntries) { if (_eventsEntries.CarID == carID) { _eventsEntries.CarID = value; } }
+                if (!Statics.DelayPL)
+                {
+                    List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
+                    foreach (EventsEntries _eventEntry in listEventsEntries) { if (_eventEntry.CarChangeDate == registerDate) { _eventEntry.CarID = value; } }
+                }
                 carID = value;
             }
         }
 
         public DateTime RegisterDate
         {
-            get { return registerdate; }
+            get { return registerDate; }
             set
             {
-                List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                foreach (EventsEntries _eventsEntries in listEventsEntries)
+                registerDate = value;
+                if (!Statics.DelayPL)
                 {
-                    if (_eventsEntries.CarChangeDate == registerdate) { _eventsEntries.CarChangeDate = value; }
+                    List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
+                    foreach (EventsEntries _eventEntry in listEventsEntries)
+                    {
+                        if (_eventEntry.CarChangeDate <= registerDate) { _eventEntry.CarChangeDate = value; _eventEntry.CarID = CarID; }
+                    }
                 }
-                registerdate = value;
             }
         }
 
         public DateTime SignOutDate
         {
-            get { return signoutdate; }
+            get { return signOutDate; }
             set
             {
                 if (value >= RegisterDate)
                 {
-                    signoutdate = value;
-                    if (ScorePoints)
+                    DateTime previousSignOutDate = signOutDate;
+                    signOutDate = value;
+                    if (!Statics.DelayPL && ScorePoints)
                     {
                         List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                        foreach (EventsEntries _eventsEntries in listEventsEntries)
+                        foreach (EventsEntries _eventEntry in listEventsEntries)
                         {
-                            Event _event = Event.Statics.GetByID(_eventsEntries.EventID);
-                            if (_event.EventDate > signoutdate) { _eventsEntries.SignInDate = Event.DateTimeMaxValue; }
-                            else if (RegisterDate < _event.EventDate && _event.EventDate > DateTime.Now)
+                            Event _event = Event.Statics.GetByID(_eventEntry.EventID);
+                            if (_event.EventDate > signOutDate) { _eventEntry.SignInDate = Event.DateTimeMaxValue; }
+                            else if (_event.EventDate > DateTime.Now && _event.EventDate > previousSignOutDate && _event.EventDate < signOutDate)
                             {
-                                _eventsEntries.SignInDate = Event.DateTimeMinValue;
+                                _eventEntry.SignInDate = DateTime.Now;
                             }
                         }
                     }
@@ -142,29 +149,32 @@ namespace Database
             get { return category; }
             set
             {
-                if (value >= 0 && value <= 4)
+                if (value >= 0 && value <= 4 && category != value)
                 {
-                    List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                    foreach (EventsEntries _eventsEntries in listEventsEntries)
-                    {
-                        if (_eventsEntries.Category == category) { _eventsEntries.Category = value; }
-                    }
                     category = value;
+                    if (category == 3) { ScorePoints = true; } else if (category == 1) { ScorePoints = false; }
                 }
             }
         }
 
         public bool ScorePoints
         {
-            get { return scorepoints; }
+            get { return scorePoints; }
             set
             {
-                List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                foreach (EventsEntries _eventsEntries in listEventsEntries)
+                if (scorePoints != value)
                 {
-                    if (_eventsEntries.ScorePoints == scorepoints) { _eventsEntries.ScorePoints = value; }
+                    if (!Statics.DelayPL)
+                    {
+                        List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
+                        foreach (EventsEntries _eventEntry in listEventsEntries)
+                        {
+                            if (_eventEntry.ScorePoints == scorePoints) { _eventEntry.ScorePoints = value; }
+                        }
+                    }
+                    scorePoints = value;
+                    if (scorePoints) { Category = 3; } else { Category = 1; }
                 }
-                scorepoints = value;
             }
         }
 

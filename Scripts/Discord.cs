@@ -23,7 +23,7 @@ namespace Scripts
         public static SignInOutBot? Instance;
         public DiscordSocketClient _client;
         private CommandService _commands;
-        private InteractionService _interactions;
+        //private InteractionService _interactions;
         private IServiceProvider _services;
         public DisBotPreset Settings;
 
@@ -33,11 +33,9 @@ namespace Scripts
             Settings = settings;
             _client = new DiscordSocketClient();
             _commands = new CommandService();
-            _interactions = new InteractionService(_client);
             _services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
-                .AddSingleton(_interactions)
                 .BuildServiceProvider();
             _client.Log += _client_Log;
         }
@@ -144,13 +142,13 @@ namespace Scripts
 
 
 
-        [Command("abmelden")]
+        /*[Command("abmelden")]
         public async Task SignInOutCmd()
         {
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
                 var component = new ComponentBuilder();
                 List<dynamic> ListMenuEvents = new() { new SelectMenuBuilder() { CustomId = "MenuEvents0", Placeholder = "Event auswählen" } };
                 List<dynamic> ListMenuEntries = new() { new SelectMenuBuilder() { CustomId = "MenuEntries0", Placeholder = "Entry auswählen" } };
@@ -229,6 +227,18 @@ namespace Scripts
             }
             ListMenu[countListMenu - 1].AddOption(value, name);
             return (ListMenu, optionCount, component);
+        }*/
+
+        [Command("abmelden")]
+        public async Task SignOutCmd_alt()
+        {
+            if (iPreSVM is not null)
+            {
+                SetDefaultProperties();
+                RegisterType = false;
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await SignInOut();
+            }
         }
 
         [Command("anmelden")]
@@ -238,7 +248,7 @@ namespace Scripts
             {
                 SetDefaultProperties();
                 RegisterType = true;
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
                 await SignInOut();
             }
         }
@@ -286,7 +296,7 @@ namespace Scripts
             {
                 SetDefaultProperties();
                 RegisterType = false;
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
                 await PullInOut();
             }
         }
@@ -298,7 +308,7 @@ namespace Scripts
             {
                 SetDefaultProperties();
                 RegisterType = false;
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
                 await ParseDiscordID(strDiscordID);
                 await PullInOut();
             }
@@ -311,7 +321,7 @@ namespace Scripts
             {
                 SetDefaultProperties();
                 RegisterType = true;
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
                 await ParseDiscordID(strDiscordID);
                 await PullInOut();
             }
@@ -323,7 +333,7 @@ namespace Scripts
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
                 await ParseCarID(strCarNr);
                 await ChangeCar();
             }
@@ -359,7 +369,7 @@ namespace Scripts
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
                 await ShowCars();
                 await UserMessage!.DeleteAsync();
             }
@@ -371,7 +381,7 @@ namespace Scripts
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
                 await ShowBoP();
                 await UserMessage!.DeleteAsync();
             }
@@ -392,7 +402,7 @@ namespace Scripts
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr + 1).ToString());
+                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
                 await ShowStartingGrid(false, false);
                 await UserMessage!.DeleteAsync();
             }
@@ -594,18 +604,15 @@ namespace Scripts
                     else
                     {
                         iPreSVM.UpdateBoPForEvent(_event);
-                        if (_entry.ScorePoints)
+                        List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), _event.SeasonID));
+                        int eventNrMax = listEvents.Count; if (!_entry.ScorePoints) { eventNrMax = _event.EventNr; }
+                        for (int _eventNr = _event.EventNr; _eventNr <= eventNrMax; _eventNr++)
                         {
-                            List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), _event.SeasonID));
-                            for (int _eventNr = Event.Statics.GetByID(EventID).EventNr; _eventNr < listEvents.Count; _eventNr++)
-                            {
-                                EventsEntries _tempEventsEntries = EventsEntries.GetAnyByUniqProp(EntryID, listEvents[_eventNr].ID);
-                                _tempEventsEntries.CarID = CarID;
-                                _tempEventsEntries.CarChangeDate = DateTime.Now;
-                            }
+                            EventsEntries _tempEventsEntries = EventsEntries.GetAnyByUniqProp(EntryID, listEvents[_eventNr - 1].ID);
+                            _tempEventsEntries.CarID = CarID;
+                            _tempEventsEntries.CarChangeDate = DateTime.Now;
+                            _ = EventsEntries.Statics.WriteSQL(_tempEventsEntries);
                         }
-                        else { _eventsEntries.CarID = CarID; }
-                        iPreSVM.UpdateBoPForEvent(_event);
                         await ShowStartingGrid(true, true);
                         await UserMessage.AddReactionAsync(emojiSuccess);
                         _eventsEntries = EventsEntries.Statics.GetByUniqProp(new List<dynamic>() { EntryID, EventID });
@@ -619,8 +626,6 @@ namespace Scripts
                                 iPreSVM.CarLimitRegisterLimit.ToString() +
                                 "x in der Meisterschaft vertreten ist. Solltest du auch beim nächsten Rennen gerne als Stammfahrer teilnehmen wollen, wähle bitte ein anderes Fahrzeug aus.");
                         }
-                        GSheets.UpdateEntriesCurrentEvent(GSheet.ListIDs[6].DocID, GSheet.ListIDs[6].SheetID, iPreSVM.CurrentEvent);
-                        GSheets.UpdateCarChanges(GSheet.ListIDs[6].DocID, GSheet.ListIDs[6].SheetID, iPreSVM.CurrentSeasonID);
                     }
                 }
                 else
@@ -633,7 +638,7 @@ namespace Scripts
 
         public async Task SignInOut()
         {
-            //await ParseEntryID();
+            await ParseEntryID();
             if (EntryID != Basics.NoID && EventID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
             {
                 if (DiscordID_Author == DiscordID_Driver || IsAdmin)
@@ -664,9 +669,9 @@ namespace Scripts
                     {
                         if (RegisterType) { _eventsEntries.SignInDate = DateTime.Now; }
                         else { _eventsEntries.SignInDate = Event.DateTimeMaxValue; }
+                        EventsEntries.Statics.WriteSQL();
                         await ShowStartingGrid(false, false);
                         await UserMessage.AddReactionAsync(emojiSuccess);
-                        EventsEntries.Statics.WriteSQL();
                     }
                 }
                 else
@@ -720,9 +725,10 @@ namespace Scripts
                 {
                     if (RegisterType) { _entry.SignOutDate = Event.DateTimeMaxValue; }
                     else { _entry.SignOutDate = DateTime.Now; }
+                    EventsEntries.Statics.WriteSQL();
+                    Entry.Statics.WriteSQL();
                     await ShowStartingGrid(false, false);
                     await UserMessage.AddReactionAsync(emojiSuccess);
-                    Entry.Statics.WriteSQL();
                 }
             }
         }
@@ -735,7 +741,7 @@ namespace Scripts
                 string text = "**Rennkalender " + iPreSVM.CurrentSeason.Name + "**\n";
                 foreach (Event _event in listEvents)
                 {
-                    text += (_event.EventNr + 1).ToString() + ".\t";
+                    text += (_event.EventNr).ToString() + ".\t";
                     text += Basics.Date2String(_event.EventDate, "DD.MM.\t");
                     text += Track.Statics.GetByID(_event.TrackID).Name_GTRC + "\n";
                 }
@@ -821,7 +827,7 @@ namespace Scripts
                 //if (iPreSVM.IsCheckedRegisterLimit && iPreSVM.DateRegisterLimit < DateTime.Now) { printCarChange = true; }
 
                 List<Entry> EntriesSortRaceNumber = new();
-                List<Entry> EntriesSortPreQualiPos = new();
+                List<Entry> EntriesSortPriority = new();
                 List<Entry> EntriesSortSignInDate = new();
                 List<Entry> NoEntriesSortRaceNumber = new();
                 PreQualiResultLine.Statics.LoadSQL();
@@ -836,9 +842,9 @@ namespace Scripts
                                select _entry;
                 EntriesSortRaceNumber = linqList.Cast<Entry>().ToList();
                 linqList = from _entry in EntriesSortRaceNumber
-                           orderby PreQualiResultLine.Statics.GetByUniqProp(_entry.ID, 1).Position
+                           orderby _entry.Priority
                            select _entry;
-                EntriesSortPreQualiPos = linqList.Cast<Entry>().ToList();
+                EntriesSortPriority = linqList.Cast<Entry>().ToList();
                 linqList = from _entry in EntriesSortRaceNumber
                            orderby EventsEntries.GetAnyByUniqProp(_entry.ID, eventID).SignInDate
                            select _entry;
@@ -864,7 +870,7 @@ namespace Scripts
 
                 textTemp = "";
                 pos = 1;
-                foreach (Entry entry in EntriesSortPreQualiPos)
+                foreach (Entry entry in EntriesSortPriority)
                 {
                     EventsEntries eventEntry = EventsEntries.GetAnyByUniqProp(entry.ID, eventID);
                     bool candidate = eventEntry.SignInState && !eventEntry.IsOnEntrylist;
@@ -873,7 +879,7 @@ namespace Scripts
                         (textTemp, pos) = AddStartingGridLine(textTemp, pos, entry, eventEntry, printCar, printCarChange, true);
                     }
                 }
-                foreach (Entry entry in EntriesSortPreQualiPos)
+                foreach (Entry entry in EntriesSortPriority)
                 {
                     EventsEntries eventEntry = EventsEntries.GetAnyByUniqProp(entry.ID, eventID);
                     bool candidate = eventEntry.SignInState && !eventEntry.IsOnEntrylist;

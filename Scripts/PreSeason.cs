@@ -8,6 +8,7 @@ using System.Collections;
 using Newtonsoft.Json;
 using System.Text;
 using System.Threading;
+using System.Reflection;
 
 namespace Scripts
 {
@@ -339,12 +340,10 @@ namespace Scripts
             List<Entry> Entrylist = linqList.Cast<Entry>().ToList();
 
             List<EventsCars> _eventsCars = EventsCars.Statics.GetBy(nameof(EventsCars.EventID), _event.ID);
-            foreach (EventsCars _eventCar in _eventsCars) { _eventCar.ListRemove(); }
+            foreach (EventsCars _eventCar in _eventsCars) { _eventCar.Count = 0; _eventCar.CountBoP = 0; }
             foreach (Entry _entry in Entrylist)
             {
                 EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
-                _eventsEntries.Category = _entry.Category;
-                _eventsEntries.ScorePoints = _entry.ScorePoints;
                 if (_entry.RegisterDate < _event.EventDate && _entry.ScorePoints)
                 {
                     DateTime carChangeDateMax = _event.EventDate;
@@ -363,7 +362,11 @@ namespace Scripts
                     bool isRegistered = _entry.SignOutDate > _event.EventDate;
                     bool isRegisteredAtFreeze = _entry.RegisterDate < DateBoPFreeze && (_entry.SignOutDate > DateBoPFreeze || _entry.SignOutDate > _event.EventDate);
                     if (validCarAtFreeze && respectsRegLimitAtFreeze && isRegisteredAtFreeze) { _eventCarAtFreeze.CountBoP++; }
-                    if (validCar && isRegistered) { if (respectsRegLimit) { _eventCarAtFreeze.Count++; } else { _eventsEntries.Category = 1; _eventsEntries.ScorePoints = false; } }
+                    if (validCar && isRegistered)
+                    {
+                        if (respectsRegLimit) { _eventCarAtFreeze.Count++; _eventsEntries.ScorePoints = true; }
+                        else { _eventsEntries.ScorePoints = false; }
+                    }
                 }
             }
             EventsCars.Statics.WriteSQL();
@@ -374,34 +377,35 @@ namespace Scripts
         {
             List<Entry> EntriesSignedIn = new();
             List<Entry> EntriesSignedOut = new();
-            List<Entry> EntriesSortPreQualiPos = new();
+            List<Entry> EntriesSortPriority = new();
             List<Entry> EntriesSortSignInDate = new();
             PreQualiResultLine.Statics.LoadSQL();
             List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), _event.SeasonID);
             foreach (Entry _entry in listEntries)
             {
-                if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate) { EntriesSortPreQualiPos.Add(_entry); }
+                if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate) { EntriesSortPriority.Add(_entry); }
             }
-            var linqList = from _entry in EntriesSortPreQualiPos
-                           orderby PreQualiResultLine.Statics.GetByUniqProp(_entry.ID, 1).Position
+            var linqList = from _entry in EntriesSortPriority
+                           orderby _entry.Priority
                            select _entry;
-            EntriesSortPreQualiPos = linqList.Cast<Entry>().ToList();
-            linqList = from _entry in EntriesSortPreQualiPos
+            EntriesSortPriority = linqList.Cast<Entry>().ToList();
+            linqList = from _entry in EntriesSortPriority
                        orderby EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID).SignInDate
                        select _entry;
             EntriesSortSignInDate = linqList.Cast<Entry>().ToList();
 
-            foreach (Entry _entry in EntriesSortPreQualiPos)
+            foreach (Entry _entry in EntriesSortPriority)
             {
                 EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
                 bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable && _eventsEntries.SignInState;
-                if (candidate && _entry.ScorePoints && _entry.RegisterDate < DateRegisterLimit) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
+                bool regBeforePreQ = _entry.RegisterDate < DateRegisterLimit;
+                if (candidate && _eventsEntries.ScorePoints && regBeforePreQ) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
             }
-            foreach (Entry _entry in EntriesSortPreQualiPos)
+            foreach (Entry _entry in EntriesSortPriority)
             {
                 EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
                 bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable && _eventsEntries.SignInState;
-                if (candidate && _entry.ScorePoints) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
+                if (candidate && _eventsEntries.ScorePoints) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
             }
             foreach (Entry _entry in EntriesSortSignInDate)
             {
@@ -409,7 +413,7 @@ namespace Scripts
                 bool candidate = !EntriesSignedIn.Contains(_entry) && EntriesSignedIn.Count < SlotsAvailable && _eventsEntries.SignInState;
                 if (candidate) { EntriesSignedIn.Add(_entry); _eventsEntries.IsOnEntrylist = true; }
             }
-            foreach (Entry _entry in EntriesSortPreQualiPos)
+            foreach (Entry _entry in EntriesSortPriority)
             {
                 if (!EntriesSignedIn.Contains(_entry) && !EntriesSignedOut.Contains(_entry)) { EntriesSignedOut.Add(_entry); }
             }
@@ -433,7 +437,7 @@ namespace Scripts
                 }
             }
             var linqList = from _entry in Entrylist
-                           orderby PreQualiResultLine.Statics.GetByUniqProp(_entry.ID, 1).Position
+                           orderby _entry.Priority
                            select _entry;
             Entrylist = linqList.Cast<Entry>().ToList();
             foreach (Entry _entry in Entrylist)
@@ -463,9 +467,11 @@ namespace Scripts
         {
             bool allUnique = false; int number = 0;
             List<DriversEntries> driverEntryList = new();
-            foreach (Entry _entry in Entry.Statics.List)
+            List<Entry> entryList = Entry.Statics.GetBy(nameof(Entry.SeasonID), _seasonID);
+            foreach (Entry _entry in entryList)
             {
-                if (_entry.SeasonID == _seasonID) { driverEntryList = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID); }
+                List<DriversEntries> tempDriverEntryList = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
+                foreach (DriversEntries _tempDriverEntry in tempDriverEntryList) { driverEntryList.Add(_tempDriverEntry); }
             }
             foreach (DriversEntries _driverEntry in driverEntryList)
             {
@@ -515,6 +521,18 @@ namespace Scripts
                     _driverEntry.Name3Digits = Driver.Statics.GetByID(_driverEntry.DriverID).Name3DigitsOptions[0];
                 }
             }
+            DriversEntries.Statics.WriteSQL();
+        }
+
+        public static void UpdateEntryPriority(int _seasonID)
+        {
+            List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), _seasonID);
+            var linqList = from _entry in listEntries
+                           orderby _entry.ScorePoints descending, _entry.RegisterDate
+                           select _entry;
+            listEntries = linqList.Cast<Entry>().ToList();
+            for (int entryNr = 0; entryNr < listEntries.Count; entryNr++) { listEntries[entryNr].Priority = entryNr + 1; }
+            Entry.Statics.WriteSQL();
         }
     }
 }
