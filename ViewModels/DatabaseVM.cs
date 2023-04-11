@@ -46,6 +46,8 @@ namespace GTRC_Community_Manager
             ListDataTypes.Add(new KeyValuePair<string, Type>(DriversTeams.Statics.Table, typeof(DriversTeams)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(EventsEntries.Statics.Table, typeof(EventsEntries)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(EventsCars.Statics.Table, typeof(EventsCars)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(ResultsFile.Statics.Table, typeof(ResultsFile)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Lap.Statics.Table, typeof(Lap)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(PreQualiResultLine.Statics.Table, typeof(PreQualiResultLine)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Incident.Statics.Table, typeof(Incident)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(IncidentsEntries.Statics.Table, typeof(IncidentsEntries)));

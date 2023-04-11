@@ -14,95 +14,7 @@ namespace Scripts
 {
     public static class PreSeason
     {
-
-        public static bool TryReadResultsJson(string path)
-        {
-            Thread.Sleep(10);
-            try
-            {
-                int tempLBLs = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(path, Encoding.Unicode)).sessionResult.leaderBoardLines.Count;
-                int tempLaps = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(path, Encoding.Unicode)).laps.Count;
-            }
-            catch { return false; }
-            return true;
-        }
-
-        public static void AddResultsJson(string path, int seasonID)
-        {
-            //Sollte dynamisch sein:
-            int attemptMax = 1000;
-            Dictionary<string, int> QualiTracks = new() { { "nurburgring", 0 }, { "misano", 1 } };
-
-            for (int attemptNr = 0; attemptNr < attemptMax; attemptNr++)
-            {
-                if (TryReadResultsJson(path)) { break; }
-                else { Console.WriteLine("Versuch-Nr " + attemptNr.ToString() + ": Pre-Quali Results nicht einlesbar."); }
-            }
-            if (TryReadResultsJson(path))
-            {
-                var resultsJson = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(path, Encoding.Unicode));
-                var leaderBoardLines = resultsJson.sessionResult.leaderBoardLines;
-                var laps = resultsJson.laps;
-                int trackID = new Lap(false).Track;
-                if (resultsJson.trackName is JValue)
-                {
-                    string _trackName = resultsJson.trackName.ToString();
-                    if (QualiTracks.ContainsKey(_trackName)) { trackID = QualiTracks[_trackName]; }
-                }
-                for (int lapNr = 0; lapNr < laps.Count; lapNr++)
-                {
-                    Lap lap = new() { Track = trackID };
-                    var _time = laps[lapNr].laptime;
-                    if (_time is JValue) { if (Int32.TryParse(_time.ToString(), out int time)) { lap.Time = time; } }
-                    if (laps[lapNr].splits is IList && laps[lapNr].splits.Count > 2)
-                    {
-                        _time = laps[lapNr].splits[0];
-                        if (_time is JValue) { if (Int32.TryParse(_time.ToString(), out int time)) { lap.Sector1 = time; } }
-                        _time = laps[lapNr].splits[1];
-                        if (_time is JValue) { if (Int32.TryParse(_time.ToString(), out int time)) { lap.Sector2 = time; } }
-                        _time = laps[lapNr].splits[2];
-                        if (_time is JValue) { if (Int32.TryParse(_time.ToString(), out int time)) { lap.Sector3 = time; } }
-                    }
-                    var _valid = laps[lapNr].isValidForBest;
-                    if (_valid is JValue) { if (Boolean.TryParse(_valid.ToString(), out bool valid)) { lap.Valid = valid; } }
-                    int carID = -1;
-                    var _carID = laps[lapNr].carId;
-                    if (_carID is JValue) { Int32.TryParse(_carID.ToString(), out carID); }
-                    int driverNr = -1;
-                    var _driverNr = laps[lapNr].driverIndex;
-                    if (_driverNr is JValue) { Int32.TryParse(_driverNr.ToString(), out driverNr); }
-                    string steamID = Basics.NoID.ToString();
-                    if (carID > -1 && driverNr > -1)
-                    {
-                        for (int pos = 0; pos < leaderBoardLines.Count; pos++)
-                        {
-                            if (leaderBoardLines[pos].car is JObject)
-                            {
-                                int carID_lbl = -1;
-                                var _carID_lbl = leaderBoardLines[pos].car.carId;
-                                if (_carID_lbl is JValue && Int32.TryParse(_carID_lbl.ToString(), out carID_lbl) && carID == carID_lbl)
-                                {
-                                    if (leaderBoardLines[pos].car.drivers is IList && leaderBoardLines[pos].car.drivers.Count > driverNr)
-                                    {
-                                        if (leaderBoardLines[pos].car.drivers[driverNr] is JObject && leaderBoardLines[pos].car.drivers[driverNr].playerId is JValue)
-                                        {
-                                            steamID = leaderBoardLines[pos].car.drivers[driverNr].playerId.ToString();
-                                        }
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    int _entryID = Basics.NoID;
-                    Driver driver = Driver.Statics.GetByUniqProp(Driver.String2LongSteamID(steamID));
-                    _entryID = DriversEntries.GetByDriverIDSeasonID(driver.ID, seasonID).EntryID;
-                    if (_entryID != Basics.NoID) { lap.EntryID = _entryID; }
-                }
-            }
-        }
-
-        public static void ResetPreQResults(int seasonID)
+        /*public static void ResetPreQResults(int seasonID)
         {
             PreQualiResultLine.Statics.ResetSQL();
             PreQualiResultLine.Statics.LoadSQL();
@@ -302,7 +214,7 @@ namespace Scripts
             PreQualiResultLine.Statics.List = linqList.Cast<PreQualiResultLine>().ToList();
             PreQualiResultLine.Statics.WriteJson();
             PreQualiResultLine.Statics.WriteSQL();
-        }
+        }*/
 
         public static void EntryAutoSignOut(Event _event, int SignOutLimit, int NoShowLimit)
         {

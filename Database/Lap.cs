@@ -14,6 +14,9 @@ namespace Database
             Statics = new StaticDbField<Lap>(true)
             {
                 Table = "Laps",
+                UniquePropertiesNames = new List<List<string>>() { },
+                ToStringPropertiesNames = new List<string>() { nameof(ResultsFileID), nameof(RaceNumber), nameof(LastName), nameof(AccCarID),
+                    nameof(Time), nameof(IsValid) },
                 PublishList = () => PublishList()
             };
         }
@@ -21,24 +24,42 @@ namespace Database
         public Lap(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Lap(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
-        private int entryID = 0;
-        private bool valid = false;
+        private int resultsFileID = Basics.ID0;
+        private long steamID = Driver.SteamIDMinValue;
+        private bool isValid = false;
         private int time = int.MaxValue;
         private int sector1 = int.MaxValue;
         private int sector2 = int.MaxValue;
         private int sector3 = int.MaxValue;
-        private int track = Basics.NoID;
+        private int raceNumber = Basics.NoID;
+        private string firstName = "";
+        private string lastName = "";
+        private int accCarID = Basics.NoID;
+        private int ballast = 0;
+        private int restrictor = 0;
+        private int category = Basics.NoID;
 
-        public int EntryID
+        public int ResultsFileID
         {
-            get { return entryID; }
-            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } }
+            get { return resultsFileID; }
+            set
+            {
+                if (ResultsFile.Statics.IDList.Count == 0) { _ = new ResultsFile() { ID = 1 }; }
+                if (!ResultsFile.Statics.ExistsID(value)) { value = ResultsFile.Statics.IDList[0].ID; }
+                resultsFileID = value;
+            }
         }
 
-        public bool Valid
+        public long SteamID
         {
-            get { return valid; }
-            set { valid = value; }
+            get { return steamID; }
+            set { if (!Driver.IsValidSteamID(value)) { steamID = Driver.SteamIDMinValue; } else { steamID = value; } }
+        }
+
+        public bool IsValid
+        {
+            get { return isValid; }
+            set { isValid = value; }
         }
 
         public int Time
@@ -65,28 +86,50 @@ namespace Database
             set { if (value > 0) { sector3 = value; } }
         }
 
-        public int Track
+        public int RaceNumber
         {
-            get { return track; }
-            set { if (value == 0 || value == 1) { track = value; } }
+            get { return raceNumber; }
+            set { raceNumber = value; }
+        }
+
+        public string FirstName
+        {
+            get { return firstName; }
+            set { firstName = Basics.RemoveSpaceStartEnd(value ?? firstName); }
+        }
+
+        public string LastName
+        {
+            get { return lastName; }
+            set { lastName = Basics.RemoveSpaceStartEnd(value ?? lastName); }
+        }
+
+        public int AccCarID
+        {
+            get { return accCarID; }
+            set { if (value >= 0) { accCarID = value; } }
+        }
+
+        public int Ballast
+        {
+            get { return ballast; }
+            set { ballast = value; }
+        }
+
+        public int Restrictor
+        {
+            get { return restrictor; }
+            set { restrictor = value; }
+        }
+
+        public int Category
+        {
+            get { return category; }
+            set { category = value; }
         }
 
         public static void PublishList() { }
 
-        public override void SetNextAvailable()
-        {
-            int entryNr = 0;
-            List<Entry> _idList = Entry.Statics.IDList;
-            if (_idList.Count == 0) { new Entry() { ID = 1 }; _idList = Entry.Statics.IDList; }
-            Entry _entry = Entry.Statics.GetByID(entryID);
-            if (_entry.ReadyForList) { entryNr = Entry.Statics.IDList.IndexOf(_entry); } else { entryID = _idList[0].ID; }
-            int startValue = entryNr;
-            while (!IsUnique(1))
-            {
-                if (entryNr + 1 < _idList.Count) { entryNr += 1; } else { entryNr = 0; }
-                entryID = _idList[entryNr].ID;
-                if (entryNr == startValue) { break; }
-            }
-        }
+        public override void SetNextAvailable() { }
     }
 }

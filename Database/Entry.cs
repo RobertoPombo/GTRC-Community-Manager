@@ -30,7 +30,7 @@ namespace Database
         private int seasonID = 0;
         private int raceNumber = DefaultRaceNumber;
         private int teamID = Basics.NoID;
-        private int carID = 1;
+        private int carID = Basics.ID0;
         private DateTime registerDate = DateTime.Now;
         private DateTime signOutDate = Event.DateTimeMaxValue;
         private int ballast = 0;

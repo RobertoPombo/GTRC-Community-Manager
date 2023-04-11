@@ -12,6 +12,7 @@ using System.Windows.Documents;
 using Scripts;
 
 using GTRC_Community_Manager;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Database
 {
@@ -248,9 +249,14 @@ namespace Database
             if (_obj.ID == Basics.NoID) { SQL.AddSQL(Table, _obj); } else { SQL.UpdateSQL(Table, _obj); }
             Dictionary<PropertyInfo, dynamic> _dict = _obj.ReturnAsDict(false, false, false, false);
             List<string> propertyNames = new(); List<dynamic> values = new();
-            foreach (PropertyInfo prop in _dict.Keys) { propertyNames.Add(prop.Name); values.Add(_dict[prop]); }
+            foreach (PropertyInfo prop in _dict.Keys)
+            {
+                propertyNames.Add(prop.Name);
+                if (prop.PropertyType.ToString() == "System.DateTime") { values.Add(Basics.Date2String(_dict[prop], "YYYY-MM-DD hh:mm:ss")); }
+                else { values.Add(_dict[prop]); }
+            }
             List<DbType> listObj = new();
-            if (_obj.ID == Basics.NoID) { listObj = GetBySQL(propertyNames, values); } else { listObj.Add(GetByIdSQL(_obj.ID)); }
+            if (_obj.ID == Basics.NoID && _dict.Count > 0) { listObj = GetBySQL(propertyNames, values); } else { listObj.Add(GetByIdSQL(_obj.ID)); }
             FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
             if (listObj.Count > 0) { return listObj[0]; } else { return _obj; }
         }

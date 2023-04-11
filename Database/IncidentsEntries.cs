@@ -26,7 +26,7 @@ namespace Database
 
         private int incidentID = 0;
         private int entryID = 0;
-        private int driverID = 1;
+        private int driverID = Basics.ID0;
         private bool isAtFault = false;
 
         public int IncidentID

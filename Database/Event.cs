@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Scripts;
 
 using GTRC_Community_Manager;
+using Newtonsoft.Json.Linq;
 
 namespace Database
 {
@@ -62,14 +63,7 @@ namespace Database
         public DateTime EventDate
         {
             get { return eventDate; }
-            set
-            {
-                if (value < DateTimeMinValue) { eventDate = DateTimeMinValue; }
-                else if (value > DateTimeMaxValue) { eventDate = DateTimeMaxValue; }
-                else { eventDate = value; }
-                if (ReadyForList) { SetNextAvailable(); }
-                if (Statics.IDList.Contains(this)) { PublishList(); }
-            }
+            set { eventDate = value; if (ReadyForList) { SetNextAvailable(); } if (Statics.IDList.Contains(this)) { PublishList(); } }
         }
 
         public int TrackID
@@ -109,7 +103,10 @@ namespace Database
             if (_season.ReadyForList) { seasonNr = Season.Statics.IDList.IndexOf(_season); } else { seasonID = _idListSeason[0].ID; }
             int startValueSeason = seasonNr;
 
+            if (eventDate < DateTimeMinValue) { eventDate = DateTimeMinValue; }
+            else if (eventDate > DateTimeMaxValue) { eventDate = DateTimeMaxValue; }
             DateTime startValue = eventDate;
+
             while (!IsUnique(0))
             {
                 if (eventDate < DateTimeMaxValue) { eventDate = eventDate.AddDays(1); } else { eventDate = DateTimeMinValue; }

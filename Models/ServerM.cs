@@ -36,7 +36,7 @@ namespace GTRC_Community_Manager
             List.Add(this);
             ResultsWatcher = new FileSystemWatcher() { Filter = "*.json", NotifyFilter = NotifyFilters.FileName };
             ServerID = _serverID;
-            ResultsWatcher.Created += new FileSystemEventHandler(ServerVM.Instance.EventNewResultsJson);
+            ResultsWatcher.Created += new FileSystemEventHandler(EventNewResultsJson);
             State = Basics.StateOff;
         }
 
@@ -330,6 +330,11 @@ namespace GTRC_Community_Manager
         {
             try { AccServerProcess.Kill(); }
             catch { }
+        }
+
+        public void EventNewResultsJson(object source, FileSystemEventArgs e)
+        {
+            new Thread(() => ServerVM.Instance.ThreadReadNewResultsJsons(this, new List<string>() { e.FullPath })).Start();
         }
     }
 }
