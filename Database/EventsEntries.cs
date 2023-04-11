@@ -116,28 +116,7 @@ namespace Database
         public bool ScorePoints
         {
             get { return scorepoints; }
-            set
-            {
-                if (scorepoints != value)
-                {
-                    scorepoints = value;
-                    Entry _entry = Entry.Statics.GetByID(EntryID);
-                    Event _event = Event.Statics.GetByID(EventID);
-                    if (scorepoints)
-                    {
-                        if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate && SignInDate >= Event.DateTimeMaxValue)
-                        {
-                            SignInDate = Event.DateTimeMinValue;
-                        }
-                        Category = 3;
-                    }
-                    else
-                    {
-                        if (SignInDate <= Event.DateTimeMinValue) { SignInDate = Event.DateTimeMaxValue; }
-                        Category = 1;
-                    }
-                }
-            }
+            set { if (scorepoints != value) { scorepoints = value; if (scorepoints) { Category = 3; } else { Category = 1; } } }
         }
 
         public int CarID

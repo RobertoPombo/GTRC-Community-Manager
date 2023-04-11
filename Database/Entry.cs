@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 using Scripts;
+using Newtonsoft.Json.Linq;
 
 namespace Database
 {
@@ -60,7 +61,7 @@ namespace Database
         public int TeamID
         {
             get { return teamID; }
-            set { if (!Team.Statics.ExistsID(value)) { value = Basics.NoID; } teamID = value; }
+            set { Team _team = Team.Statics.GetByID(value); if (_team.ID != value || _team.SeasonID != seasonID) { value = Basics.NoID; } teamID = value; }
         }
 
         public int CarID
@@ -169,7 +170,16 @@ namespace Database
                         List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
                         foreach (EventsEntries _eventEntry in listEventsEntries)
                         {
-                            if (_eventEntry.ScorePoints == scorePoints) { _eventEntry.ScorePoints = value; }
+                            if (_eventEntry.ScorePoints == scorePoints)
+                            {
+                                _eventEntry.ScorePoints = value;
+                                Event _event = Event.Statics.GetByID(_eventEntry.EventID);
+                                if (registerDate < _event.EventDate && signOutDate > _event.EventDate && _event.EventDate > DateTime.Now)
+                                {
+                                    if (value) { _eventEntry.SignInDate = Event.DateTimeMinValue; }
+                                    else if (_eventEntry.SignInDate <= Event.DateTimeMinValue) { _eventEntry.SignInDate = Event.DateTimeMaxValue; }
+                                }
+                            }
                         }
                     }
                     scorePoints = value;
@@ -211,6 +221,9 @@ namespace Database
                     if (seasonNr == startValueSeason) { break; }
                 }
             }
+
+            Team _team = Team.Statics.GetByID(teamID);
+            if (_team.ID != teamID || _team.SeasonID != seasonID) { teamID = Basics.NoID; }
         }
     }
 }

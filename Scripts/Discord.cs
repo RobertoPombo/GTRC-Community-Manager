@@ -119,6 +119,7 @@ namespace Scripts
         public static Emoji emojiThinking = new("🤔");
         public static string adminRoleTag = "<@&>";
 
+        public bool isError = false;
         public string LogText = "";
         public SocketUserMessage? UserMessage = null;
         public bool RegisterType = true;
@@ -421,23 +422,28 @@ namespace Scripts
 
         public async Task ErrorResponse()
         {
-            await ReplyAsync(LogText);
-            await UserMessage!.AddReactionAsync(emojiFail);
+            if (!isError)
+            {
+                await ReplyAsync(LogText);
+                await UserMessage!.AddReactionAsync(emojiFail);
+                isError = true;
+            }
         }
 
         public void SetDefaultProperties()
         {
+            isError = false;
             Channel = Context.Channel;
             UserMessage = Context.Message;
             DiscordID_Author = (long)Context.Message.Author.Id;
             DiscordID_Driver = (long)Context.Message.Author.Id;
-            IsAdmin = RaceControl.Statics.ExistsUniqProp(Driver.Statics.GetByUniqProp((long)UserMessage.Author.Id, 1).ID);
+            IsAdmin = RaceControl.Statics.ExistsUniqProp(Driver.Statics.GetByUniqProp(DiscordID_Author, 1).ID);
         }
 
         public async Task ParseCarID(string strCarNr)
         {
             LogText = "Bitte eine gültige Fahrzeugnummer angeben.";
-            if (Int32.TryParse(strCarNr, out int intCarNr))
+            if (int.TryParse(strCarNr, out int intCarNr))
             {
                 if (Car.Statics.ExistsUniqProp(intCarNr)) { CarID = Car.Statics.GetByUniqProp(intCarNr).ID; }
                 else { await ErrorResponse(); await ShowCars(); }
@@ -447,7 +453,7 @@ namespace Scripts
 
         public async Task ParseEventID(string strEventNr)
         {
-            if (Int32.TryParse(strEventNr, out int intEventNr) && iPreSVM is not null)
+            if (int.TryParse(strEventNr, out int intEventNr) && iPreSVM is not null)
             {
                 List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), iPreSVM.CurrentSeasonID));
                 LogText = "Bitte eine Event-Nr zwischen 1 und " + listEvents.Count.ToString() + " angeben.";
@@ -484,7 +490,7 @@ namespace Scripts
                     }
                     else
                     {
-                        Entry entry = Entry.Statics.GetByID(DriversEntries.Statics.GetByUniqProp(_driver.ID).EntryID);
+                        Entry entry = Entry.Statics.GetByID(DriversEntries.GetByDriverIDSeasonID(_driver.ID, iPreSVM.CurrentSeasonID).EntryID);
                         if (entry.ID == Basics.NoID)
                         {
                             if (DiscordID_Driver == DiscordID_Author) { LogText = "Du bist noch nicht für die Meisterschaft registriert. Falls du dich gerade erst angemeldet hast, versuche es doch bitte in " + iPreSVM.EntriesUpdateRemTime + " erneut. " + adminRoleTag + " schaut euch das Problem bitte an."; await ErrorResponse(); }
@@ -493,7 +499,7 @@ namespace Scripts
                         else { EntryID = entry.ID; SetDiscordIDs_Drivers(); }
                     }
                 }
-                else if (Int32.TryParse(DiscordID_Driver.ToString(), out int _raceNumber))
+                else if (int.TryParse(DiscordID_Driver.ToString(), out int _raceNumber))
                 {
                     Entry entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { iPreSVM.CurrentSeasonID, _raceNumber });
                     if (entry.ID == Basics.NoID) { LogText = "Die Startnummer " + _raceNumber.ToString() + " ist noch nicht für die Meisterschaft registriert. Falls du dich gerade erst angemeldet hast, versuche es doch bitte in " + iPreSVM.EntriesUpdateRemTime + " erneut. " + adminRoleTag + " schaut euch das Problem bitte an."; await ErrorResponse(); }

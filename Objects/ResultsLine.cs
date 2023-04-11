@@ -135,7 +135,7 @@ namespace GTRC_Community_Manager
             get { if (time != 0) { return Basics.Ms2Laptime(time); } else { return ""; } }
             set
             {
-                if (value != null && value != Int32.MaxValue.ToString() && value != Int32.MinValue.ToString()) { Int32.TryParse(value, out time); }
+                if (value != null && value != int.MaxValue.ToString() && value != int.MinValue.ToString()) { int.TryParse(value, out time); }
                 if (id > 0)
                 {
                     int time0 = ResultsLineList[0].time;
@@ -170,7 +170,7 @@ namespace GTRC_Community_Manager
             get { if (bestlap != 0) { return Basics.Ms2Laptime(bestlap); } else { return ""; } }
             set
             {
-                if (value != null && value != Int32.MaxValue.ToString() && value != Int32.MinValue.ToString()) { Int32.TryParse(value, out bestlap); }
+                if (value != null && value != int.MaxValue.ToString() && value != int.MinValue.ToString()) { int.TryParse(value, out bestlap); }
                 if (id > 0)
                 {
                     int bestlap0 = ResultsLineList[0].bestlap;

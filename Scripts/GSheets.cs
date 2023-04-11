@@ -97,7 +97,7 @@ namespace Scripts
                 ["ScorePoints"] = new Entry(false).ScorePoints,
                 ["RegisterDate"] = DateTime.Now
             };
-            if (Int32.TryParse(ReadValueFromColumn(VarMap, row, "Startnummer"), out int raceNumber)) { values["RaceNumber"] = raceNumber; }
+            if (int.TryParse(ReadValueFromColumn(VarMap, row, "Startnummer"), out int raceNumber)) { values["RaceNumber"] = raceNumber; }
             long steamID = Driver.String2LongSteamID(ReadValueFromColumn(VarMap, row, "SteamID64"));
             if (Driver.IsValidSteamID(steamID)) { values["SteamID"] = steamID; }
             if (Int64.TryParse(ReadValueFromColumn(VarMap, row, "DiscordID"), out long discordID) && Driver.IsValidDiscordID(discordID)) { values["DiscordID"] = discordID; }
@@ -258,9 +258,9 @@ namespace Scripts
                     if (average < int.MaxValue)
                     {
                         values.Add(Basics.Ms2Laptime(average));
-                        if (average != average0 && average0 < Int32.MaxValue) { values.Add("'+" + Basics.Ms2Laptime(average - average0)); }
+                        if (average != average0 && average0 < int.MaxValue) { values.Add("'+" + Basics.Ms2Laptime(average - average0)); }
                         else { values.Add(""); }
-                        if (average != average1 && average1 < Int32.MaxValue) { values.Add("'+" + Basics.Ms2Laptime(average - average1)); }
+                        if (average != average1 && average1 < int.MaxValue) { values.Add("'+" + Basics.Ms2Laptime(average - average1)); }
                         else { values.Add(""); }
                     }
                     else { values.Add(""); values.Add(""); values.Add(""); }
@@ -306,7 +306,7 @@ namespace Scripts
             values = new List<object>() { "", "", "", "", "", "" };
             rows.Add(values);
             int pos = 1;
-            int count0 = Int32.MaxValue;
+            int count0 = int.MaxValue;
             foreach (EventsCars eventCar in eventsCars)
             {
                 Car car = Car.Statics.GetByID(eventCar.CarID);

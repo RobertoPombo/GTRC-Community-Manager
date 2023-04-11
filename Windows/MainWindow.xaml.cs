@@ -38,10 +38,10 @@ namespace GTRC_Community_Manager
             if (!Directory.Exists(dataDirectory)) { Directory.CreateDirectory(dataDirectory); }
             SetCultureInfo();
             InitializeComponent();
-            Width = screenWidth * 0.55;
+            Width = screenWidth * 0.6;
             Height = screenHeight * 0.6;
-            Left = (screenWidth / 2) - (Width / 2);
-            Top = (screenHeight / 2) - (Height / 2);
+            Left = ((screenWidth / 2) - (Width / 2)) * 1.9;
+            Top = ((screenHeight / 2) - (Height / 2)) * 1.8;
             MinimizeButton.Click += (s, e) => WindowState = WindowState.Minimized;
             CloseButton.Click += (s, e) => CloseWindow();
         }

@@ -428,7 +428,7 @@ namespace Scripts
             }
             foreach (DriversEntries _driverEntry in driverEntryList)
             {
-                if (Int32.TryParse(_driverEntry.Name3Digits, out number))
+                if (int.TryParse(_driverEntry.Name3Digits, out number))
                 {
                     _driverEntry.Name3Digits = Driver.Statics.GetByID(_driverEntry.DriverID).Name3DigitsOptions[0];
                 }

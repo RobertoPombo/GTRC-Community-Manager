@@ -318,7 +318,7 @@ namespace GTRC_Community_Manager
                         for (int charCount = 1; charCount <= accServerOutput.Length - prefix.Length; charCount++)
                         {
                             string strDriverCount = accServerOutput.Substring(prefix.Length, charCount);
-                            if (Int32.TryParse(strDriverCount, out int _currentDriverCount)) { CountOnline = _currentDriverCount; }
+                            if (int.TryParse(strDriverCount, out int _currentDriverCount)) { CountOnline = _currentDriverCount; }
                             else { break; }
                         }
                     }
