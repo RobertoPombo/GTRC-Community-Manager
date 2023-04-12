@@ -329,7 +329,8 @@ namespace GTRC_Community_Manager
                 laps is not IList || leaderBoardLines is not IList || laps.Count <= 0 || leaderBoardLines.Count <= 0) { return; }
                 ResultsFile resultsFile = ResultsFile.Statics.GetByUniqProp(new List<dynamic>() { _server.ServerID, dateTime });
                 if (resultsFile.ID != Basics.NoID && resultsFile.TrackID == trackID) { return; }
-                resultsFile = new() { ServerID = _server.ServerID, Date = dateTime, SessionTypeEnum = sessionType ?? 0, TrackID = trackID };
+                resultsFile = new() { ServerID = _server.ServerID, Date = dateTime, SessionTypeEnum = sessionType ?? 0, TrackID = trackID,
+                    SeasonID = _server.Server.SeasonID, ServerType = _server.Server.ServerType };
                 resultsFile = ResultsFile.Statics.WriteSQL(resultsFile);
                 if (resultsFile.ID == Basics.NoID) { return; }
                 foreach (var _lap in laps)

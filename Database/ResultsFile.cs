@@ -28,6 +28,8 @@ namespace Database
         private DateTime date = Event.DateTimeMinValue;
         private int sessionType = 0;
         private int trackID = Basics.ID0;
+        private int seasonID = 0;
+        private int serverType = 0;
 
         public int ServerID
         {
@@ -62,6 +64,29 @@ namespace Database
                 if (!Track.Statics.ExistsID(value)) { value = Track.Statics.IDList[0].ID; }
                 trackID = value;
             }
+        }
+
+        public int SeasonID
+        {
+            get { return seasonID; }
+            set
+            {
+                if (Season.Statics.IDList.Count == 0) { _ = new Season() { ID = 1 }; }
+                if (!Season.Statics.ExistsID(value)) { value = Season.Statics.IDList[0].ID; }
+                seasonID = value;
+            }
+        }
+
+        public int ServerType
+        {
+            get { return serverType; }
+            set { if (Enum.IsDefined(typeof(ServerTypeEnum), value)) { serverType = value; } }
+        }
+
+        [JsonIgnore] public ServerTypeEnum ServerTypeEnum
+        {
+            get { return (ServerTypeEnum)serverType; }
+            set { ServerType = (int)value; }
         }
 
         public static void PublishList() { }

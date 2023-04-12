@@ -89,7 +89,7 @@ namespace GTRC_Community_Manager
             set
             {
                 if (!Server.PathExistsExe()) { SetOnline = false; }
-                if (Server.PathExists()) { ResultsWatcher.Path = Server.AbsolutePath; if (DetectResults && State == Basics.StateOff) { State = Basics.StateOn; } }
+                if (Server.PathExists()) { ResultsWatcher.Path = Server.PathResults; if (DetectResults && State == Basics.StateOff) { State = Basics.StateOn; } }
                 else { DetectResults = false; if (State == Basics.StateOn) { State = Basics.StateOff; } }
                 RaisePropertyChanged();
             }
