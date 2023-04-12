@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Windows.Documents;
 
 namespace GTRC_Community_Manager
 {
@@ -118,19 +119,25 @@ namespace GTRC_Community_Manager
             }
         }
 
-        public void ThreadRestartServer()
+        public static void ThreadRestartAllAccServers(int delayMS = 0)
         {
             foreach (ServerM _server in ServerM.List)
             {
-                if (_server.SetOnline) { _server.SetOnline = false; Thread.Sleep(500); _server.SetOnline = true; Thread.Sleep(500); }
+                if (_server.SetOnline) { _server.SetOnline = false; Thread.Sleep(delayMS); _server.SetOnline = true; Thread.Sleep(delayMS); }
             }
+        }
+
+        public static void ThreadStopAllAccServers(int delayMS = 0)
+        {
+            foreach (ServerM _server in ServerM.List) { if (_server.SetOnline) { _server.SetOnline = false; Thread.Sleep(delayMS); } }
+            foreach (ServerM _server in ServerM.List) { _server.StopAccServer(); }
         }
 
         public void TriggerRestartServer()
         {
             UpdateEntrylists();
             UpdateBoPs();
-            new Thread(ThreadRestartServer).Start();
+            new Thread(() => ThreadRestartAllAccServers(500)).Start();
         }
 
         public void ReloadAllServerAllResultsJson()
@@ -233,12 +240,17 @@ namespace GTRC_Community_Manager
             if (obj.GetType() == typeof(ServerM)) { ServerM _serverM = (ServerM)obj; _serverM.Server.ListRemove(); this.RaisePropertyChanged(nameof(ListServer)); }
         }
 
-        public void RestoreSettingsTrigger() { Server.Statics.LoadSQL(); }
+        public void RestoreSettingsTrigger()
+        {
+            ThreadStopAllAccServers();
+            Server.Statics.LoadSQL();
+        }
 
         public void RestoreSettings()
         {
             try
             {
+                ThreadStopAllAccServers();
                 int countServerM = ServerM.List.Count;
                 for (int _serverMNr = countServerM - 1; _serverMNr >= 0; _serverMNr--) { ServerM.List.RemoveAt(_serverMNr); }
                 dynamic? obj = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(PathSettings, Encoding.Unicode));
@@ -274,7 +286,7 @@ namespace GTRC_Community_Manager
         public void SaveSettings()
         {
             string text = JsonConvert.SerializeObject(this, Formatting.Indented);
-            foreach (ServerM _server in ServerM.List) { _server.SetOnline = false; }
+            ThreadStopAllAccServers();
             File.WriteAllText(PathSettings, text, Encoding.Unicode);
             Server.Statics.WriteSQL();
             MainVM.List[0].LogCurrentText = "Server settings saved.";

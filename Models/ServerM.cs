@@ -11,6 +11,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Media;
+using System.Text;
+using System.Data;
 
 namespace GTRC_Community_Manager
 {
@@ -305,7 +307,7 @@ namespace GTRC_Community_Manager
             List<string> prefixes = new() { "Udp message count (", "Tcp message count (", "Updated lobby with ", "Updated leaderboard for ", "Alive cars: " };
             //List<string> suffixes = new List<string>() { "driver", "client" };
             List<string> messageBlacklist = new() { "==ERR:", "	EntryList entry: " };
-            if (accServerOutput != null && accServerOutput.Length > 0)
+            if (accServerOutput is not null && accServerOutput.Length > 0)
             {
                 foreach (string message in messageBlacklist)
                 {
@@ -328,7 +330,7 @@ namespace GTRC_Community_Manager
 
         public void StopAccServer()
         {
-            try { AccServerProcess.Kill(); }
+            try { AccServerProcess?.Kill(); }
             catch { }
         }
 

@@ -50,7 +50,7 @@ namespace GTRC_Community_Manager
         {
             if (instanceListWindow is not null) { instanceListWindow.Close(); }
             if (DatabaseVM.Instance is not null) { DatabaseVM.Instance.SaveFilter(); }
-            foreach (ServerM _server in ServerM.List) { _server.SetOnline = false; }
+            ServerVM.ThreadStopAllAccServers();
             try { SQL.Connection.Close(); } catch { }
             if (SignInOutBot.Instance?._client is not null)
             {
