@@ -9,11 +9,84 @@ using Newtonsoft.Json;
 using System.Text;
 using System.Threading;
 using System.Reflection;
+using GTRC_Community_Manager;
+using Enums;
 
 namespace Scripts
 {
     public static class PreSeason
     {
+        public static void UpdateLeaderboard(ServerM _server)
+        {
+            int serverID = _server.ServerID;
+            int seasonID = _server.Server.SeasonID;
+            if (_server.ServerTypeEnum == ServerTypeEnum.Practice)
+            {
+                List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), seasonID));
+                for (int eventNr = 0; eventNr < listEvents.Count; eventNr++)
+                {
+                    Event _event = listEvents[eventNr];
+                    int eventID = _event.ID;
+                    List<string> propNames = new() { nameof(LeaderboardLinePractice.ServerID), nameof(LeaderboardLinePractice.EventID) };
+                    List<dynamic> propValues = new() { serverID, eventID };
+                    List<LeaderboardLinePractice> listLBL = LeaderboardLinePractice.Statics.GetBy(propNames, propValues);
+                    for (int lblNr = listLBL.Count - 1; lblNr >= 0; lblNr--) { listLBL[lblNr].DeleteSQL(); }
+                    propNames = new() { nameof(ResultsFile.ServerID), nameof(ResultsFile.TrackID), nameof(ResultsFile.SeasonID), nameof(ResultsFile.ServerType) };
+                    propValues = new() { serverID, _event.TrackID, seasonID, _server.Server.ServerType };
+                    List<ResultsFile> listResultsFiles = ResultsFile.Statics.GetBy(propNames, propValues);
+                    foreach (ResultsFile _resultsFile in listResultsFiles)
+                    {
+                        DateTime previousEventDate = Event.DateTimeMinValue;
+                        if (eventNr > 0) { previousEventDate = listEvents[eventNr - 1].EventDate; }
+                        if (_resultsFile.Date > previousEventDate && _resultsFile.Date < _event.EventDate)
+                        {
+                            List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), seasonID);
+                            foreach (Entry _entry in listEntries)
+                            {
+                                int entryID = _entry.ID;
+                                List<DriversEntries> listDriversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), entryID);
+                                foreach (DriversEntries _driverEntry in listDriversEntries)
+                                {
+                                    int driverID = _driverEntry.DriverID;
+                                    long steamID = Driver.Statics.GetByID(driverID).SteamID;
+                                    foreach(Car _car in Car.Statics.List)
+                                    {
+                                        int carID = _car.ID;
+                                        propNames = new() { nameof(Lap.ResultsFileID), nameof(Lap.SteamID), nameof(Lap.AccCarID) };
+                                        propValues = new() { _resultsFile.ID, steamID, _car.AccCarID };
+                                        List<Lap> listLaps = Lap.Statics.GetBy(propNames, propValues);
+                                        if (listLaps.Count > 0)
+                                        {
+                                            List<dynamic> uniqProps = new() { serverID, eventID, entryID, driverID };
+                                            LeaderboardLinePractice newLBL = LeaderboardLinePractice.Statics.GetByUniqProp(uniqProps);
+                                            if (!newLBL.ReadyForList)
+                                            {
+                                                newLBL = new() { ServerID = serverID, EventID = eventID, EntryID = entryID, DriverID = driverID, CarID = carID };
+                                            }
+                                            foreach (Lap _lap in listLaps)
+                                            {
+                                                if (_lap.IsValid)
+                                                {
+                                                    newLBL.BestLap = Math.Min(_lap.Time, newLBL.BestLap);
+                                                    newLBL.BestSector1 = Math.Min(_lap.Sector1, newLBL.BestSector1);
+                                                    newLBL.BestSector2 = Math.Min(_lap.Sector2, newLBL.BestSector2);
+                                                    newLBL.BestSector3 = Math.Min(_lap.Sector3, newLBL.BestSector3);
+                                                    newLBL.ValidLapsCount += 1;
+                                                }
+                                                newLBL.LapsCount += 1;
+                                            }
+                                            _ = LeaderboardLinePractice.Statics.WriteSQL(newLBL);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (_server.ServerTypeEnum == ServerTypeEnum.PreQuali) { }
+        }
+
         /*public static void ResetPreQResults(int seasonID)
         {
             PreQualiResultLine.Statics.ResetSQL();

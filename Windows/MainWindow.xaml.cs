@@ -60,9 +60,15 @@ namespace GTRC_Community_Manager
             this.Close();
         }
 
-        private void SettingsTabItem_Initialized(object sender, EventArgs e)
+        public static bool CheckExistingSqlThreads()
         {
-
+            if (DatabaseVM.IsRunning) { return true; }
+            if (Commands.IsRunning) { return true; }
+            if (PreSeasonVM.IsRunningExportEntrylist) { return true; }
+            if (PreSeasonVM.Instance?.IsRunningEntries ?? false) { return true; }
+            if (ServerVM.IsRunning) { return true; }
+            foreach (ServerM _server in ServerM.List) { if (_server.IsRunning) { return true; } }
+            return false;
         }
 
         private void SetCultureInfo()

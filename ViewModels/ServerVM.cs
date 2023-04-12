@@ -22,6 +22,7 @@ namespace GTRC_Community_Manager
         private static readonly string PathSettings = MainWindow.dataDirectory + "config server.json";
         [JsonIgnore] public BackgroundWorker BackgroundWorkerRestartServer = new() { WorkerSupportsCancellation = true };
         public static readonly Random random = new();
+        public static bool IsRunning = false;
 
         private bool stateAutoServerRestart = false;
         private int serverRestartTime = 0;
@@ -166,13 +167,14 @@ namespace GTRC_Community_Manager
         {
             _server.WaitQueue++;
             _server.WaitQueue += paths.Count;
-            while (PreSeasonVM.Instance.CheckExistingThreads()) { Thread.Sleep(200 + random.Next(100)); }
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); }
             _server.IsRunning = true;
             _server.WaitQueue--;
             for (int pathNr = 0; pathNr < paths.Count; pathNr++) { ImportResultsJson(paths[pathNr], _server); _server.WaitQueue--; }
             Lap.Statics.LoadSQL();
             if (PreSeasonVM.Instance is not null)
             {
+                //PreSeason.UpdateLeaderboard(_server);
                 //PreSeason.UpdatePreQResults(PreSeasonVM.Instance.CurrentSeasonID);
                 //GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
             }
@@ -229,21 +231,27 @@ namespace GTRC_Community_Manager
 
         public void AddServer()
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             Server.Statics.LoadSQL();
             _ = new Server();
             Server.Statics.WriteSQL();
             Server.Statics.LoadSQL();
+            IsRunning = false;
         }
 
         public void DelServer(object obj)
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             if (obj.GetType() == typeof(ServerM)) { ServerM _serverM = (ServerM)obj; _serverM.Server.ListRemove(); this.RaisePropertyChanged(nameof(ListServer)); }
+            IsRunning = false;
         }
 
         public void RestoreSettingsTrigger()
         {
             ThreadStopAllAccServers();
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             Server.Statics.LoadSQL();
+            IsRunning = false;
         }
 
         public void RestoreSettings()
@@ -288,7 +296,9 @@ namespace GTRC_Community_Manager
             string text = JsonConvert.SerializeObject(this, Formatting.Indented);
             ThreadStopAllAccServers();
             File.WriteAllText(PathSettings, text, Encoding.Unicode);
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             Server.Statics.WriteSQL();
+            IsRunning = false;
             MainVM.List[0].LogCurrentText = "Server settings saved.";
         }
 

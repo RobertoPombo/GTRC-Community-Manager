@@ -19,43 +19,44 @@ namespace GTRC_Community_Manager
         private static readonly string PathSettings = MainWindow.dataDirectory + "config preseason.json";
         [JsonIgnore] public BackgroundWorker BackgroundWorkerResetEntries = new() { WorkerSupportsCancellation = true };
         public static readonly Random random = new();
+        public static bool IsRunningExportEntrylist = false;
 
         private static ObservableCollection<Series> listSeries = new();
         private static ObservableCollection<Season> listSeasons = new();
 
         private int currentSeriesID = Basics.NoID;
         private int currentSeasonID = Basics.NoID;
-        private Event currentevent;
-        private int slotsavailable = 0;
-        private int slotstaken = 0;
-        private string slotstakentext = "0/0";
-        private bool stateautoupdateentries;
-        private Brush stateentries = Basics.StateOff;
-        private int intervallminrefreshentries = 0;
-        private int entriesupdateremtime = 0;
-        private bool isrunningentries = false;
-        private int waitqueueentries = 0;
-        private bool ischeckedballast = false;
-        private bool ischeckedrestriktor = false;
-        private bool ischeckedregisterlimit = false;
-        private bool ischeckedbopfreeze = false;
-        private bool ischeckedgridslotslimit = false;
-        private bool ischeckedsignoutlimit = false;
-        private bool ischeckednoshowlimit = false;
-        private bool ischeckedcarchangelimit = false;
+        private Event currentEvent;
+        private int slotsAvailable = 0;
+        private int slotsTaken = 0;
+        private string slotsTakenText = "0/0";
+        private bool stateAutoUpdateEntries;
+        private Brush stateEntries = Basics.StateOff;
+        private int intervallMinRefreshEntries = 0;
+        private int entriesUpdateRemTime = 0;
+        private bool isRunningEntries = false;
+        private int waitQueueEntries = 0;
+        private bool isCheckedBallast = false;
+        private bool isCheckedRestriktor = false;
+        private bool isCheckedRegisterLimit = false;
+        private bool isCheckedBoPFreeze = false;
+        private bool isCheckedGridSlotsLimit = false;
+        private bool isCheckedSignOutLimit = false;
+        private bool isCheckedNoShowLimit = false;
+        private bool isCheckedCarChangeLimit = false;
         private bool isCheckedUnlimitedCarVersionChanges = false;
-        private int carlimitballast = 0;
-        private int carlimitrestriktor = 0;
-        private int carlimitregisterlimit = 0;
-        private int gridslotslimit = 0;
-        private int signoutlimit = 0;
-        private int noshowlimit = 0;
-        private int carchangelimit = 0;
-        private int gainballast = 0;
-        private int gainrestriktor = 0;
-        private DateTime dateregisterlimit = DateTime.Now;
-        private DateTime datebopfreeze = DateTime.Now;
-        private DateTime datecarchangelimit = DateTime.Now;
+        private int carLimitBallast = 0;
+        private int carLimitRestriktor = 0;
+        private int carLimitRegisterLimit = 0;
+        private int gridSlotsLimit = 0;
+        private int signOutLimit = 0;
+        private int noShowLimit = 0;
+        private int carChangeLimit = 0;
+        private int gainBallast = 0;
+        private int gainRestriktor = 0;
+        private DateTime dateRegisterLimit = DateTime.Now;
+        private DateTime dateBoPFreeze = DateTime.Now;
+        private DateTime dateCarChangeLimit = DateTime.Now;
 
         public PreSeasonVM()
         {
@@ -106,18 +107,18 @@ namespace GTRC_Community_Manager
 
         [JsonIgnore] public Event CurrentEvent
         {
-            get { return currentevent; }
-            set { currentevent = value; SlotsAvailable++; RaisePropertyChanged(); }
+            get { return currentEvent; }
+            set { currentEvent = value; SlotsAvailable++; RaisePropertyChanged(); }
         }
 
         [JsonIgnore] public int SlotsAvailable
         {
-            get { return slotsavailable; }
+            get { return slotsAvailable; }
             set
             {
-                if (currentevent is not null)
+                if (currentEvent is not null)
                 {
-                    slotsavailable = GetSlotsAvalable(Track.Statics.GetByID(CurrentEvent.TrackID));
+                    slotsAvailable = GetSlotsAvalable(Track.Statics.GetByID(CurrentEvent.TrackID));
                     SlotsTakenText = "?";
                 }
             }
@@ -125,45 +126,45 @@ namespace GTRC_Community_Manager
 
         [JsonIgnore] public int SlotsTaken
         {
-            get { return slotstaken; }
-            set { slotstaken = value; SlotsTakenText = "?"; }
+            get { return slotsTaken; }
+            set { slotsTaken = value; SlotsTakenText = "?"; }
         }
 
         [JsonIgnore] public string SlotsTakenText
         {
-            get { return slotstakentext; }
-            set { slotstakentext = SlotsTaken.ToString() + "/" + SlotsAvailable.ToString(); RaisePropertyChanged(); }
+            get { return slotsTakenText; }
+            set { slotsTakenText = SlotsTaken.ToString() + "/" + SlotsAvailable.ToString(); RaisePropertyChanged(); }
         }
 
         public bool StateAutoUpdateEntries
         {
-            get { return stateautoupdateentries; }
+            get { return stateAutoUpdateEntries; }
             set
             {
-                stateautoupdateentries = value;
+                stateAutoUpdateEntries = value;
                 RaisePropertyChanged();
-                if (stateautoupdateentries && StateEntries == Basics.StateOff) { StateEntries = Basics.StateOn; }
-                else if (!stateautoupdateentries && StateEntries == Basics.StateOn) { StateEntries = Basics.StateOff; }
-                entriesupdateremtime = intervallminrefreshentries * 60;
+                if (stateAutoUpdateEntries && StateEntries == Basics.StateOff) { StateEntries = Basics.StateOn; }
+                else if (!stateAutoUpdateEntries && StateEntries == Basics.StateOn) { StateEntries = Basics.StateOff; }
+                entriesUpdateRemTime = intervallMinRefreshEntries * 60;
                 EntriesUpdateRemTime = "?";
             }
         }
 
         [JsonIgnore] public Brush StateEntries
         {
-            get { return stateentries; }
-            set { stateentries = value; RaisePropertyChanged(); }
+            get { return stateEntries; }
+            set { stateEntries = value; RaisePropertyChanged(); }
         }
 
         public int IntervallMinRefreshEntries
         {
-            get { return intervallminrefreshentries; }
+            get { return intervallMinRefreshEntries; }
             set
             {
                 if (value < 1) { value = 1; }
                 else if (value > 1440) { value = 1440; }
-                intervallminrefreshentries = value;
-                entriesupdateremtime = intervallminrefreshentries * 60;
+                intervallMinRefreshEntries = value;
+                entriesUpdateRemTime = intervallMinRefreshEntries * 60;
                 EntriesUpdateRemTime = "?";
                 RaisePropertyChanged();
             }
@@ -173,9 +174,9 @@ namespace GTRC_Community_Manager
         {
             get
             {
-                if (entriesupdateremtime > 7200) { return ((int)Math.Ceiling((double)entriesupdateremtime / (60 * 60))).ToString() + " h"; }
-                else if (entriesupdateremtime > 120) { return ((int)Math.Ceiling((double)entriesupdateremtime / 60)).ToString() + " min"; }
-                else { return entriesupdateremtime.ToString() + " sec"; }
+                if (entriesUpdateRemTime > 7200) { return ((int)Math.Ceiling((double)entriesUpdateRemTime / (60 * 60))).ToString() + " h"; }
+                else if (entriesUpdateRemTime > 120) { return ((int)Math.Ceiling((double)entriesUpdateRemTime / 60)).ToString() + " min"; }
+                else { return entriesUpdateRemTime.ToString() + " sec"; }
             }
             set { RaisePropertyChanged(); }
         }
@@ -183,63 +184,63 @@ namespace GTRC_Community_Manager
         [JsonIgnore]
         public bool IsRunningEntries
         {
-            get { return isrunningentries; }
-            set { isrunningentries = value; SetStateEntries(); }
+            get { return isRunningEntries; }
+            set { isRunningEntries = value; SetStateEntries(); }
         }
 
         [JsonIgnore]
         public int WaitQueueEntries
         {
-            get { return waitqueueentries; }
-            set { if (value >= 0) { waitqueueentries = value; SetStateEntries(); } }
+            get { return waitQueueEntries; }
+            set { if (value >= 0) { waitQueueEntries = value; SetStateEntries(); } }
         }
 
         public bool IsCheckedBallast
         {
-            get { return ischeckedballast; }
-            set { ischeckedballast = value; RaisePropertyChanged(); }
+            get { return isCheckedBallast; }
+            set { isCheckedBallast = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedRestriktor
         {
-            get { return ischeckedrestriktor; }
-            set { ischeckedrestriktor = value; RaisePropertyChanged(); }
+            get { return isCheckedRestriktor; }
+            set { isCheckedRestriktor = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedRegisterLimit
         {
-            get { return ischeckedregisterlimit; }
-            set { ischeckedregisterlimit = value; RaisePropertyChanged(); }
+            get { return isCheckedRegisterLimit; }
+            set { isCheckedRegisterLimit = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedBoPFreeze
         {
-            get { return ischeckedbopfreeze; }
-            set { ischeckedbopfreeze = value; RaisePropertyChanged(); }
+            get { return isCheckedBoPFreeze; }
+            set { isCheckedBoPFreeze = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedGridSlotsLimit
         {
-            get { return ischeckedgridslotslimit; }
-            set { ischeckedgridslotslimit = value; RaisePropertyChanged(); SlotsAvailable++; }
+            get { return isCheckedGridSlotsLimit; }
+            set { isCheckedGridSlotsLimit = value; RaisePropertyChanged(); SlotsAvailable++; }
         }
 
         public bool IsCheckedSignOutLimit
         {
-            get { return ischeckedsignoutlimit; }
-            set { ischeckedsignoutlimit = value; RaisePropertyChanged(); }
+            get { return isCheckedSignOutLimit; }
+            set { isCheckedSignOutLimit = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedNoShowLimit
         {
-            get { return ischeckednoshowlimit; }
-            set { ischeckednoshowlimit = value; RaisePropertyChanged(); }
+            get { return isCheckedNoShowLimit; }
+            set { isCheckedNoShowLimit = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedCarChangeLimit
         {
-            get { return ischeckedcarchangelimit; }
-            set { ischeckedcarchangelimit = value; RaisePropertyChanged(); }
+            get { return isCheckedCarChangeLimit; }
+            set { isCheckedCarChangeLimit = value; RaisePropertyChanged(); }
         }
 
         public bool IsCheckedUnlimitedCarVersionChanges
@@ -250,74 +251,74 @@ namespace GTRC_Community_Manager
 
         public int CarLimitBallast
         {
-            get { return carlimitballast; }
-            set { carlimitballast = value; RaisePropertyChanged(); }
+            get { return carLimitBallast; }
+            set { carLimitBallast = value; RaisePropertyChanged(); }
         }
 
         public int CarLimitRestriktor
         {
-            get { return carlimitrestriktor; }
-            set { carlimitrestriktor = value; RaisePropertyChanged(); }
+            get { return carLimitRestriktor; }
+            set { carLimitRestriktor = value; RaisePropertyChanged(); }
         }
 
         public int CarLimitRegisterLimit
         {
-            get { return carlimitregisterlimit; }
-            set { carlimitregisterlimit = value; RaisePropertyChanged(); }
+            get { return carLimitRegisterLimit; }
+            set { carLimitRegisterLimit = value; RaisePropertyChanged(); }
         }
 
         public int GridSlotsLimit
         {
-            get { return gridslotslimit; }
-            set { gridslotslimit = value; RaisePropertyChanged(); SlotsAvailable++; }
+            get { return gridSlotsLimit; }
+            set { gridSlotsLimit = value; RaisePropertyChanged(); SlotsAvailable++; }
         }
 
         public int SignOutLimit
         {
-            get { return signoutlimit; }
-            set { signoutlimit = value; RaisePropertyChanged(); }
+            get { return signOutLimit; }
+            set { signOutLimit = value; RaisePropertyChanged(); }
         }
 
         public int NoShowLimit
         {
-            get { return noshowlimit; }
-            set { noshowlimit = value; RaisePropertyChanged(); }
+            get { return noShowLimit; }
+            set { noShowLimit = value; RaisePropertyChanged(); }
         }
 
         public int CarChangeLimit
         {
-            get { return carchangelimit; }
-            set { carchangelimit = value; RaisePropertyChanged(); }
+            get { return carChangeLimit; }
+            set { carChangeLimit = value; RaisePropertyChanged(); }
         }
 
         public int GainBallast
         {
-            get { return gainballast; }
-            set { gainballast = value; RaisePropertyChanged(); }
+            get { return gainBallast; }
+            set { gainBallast = value; RaisePropertyChanged(); }
         }
 
         public int GainRestriktor
         {
-            get { return gainrestriktor; }
-            set { gainrestriktor = value; RaisePropertyChanged(); }
+            get { return gainRestriktor; }
+            set { gainRestriktor = value; RaisePropertyChanged(); }
         }
 
         public DateTime DateRegisterLimit
         {
-            get { return dateregisterlimit; }
-            set { dateregisterlimit = value; RaisePropertyChanged(); }
+            get { return dateRegisterLimit; }
+            set { dateRegisterLimit = value; RaisePropertyChanged(); }
         }
 
         public DateTime DateBoPFreeze
         {
-            get { return datebopfreeze; }
-            set { datebopfreeze = value; RaisePropertyChanged(); }
+            get { return dateBoPFreeze; }
+            set { dateBoPFreeze = value; RaisePropertyChanged(); }
         }
 
         public DateTime DateCarChangeLimit
         {
-            get { return datecarchangelimit; }
-            set { datecarchangelimit = value; RaisePropertyChanged(); }
+            get { return dateCarChangeLimit; }
+            set { dateCarChangeLimit = value; RaisePropertyChanged(); }
         }
 
         public int GetSlotsAvalable(Track track)
@@ -378,12 +379,12 @@ namespace GTRC_Community_Manager
                 Thread.Sleep(1000);
                 if (StateAutoUpdateEntries)
                 {
-                    entriesupdateremtime -= 1;
+                    entriesUpdateRemTime -= 1;
                     EntriesUpdateRemTime = "?";
-                    if (entriesupdateremtime == 0)
+                    if (entriesUpdateRemTime == 0)
                     {
                         TriggerResetEntries();
-                        entriesupdateremtime = intervallminrefreshentries * 60;
+                        entriesUpdateRemTime = intervallMinRefreshEntries * 60;
                     }
                 }
             }
@@ -392,14 +393,12 @@ namespace GTRC_Community_Manager
         public void ThreadResetEntries()
         {
             WaitQueueEntries++;
-            while (CheckExistingThreads()) { Thread.Sleep(200 + random.Next(100)); }
-            IsRunningEntries = true;
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunningEntries = true;
             WaitQueueEntries--;
-            Lap.Statics.LoadSQL();
+            //Lap.Statics.LoadSQL();
             ResetEntries();
             //PreSeason.UpdatePreQResults(CurrentSeasonID);
-            PreSeason.CountCars(CurrentEvent, DateRegisterLimit, CarLimitRegisterLimit, DateBoPFreeze, IsCheckedRegisterLimit, IsCheckedBoPFreeze);
-            PreSeason.CalcBoP(CurrentEvent, CarLimitBallast, CarLimitRestriktor, GainBallast, GainRestriktor, IsCheckedBallast, IsCheckedRestriktor);
+            UpdateBoPForEvent(CurrentEvent);
             GSheets.UpdateBoPStandings(CurrentEvent, GSheet.ListIDs[2].DocID, GSheet.ListIDs[2].SheetID);
             //GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
             IsRunningEntries = false;
@@ -424,13 +423,6 @@ namespace GTRC_Community_Manager
             }
         }
 
-        public bool CheckExistingThreads()
-        {
-            if (IsRunningEntries) { return true; }
-            foreach (ServerM _server in ServerM.List) { if (_server.IsRunning) { return true; } }
-            return false;
-        }
-
         public void ResetEntries()
         {
             GSheets.SyncFormsEntries(CurrentSeasonID, GSheet.ListIDs[4].DocID, GSheet.ListIDs[4].SheetID, "A:I");
@@ -445,7 +437,9 @@ namespace GTRC_Community_Manager
 
         public void ThreadUpdateEntrylistBoP(Event _event)
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunningExportEntrylist = true;
             _ = ThreadUpdateEntrylistBoP_Int(_event);
+            IsRunningExportEntrylist = false;
         }
 
         public int ThreadUpdateEntrylistBoP_Int(Event _event)
@@ -505,29 +499,29 @@ namespace GTRC_Community_Manager
                 dynamic obj = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(PathSettings, Encoding.Unicode));
                 CurrentSeriesID = obj?.CurrentSeriesID ?? currentSeriesID;
                 CurrentSeasonID = obj?.CurrentSeasonID ?? currentSeasonID;
-                StateAutoUpdateEntries = obj?.StateAutoUpdateEntries ?? stateautoupdateentries;
-                IntervallMinRefreshEntries = obj?.IntervallMinRefreshEntries ?? intervallminrefreshentries;
-                IsCheckedBallast = obj?.IsCheckedBallast ?? ischeckedballast;
-                IsCheckedRestriktor = obj?.IsCheckedRestriktor ?? ischeckedrestriktor;
-                IsCheckedRegisterLimit = obj?.IsCheckedRegisterLimit ?? ischeckedregisterlimit;
-                IsCheckedBoPFreeze = obj?.IsCheckedBoPFreeze ?? ischeckedbopfreeze;
-                IsCheckedGridSlotsLimit = obj?.IsCheckedGridSlotsLimit ?? ischeckedgridslotslimit;
-                IsCheckedSignOutLimit = obj?.IsCheckedSignOutLimit ?? ischeckedsignoutlimit;
-                IsCheckedNoShowLimit = obj?.IsCheckedNoShowLimit ?? ischeckednoshowlimit;
-                IsCheckedCarChangeLimit = obj?.IsCheckedCarChangeLimit ?? ischeckedcarchangelimit;
+                StateAutoUpdateEntries = obj?.StateAutoUpdateEntries ?? stateAutoUpdateEntries;
+                IntervallMinRefreshEntries = obj?.IntervallMinRefreshEntries ?? intervallMinRefreshEntries;
+                IsCheckedBallast = obj?.IsCheckedBallast ?? isCheckedBallast;
+                IsCheckedRestriktor = obj?.IsCheckedRestriktor ?? isCheckedRestriktor;
+                IsCheckedRegisterLimit = obj?.IsCheckedRegisterLimit ?? isCheckedRegisterLimit;
+                IsCheckedBoPFreeze = obj?.IsCheckedBoPFreeze ?? isCheckedBoPFreeze;
+                IsCheckedGridSlotsLimit = obj?.IsCheckedGridSlotsLimit ?? isCheckedGridSlotsLimit;
+                IsCheckedSignOutLimit = obj?.IsCheckedSignOutLimit ?? isCheckedSignOutLimit;
+                IsCheckedNoShowLimit = obj?.IsCheckedNoShowLimit ?? isCheckedNoShowLimit;
+                IsCheckedCarChangeLimit = obj?.IsCheckedCarChangeLimit ?? isCheckedCarChangeLimit;
                 IsCheckedUnlimitedCarVersionChanges = obj?.IsCheckedUnlimitedCarVersionChanges ?? isCheckedUnlimitedCarVersionChanges;
-                CarLimitBallast = obj?.CarLimitBallast ?? carlimitballast;
-                CarLimitRestriktor =    obj?.CarLimitRestriktor ?? carlimitrestriktor;
-                CarLimitRegisterLimit = obj?.CarLimitRegisterLimit ?? carlimitregisterlimit;
-                GridSlotsLimit = obj?.GridSlotsLimit ?? gridslotslimit;
-                SignOutLimit = obj?.SignOutLimit ?? signoutlimit;
-                NoShowLimit = obj?.NoShowLimit ?? noshowlimit;
-                CarChangeLimit = obj?.CarChangeLimit ?? carchangelimit;
-                GainBallast = obj?.GainBallast ?? gainballast;
-                GainRestriktor = obj?.GainRestriktor ?? gainrestriktor;
-                DateRegisterLimit = obj?.DateRegisterLimit ?? dateregisterlimit;
-                DateBoPFreeze = obj?.DateBoPFreeze ?? datebopfreeze;
-                DateCarChangeLimit = obj?.DateCarChangeLimit ?? datecarchangelimit;
+                CarLimitBallast = obj?.CarLimitBallast ?? carLimitBallast;
+                CarLimitRestriktor =    obj?.CarLimitRestriktor ?? carLimitRestriktor;
+                CarLimitRegisterLimit = obj?.CarLimitRegisterLimit ?? carLimitRegisterLimit;
+                GridSlotsLimit = obj?.GridSlotsLimit ?? gridSlotsLimit;
+                SignOutLimit = obj?.SignOutLimit ?? signOutLimit;
+                NoShowLimit = obj?.NoShowLimit ?? noShowLimit;
+                CarChangeLimit = obj?.CarChangeLimit ?? carChangeLimit;
+                GainBallast = obj?.GainBallast ?? gainBallast;
+                GainRestriktor = obj?.GainRestriktor ?? gainRestriktor;
+                DateRegisterLimit = obj?.DateRegisterLimit ?? dateRegisterLimit;
+                DateBoPFreeze = obj?.DateBoPFreeze ?? dateBoPFreeze;
+                DateCarChangeLimit = obj?.DateCarChangeLimit ?? dateCarChangeLimit;
                 MainVM.List[0].LogCurrentText = "Pre-Season settings restored.";
             }
             catch { MainVM.List[0].LogCurrentText = "Restore pre-Season settings failed!"; }

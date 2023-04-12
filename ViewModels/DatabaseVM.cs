@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace GTRC_Community_Manager
 {
@@ -19,6 +20,8 @@ namespace GTRC_Community_Manager
         private static readonly string PathFilter = MainWindow.dataDirectory + "config filter.json";
         private static Type dataType = typeof(ThemeColor);
         private static List<KeyValuePair<string, Type>> listDataTypes = new();
+        public static bool IsRunning = false;
+        public static readonly Random random = new();
 
         private bool forceDel = false;
         private ObservableCollection<DataRowVM> list = new();
@@ -48,7 +51,7 @@ namespace GTRC_Community_Manager
             ListDataTypes.Add(new KeyValuePair<string, Type>(EventsCars.Statics.Table, typeof(EventsCars)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(ResultsFile.Statics.Table, typeof(ResultsFile)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Lap.Statics.Table, typeof(Lap)));
-            ListDataTypes.Add(new KeyValuePair<string, Type>(PreQualiResultLine.Statics.Table, typeof(PreQualiResultLine)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(LeaderboardLinePractice.Statics.Table, typeof(LeaderboardLinePractice)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Incident.Statics.Table, typeof(Incident)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(IncidentsEntries.Statics.Table, typeof(IncidentsEntries)));
             if (!File.Exists(PathFilter)) { File.WriteAllText(PathFilter, "", Encoding.Unicode); }
@@ -193,6 +196,7 @@ namespace GTRC_Community_Manager
 
         public void Add()
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             List<dynamic> backupValues = Current.Values;
             if (Current.Object.List.Contains(Current.Object))
             {
@@ -202,15 +206,18 @@ namespace GTRC_Community_Manager
             Current.Object.ID = Basics.NoID;
             Current = new DataRowVM(Current.Object, false, false);
             if (Enumerable.SequenceEqual(backupValues, Current.Values)) { Current.Object.ListAdd(); ResetList(Current.Object.ID); }
+            IsRunning = false;
         }
 
         public void Del()
         {
             if (Selected is not null && Statics?.FilteredList.Contains(Selected.Object))
             {
+                while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
                 int index = Statics.FilteredList.IndexOf(Selected.Object);
                 Selected.Object.ListRemove(UseForceDel());
                 ResetList(index);
+                IsRunning = false;
             }
         }
 
@@ -226,8 +233,10 @@ namespace GTRC_Community_Manager
 
         public void ReadJson()
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             Statics.ReadJson(UseForceDel());
             ResetList();
+            IsRunning = false;
         }
 
         public void WriteJson()
@@ -237,38 +246,50 @@ namespace GTRC_Community_Manager
 
         public void LoadSQL()
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             Statics.LoadSQL(UseForceDel());
             ResetList();
+            IsRunning = false;
         }
 
         public void WriteSQL()
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             Statics.WriteSQL();
             ResetList();
+            IsRunning = false;
         }
 
         public void ClearList()
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             Statics.ListClear(UseForceDel());
             ResetList();
+            IsRunning = false;
         }
 
         public void ClearSQL()
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             Statics.ResetSQL(UseForceDel());
             ResetList();
+            IsRunning = false;
         }
 
         public void ClearJson()
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             ClearList();
             WriteJson();
+            IsRunning = false;
         }
 
         public void CleanUpList()
         {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             Statics.DeleteNotUnique();
             ResetList();
+            IsRunning = false;
         }
 
         public void ClearFilter()

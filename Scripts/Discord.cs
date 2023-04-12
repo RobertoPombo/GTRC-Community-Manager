@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Collections;
 
 using GTRC_Community_Manager;
@@ -118,6 +119,8 @@ namespace Scripts
         public static Emoji emojiCry = new("😭");
         public static Emoji emojiThinking = new("🤔");
         public static string adminRoleTag = "<@&>";
+        public static bool IsRunning = false;
+        public static readonly Random random = new();
 
         public bool isError = false;
         public string LogText = "";
@@ -575,6 +578,8 @@ namespace Scripts
 
         public async Task ChangeCar()
         {
+            var tempReply = await ReplyAsync(":sleeping:");
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             await ParseEntryID();
             if (EntryID != Basics.NoID && CarID != Basics.NoID && EventID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
             {
@@ -640,10 +645,14 @@ namespace Scripts
                     await ErrorResponse();
                 }
             }
+            await tempReply.DeleteAsync();
+            IsRunning = false;
         }
 
         public async Task SignInOut()
         {
+            var tempReply = await ReplyAsync(":sleeping:");
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             await ParseEntryID();
             if (EntryID != Basics.NoID && EventID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
             {
@@ -694,10 +703,14 @@ namespace Scripts
                     }
                 }
             }
+            await tempReply.DeleteAsync();
+            IsRunning = false;
         }
 
         public async Task PullInOut()
         {
+            var tempReply = await ReplyAsync(":sleeping:");
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             await ParseEntryID();
             if (EntryID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
             {
@@ -737,12 +750,15 @@ namespace Scripts
                     await UserMessage.AddReactionAsync(emojiSuccess);
                 }
             }
+            await tempReply.DeleteAsync();
+            IsRunning = false;
         }
 
         public async Task ShowEvents()
         {
             if (iPreSVM is not null)
             {
+                while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
                 List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), iPreSVM.CurrentSeasonID));
                 string text = "**Rennkalender " + iPreSVM.CurrentSeason.Name + "**\n";
                 foreach (Event _event in listEvents)
@@ -752,6 +768,7 @@ namespace Scripts
                     text += Track.Statics.GetByID(_event.TrackID).Name_GTRC + "\n";
                 }
                 await SendMessage(text, false);
+                IsRunning = false;
             }
         }
 
@@ -760,6 +777,7 @@ namespace Scripts
             if (iPreSVM is not null)
             {
                 var tempReply = await ReplyAsync(":sleeping:");
+                while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
                 if (EventID != Basics.NoID)
                 {
                     Event _event = Event.Statics.GetByID(EventID);
@@ -785,6 +803,7 @@ namespace Scripts
                 }
                 await SendMessage(text, false);
                 await tempReply.DeleteAsync();
+                IsRunning = false;
             }
         }
 
@@ -793,8 +812,10 @@ namespace Scripts
             if (EventID != Basics.NoID && iPreSVM is not null)
             {
                 var tempReply = await ReplyAsync(":sleeping:");
+                while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
                 Event _event = Event.Statics.GetByID(EventID);
                 iPreSVM.UpdateBoPForEvent(_event);
+                IsRunning = false;
                 string text = "**BoP für Event " + _event.Name + Basics.Date2String(_event.EventDate, " (DD.MM.YY)**\n");
                 List<EventsCars> eventsCars = EventsCars.SortByCount(EventsCars.GetAnyBy(nameof(EventsCars.EventID), EventID));
                 foreach (EventsCars eventCar in eventsCars)
@@ -810,6 +831,7 @@ namespace Scripts
                 }
                 await SendMessage(text, false);
                 await tempReply.DeleteAsync();
+                IsRunning = false;
             }
         }
 
@@ -817,9 +839,7 @@ namespace Scripts
         {
             if (EventID != Basics.NoID && iPreSVM is not null)
             {
-                var tempReply = await ReplyAsync(":sleeping:");
                 await CreateStartingGridMessage(EventID, printCar, printCarChange);
-                await tempReply.DeleteAsync();
             }
         }
 
