@@ -11,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Media;
-using System.Text;
 using System.Data;
 
 namespace GTRC_Community_Manager
@@ -21,6 +20,7 @@ namespace GTRC_Community_Manager
         public static ObservableCollection<ServerM> List = new();
 
         [JsonIgnore] public Process AccServerProcess;
+        [JsonIgnore] public int ServerOutputTimeoutSekMax = 60;
 
         private Server server;
         private FileSystemWatcher resultswatcher;
@@ -30,6 +30,7 @@ namespace GTRC_Community_Manager
         private Brush state;
         private bool isRunning = false;
         private int waitQueue = 0;
+        private int serverOutputTimeoutSek = 0;
 
         public ServerM() { }
 
@@ -183,8 +184,13 @@ namespace GTRC_Community_Manager
                     if (setOnline != value)
                     {
                         setOnline = value;
-                        if (setOnline) { new Thread(ThreadStartAccServer).Start(); }
-                        else { CountOnline = 0; StopAccServer(); }
+                        if (setOnline)
+                        {
+                            new Thread(ThreadStartAccServer).Start();
+                            serverOutputTimeoutSek = ServerOutputTimeoutSekMax;
+                            new Thread(ThreadCountdownServerTimeout).Start();
+                        }
+                        else { StopAccServer(); serverOutputTimeoutSek = -1; }
                         RaisePropertyChanged();
                     }
                 }
@@ -194,7 +200,7 @@ namespace GTRC_Community_Manager
         [JsonIgnore] public int CountOnline
         {
             get { return countOnline; }
-            set { countOnline = value; RaisePropertyChanged(); }
+            set { if (countOnline != value) { countOnline = value; RaisePropertyChanged(); } }
         }
 
         public bool DetectResults
@@ -266,6 +272,19 @@ namespace GTRC_Community_Manager
             }
         }
 
+        [JsonIgnore] public int ServerOutputTimeoutSek
+        {
+            get { return serverOutputTimeoutSek; }
+            set { if (value <= 0) { CountOnline = 0; } else if (serverOutputTimeoutSek >= 0) { serverOutputTimeoutSek = value; }
+                string text = "";
+                foreach (ServerM _k in List)
+                {
+                    text += _k.ServerID.ToString() + ": " + _k.ServerOutputTimeoutSek.ToString() + " | ";
+                }
+                MainVM.List[0].LogCurrentText = text;
+            }
+        }
+
         public void SetStateResults()
         {
             if (IsRunning)
@@ -309,6 +328,7 @@ namespace GTRC_Community_Manager
             List<string> messageBlacklist = new() { "==ERR:", "	EntryList entry: " };
             if (accServerOutput is not null && accServerOutput.Length > 0)
             {
+                ServerOutputTimeoutSek = ServerOutputTimeoutSekMax;
                 foreach (string message in messageBlacklist)
                 {
                     if (accServerOutput.Length > message.Length && accServerOutput[..message.Length] == message) { break; }
@@ -337,6 +357,11 @@ namespace GTRC_Community_Manager
         public void EventNewResultsJson(object source, FileSystemEventArgs e)
         {
             new Thread(() => ServerVM.Instance.ThreadReadNewResultsJsons(this, new List<string>() { e.FullPath })).Start();
+        }
+
+        public void ThreadCountdownServerTimeout()
+        {
+            while (ServerOutputTimeoutSek >= 0) { Thread.Sleep(1000); ServerOutputTimeoutSek--; }
         }
     }
 }
