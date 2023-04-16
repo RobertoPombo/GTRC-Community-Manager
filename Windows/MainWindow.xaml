@@ -561,6 +561,9 @@
                                             Command="{Binding UpdateEntrylistBoPCmd}"
                                             Style="{StaticResource ExpTextButtonStyle}" Padding="7" Margin="5,0"/>
                                     <Label Content="{Binding SlotsTakenText}" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    <Button Content="Publish track report"
+                                            Command="{Binding PublishTrackReportCmd}"
+                                            Style="{StaticResource ExpTextButtonStyle}" Padding="7" Margin="5,0"/>
                                 </StackPanel>
                             </Grid>
                             

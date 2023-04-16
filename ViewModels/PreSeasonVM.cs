@@ -58,6 +58,7 @@ namespace GTRC_Community_Manager
             SaveSettingsCmd = new UICmd((o) => SaveSettings());
             ResetEntriesCmd = new UICmd((o) => TriggerResetEntries());
             UpdateEntrylistBoPCmd = new UICmd((o) => UpdateEntrylistBoP());
+            PublishTrackReportCmd = new UICmd((o) => PublishTrackReport());
             SeasonSaveSQLCmd = new UICmd((o) => SeasonSaveSQL());
             SeasonLoadSQLCmd = new UICmd((o) => SeasonLoadSQL());
             if (!File.Exists(PathSettings)) { SaveSettings(); }
@@ -451,6 +452,11 @@ namespace GTRC_Community_Manager
             return carChangeCount;
         }
 
+        public void PublishTrackReport()
+        {
+
+        }
+
         public void RestoreSettings()
         {
             try
@@ -488,6 +494,7 @@ namespace GTRC_Community_Manager
         [JsonIgnore] public UICmd SaveSettingsCmd { get; set; }
         [JsonIgnore] public UICmd ResetEntriesCmd { get; set; }
         [JsonIgnore] public UICmd UpdateEntrylistBoPCmd { get; set; }
+        [JsonIgnore] public UICmd PublishTrackReportCmd { get; set; }
         [JsonIgnore] public UICmd SeasonSaveSQLCmd { get; set; }
         [JsonIgnore] public UICmd SeasonLoadSQLCmd { get; set; }
     }

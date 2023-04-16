@@ -40,13 +40,13 @@ namespace Database
         public int Position
         {
             get { return position; }
-            set { if (value > 0) { position = value; if (ReadyForList) { SetNextAvailable(); } } }
+            set { if (value <= 0) { position = 1; } else { position = value; } if (ReadyForList) { SetNextAvailable(); } }
         }
 
         public int Points
         {
             get { return points; }
-            set { if (value >= 0) { position = value; } }
+            set { points = value; }
         }
 
         public static void PublishList() { }

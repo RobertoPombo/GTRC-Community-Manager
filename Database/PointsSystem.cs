@@ -42,13 +42,13 @@ namespace Database
         public int MinPercentageOfP1
         {
             get { return minPercentageOfP1; }
-            set { if (value >= 0 && value <= 100) { minPercentageOfP1 = value; } }
+            set { if (value < 0) { minPercentageOfP1 = 0; } else if (value > 100) { minPercentageOfP1 = 100; } else { minPercentageOfP1 = value; } }
         }
 
         public int MaxPercentageOfP1
         {
             get { return maxPercentageOfP1; }
-            set { if (value >= 100) { maxPercentageOfP1 = value; } }
+            set { if (value < 100) { maxPercentageOfP1 = 100; } else { maxPercentageOfP1 = value; } }
         }
 
         public static void PublishList() { }
@@ -63,6 +63,22 @@ namespace Database
                 name = defName + " #" + nr.ToString();
                 nr++; if (nr == int.MaxValue) { break; }
             }
+        }
+
+        public int GetPointsByPosition(int position)
+        {
+            if (ID != Basics.NoID)
+            {
+                for (int pos = position; pos > 0; pos--)
+                {
+                    List<dynamic> uniqValues = new() { ID, pos };
+                    if (PointsPositions.Statics.ExistsUniqProp(uniqValues))
+                    {
+                        return PointsPositions.Statics.GetByUniqProp(uniqValues).Points;
+                    }
+                }
+            }
+            return 0;
         }
     }
 }
