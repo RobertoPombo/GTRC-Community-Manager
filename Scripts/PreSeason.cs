@@ -11,6 +11,7 @@ using System.Threading;
 using System.Reflection;
 using GTRC_Community_Manager;
 using Enums;
+using System.Runtime.ConstrainedExecution;
 
 namespace Scripts
 {
@@ -290,6 +291,8 @@ namespace Scripts
 
         public static void SetEntry_NotScorePoints_NotPermanent(Event nextEvent)
         {
+            bool saveSQL = false;
+            string delimiter = "#!#";
             List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), nextEvent.SeasonID);
             foreach (Entry _entry in listEntries)
             {
@@ -298,16 +301,52 @@ namespace Scripts
                 signOutCount += noShowCount;
                 if (_entry.SignOutDate > DateTime.Now)
                 {
-                    if (noShowCount > nextEvent.ObjSeason.NoShowLimit) { _entry.ScorePoints = false; _entry.Permanent = false; }
-                    else if (signOutCount > nextEvent.ObjSeason.SignOutLimit) { _entry.Permanent = false; }
+                    if (noShowCount > nextEvent.ObjSeason.NoShowLimit)
+                    {
+                        if (_entry.ScorePoints || _entry.Permanent)
+                        {
+                            string message = delimiter + "Da du das Limit von " + nextEvent.ObjSeason.NoShowLimit.ToString() +
+                                " Nichtteilnahmen trotz Anmeldung pro Saison überschritten hast, ";
+                            if (_entry.ScorePoints && _entry.Permanent)
+                            {
+                                message += "sammelst du ab jetzt keine Meisterschaftspunkte mehr und musst dich zu jedem Event einzeln anmelden." +
+                                    " Startplätze werden bevorzugt an Teilnehmer vergeben, die nicht außerhalb der Wertung fahren" +
+                                    " und für jedes Rennen automatisch angemeldet sind.";
+                            }
+                            else if (_entry.ScorePoints)
+                            {
+                                message += "sammelst du ab jetzt keine Meisterschaftspunkte mehr." +
+                                    " Startplätze werden bevorzugt an Teilnehmer vergeben, die nicht außerhalb der Wertung fahren.";
+                            }
+                            else
+                            {
+                                message += "musst du dich ab jetzt zu jedem Event einzeln anmelden." +
+                                    " Startplätze werden bevorzugt an Teilnehmer vergeben, die für jedes Rennen automatisch angemeldet sind.";
+                            }
+                            _ = Commands.NotifyEntry(_entry, message, delimiter);
+                            _entry.ScorePoints = false;
+                            _entry.Permanent = false;
+                        }
+                    }
+                    else if (signOutCount > nextEvent.ObjSeason.SignOutLimit)
+                    {
+                        if (_entry.Permanent)
+                        {
+                            string message = delimiter + "Da du das Limit von " + nextEvent.ObjSeason.SignOutLimit.ToString() +
+                                " Abmeldungen/Nichtteilnahmen pro Saison überschritten hast, musst du dich ab jetzt zu jedem Event einzeln anmelden." +
+                                " Startplätze werden bevorzugt an Teilnehmer vergeben, die für jedes Rennen automatisch angemeldet sind.";
+                            _ = Commands.NotifyEntry(_entry, message, "#!#");
+                            _entry.Permanent = false;
+                        }
+                    }
                 }
             }
-            EventsEntries.Statics.WriteSQL();
-            Entry.Statics.WriteSQL();
+            if (saveSQL) { EventsEntries.Statics.WriteSQL(); Entry.Statics.WriteSQL(); }
         }
 
         public static void CountCars(Event _event)
         {
+            string delimiter = "#!#";
             Season _season = _event.ObjSeason;
             var linqList = from _entry in Entry.Statics.List
                            where _entry.SeasonID == _event.SeasonID
@@ -342,8 +381,42 @@ namespace Scripts
                     if (validCarAtFreeze && respectsRegLimitAtFreeze && isRegisteredAtFreeze) { _eventCarAtFreeze.CountBoP++; }
                     if (validCar && isRegistered)
                     {
-                        if (respectsRegLimit) { _eventCarAtFreeze.Count++; _eventsEntries.ScorePoints = true; }
-                        else { _eventsEntries.ScorePoints = false; }
+                        if (respectsRegLimit)
+                        {
+                            _eventCarAtFreeze.Count++;
+                            if (!_eventsEntries.ScorePoints)
+                            {
+                                string message = delimiter + "Du fährst ab jetzt nicht mehr außerhalb der Wertung mit und sammelst Meisterschaftspunkte.";
+                                _ = Commands.NotifyEntry(_entry, message, "#!#");
+                                _eventsEntries.ScorePoints = true;
+                            }
+                        }
+                        else
+                        {
+                            if (_eventsEntries.ScorePoints)
+                            {
+                                string message = delimiter + "Aufgrund der Obergrenze von " + _season.CarLimitRegisterLimit.ToString() +
+                                    " Fahrzeugen fährst du das kommende Rennen mit dem " + _eventCar.ObjCar.Name +
+                                    " außerhalb der Wertung mit und sammelst keine Meisterschaftspunkte.";
+                                if (_season.DateBoPFreeze > DateTime.Now)
+                                {
+                                    message += " Sobald dieses Fahrzeug wieder weniger als " + _event.ObjSeason.CarLimitRegisterLimit.ToString() +
+                                        "x in der Meisterschaft vertreten ist, nimmst du an der Meisterschaftswertung teil.";
+                                }
+                                if (_season.CarChangeLimit > 0)
+                                {
+                                    message += " Solltest du beim kommenden Rennen gerne um Punkte fahren wollen," +
+                                    " kannst du dir die `!fahrzeugliste` anzeigen lassen und einen `!fahrzeugwechsel` versuchen.";
+                                }
+                                else if (_season.UnlimitedCarVersionChanges)
+                                {
+                                    message += " Solltest du beim kommenden Rennen gerne um Punkte fahren wollen, kannst du dir die `!fahrzeugliste` anzeigen" +
+                                        " lassen und einen `!fahrzeugwechsel` auf einen anderen" + _eventCar.ObjCar.Manufacturer + " durchführen.";
+                                }
+                                _ = Commands.NotifyEntry(_entry, message, "#!#");
+                                _eventsEntries.ScorePoints = false;
+                            }
+                        }
                     }
                 }
             }

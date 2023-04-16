@@ -16,6 +16,7 @@ using System.Threading;
 using System.Collections;
 
 using GTRC_Community_Manager;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Scripts
 {
@@ -530,24 +531,34 @@ namespace Scripts
 
         public void SetDiscordIDs_Drivers()
         {
-            List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), EntryID);
-            foreach (DriversEntries _driverEntry in _driverEntries)
-            {
-                if (_driverEntry.ObjDriver.ID != Basics.NoID) { DiscordIDs_Drivers.Add(_driverEntry.ObjDriver.DiscordID); }
-            }
+            DiscordIDs_Drivers = GetDiscordIDs_Drivers(EntryID);
         }
 
-        public string TagDiscordIDs(List<long> listDiscordIDs, bool mobileType)
+        public static List<long> GetDiscordIDs_Drivers(int _entryID)
+        {
+            List<long> discordIDs_Drivers = new();
+            List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entryID);
+            foreach (DriversEntries _driverEntry in _driverEntries)
+            {
+                if (_driverEntry.ObjDriver.ID != Basics.NoID && Driver.IsValidDiscordID(_driverEntry.ObjDriver.DiscordID))
+                {
+                    discordIDs_Drivers.Add(_driverEntry.ObjDriver.DiscordID);
+                }
+            }
+            return discordIDs_Drivers;
+        }
+
+        public static string TagDiscordIDs(List<long> listDiscordIDs, bool mobileType)
         {
             string tagText= "";
             foreach (long _discordID in listDiscordIDs) { tagText += TagDiscordID(_discordID, mobileType); }
             return tagText;
         }
 
-        public string TagDiscordID(long _discordID, bool mobileType)
+        public static string TagDiscordID(long _discordID, bool mobileType)
         {
             string tagText = "";
-            if (mobileType) { tagText += "<@!" + _discordID.ToString() + ">"; }
+            if (mobileType) { tagText += "<@!" + _discordID.ToString() + "> "; }
             else { tagText += "<@" + _discordID.ToString() + "> "; }
             return tagText;
         }
@@ -579,6 +590,14 @@ namespace Scripts
             }
             text += "\n\nStatt das `!` zu verwenden kannst du mich auch direkt mit `@` ansprechen.";
             await SendMessage(text, false);
+        }
+
+        public static async Task NotifyEntry(Entry entry, string message, string delimiter)
+        {
+            List<long> discordIDs_Drivers = GetDiscordIDs_Drivers(entry.ID);
+            if (discordIDs_Drivers.Count > 0) { message = message.Replace(delimiter, TagDiscordIDs(discordIDs_Drivers, false)); }
+            else { message = message.Replace(delimiter, adminRoleTag + " @Teilnehmer #" + entry.RaceNumber.ToString() + " (Discord-ID fehlt)\n "); }
+            await SendMessage(message, false, false);
         }
 
         public async Task ChangeCar()
@@ -633,14 +652,20 @@ namespace Scripts
                         _eventsEntries = EventsEntries.Statics.GetByUniqProp(new List<dynamic>() { EntryID, EventID });
                         if (_entry.ScorePoints && !_eventsEntries.ScorePoints)
                         {
-                            await ReplyAsync(TagDiscordIDs(DiscordIDs_Drivers, false) + "Seit dem " +
+                            string message = TagDiscordIDs(DiscordIDs_Drivers, false) + "Seit dem " +
                                 Basics.Date2String(_event.ObjSeason.DateCarChangeLimit, "DD.MM.YY") +
                                 " um " + Basics.Date2String(_event.ObjSeason.DateCarChangeLimit, "hh:mm") +
                                 " Uhr kann eigentlich nicht mehr auf dieses Fahrzeug gewechselt werden, da die Obergrenze von " +
                                 _event.ObjSeason.CarLimitRegisterLimit.ToString() + " Fahrzeugen erreicht wurde. Daher fährst du in dieser Meisterschaft mit dem " +
-                                _car.Name + " ab jetzt außerhalb der Wertung mit und sammelst keine Meisterschaftspunkte, bis dieses Fahrzeug wieder weniger als " +
-                                _event.ObjSeason.CarLimitRegisterLimit.ToString() +
-                                "x in der Meisterschaft vertreten ist. Solltest du auch beim nächsten Rennen gerne weiterhin Punkte bekommen wollen, wähle bitte ein anderes Fahrzeug aus.");
+                                _car.Name + " ab jetzt außerhalb der Wertung mit und sammelst keine Meisterschaftspunkte";
+                            if (_event.ObjSeason.DateBoPFreeze > DateTime.Now)
+                            {
+                                message += ", bis dieses Fahrzeug wieder weniger als " +
+                                _event.ObjSeason.CarLimitRegisterLimit.ToString() + "x in der Meisterschaft vertreten ist.";
+                            }
+                            else { message += "."; }
+                            message += " Solltest du auch beim nächsten Rennen gerne weiterhin Punkte bekommen wollen, wähle bitte ein anderes Fahrzeug aus.";
+                            await ReplyAsync(message);
                         }
                     }
                 }
@@ -953,20 +978,25 @@ namespace Scripts
             return (text, pos);
         }
 
-        public static async Task SendMessage(string newMessageContent, bool isStartingGrid)
+        public static async Task SendMessage(string newMessageContent, bool isStartingGrid, bool deleteLater = true)
         {
-            
-            if (Channel is null && Settings is not null) { Channel = iSioBot?._client?.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelID); }
+            if (Channel is null && Settings is not null)
+            {
+                Channel = iSioBot?._client?.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelID);
+            }
             if (Channel is not null)
             {
-                foreach (ulong _id in discordMessages.latestMessageID) { await DeleteMessage(_id); }
-                if (isStartingGrid)
+                if (deleteLater)
                 {
-                    foreach (ulong _id in discordMessages.latestStartingGridID) { await DeleteMessage(_id); }
-                    discordMessages.latestStartingGridID = new DiscordMessages().latestStartingGridID;
+                    foreach (ulong _id in discordMessages.latestMessageID) { await DeleteMessage(_id); }
+                    if (isStartingGrid)
+                    {
+                        foreach (ulong _id in discordMessages.latestStartingGridID) { await DeleteMessage(_id); }
+                        discordMessages.latestStartingGridID = new DiscordMessages().latestStartingGridID;
+                    }
+                    else { discordMessages.latestMessageID = new DiscordMessages().latestMessageID; }
                 }
-                else { discordMessages.latestMessageID = new DiscordMessages().latestMessageID; }
-                await SendMessageRecursive(newMessageContent, isStartingGrid);
+                await SendMessageRecursive(newMessageContent, isStartingGrid, deleteLater);
                 discordMessages.WriteJson();
             }
         }
@@ -978,7 +1008,7 @@ namespace Scripts
             if (oldMessage is not null) { await oldMessage.DeleteAsync(); }
         }
 
-        public static async Task SendMessageRecursive(string MessageContent, bool isStartingGrid)
+        public static async Task SendMessageRecursive(string MessageContent, bool isStartingGrid, bool deleteLater = true)
         {
             List<string> keys = new() { "**\n", "\n" };
             string part1;
@@ -1015,15 +1045,15 @@ namespace Scripts
             }
             else
             {
-                await SendMessageRecursiveEnding(MessageContent, isStartingGrid);
+                await SendMessageRecursiveEnding(MessageContent, isStartingGrid, deleteLater);
             }
         }
 
-        public static async Task SendMessageRecursiveEnding(string MessageContent, bool isStartingGrid)
+        public static async Task SendMessageRecursiveEnding(string MessageContent, bool isStartingGrid, bool deleteLater = true)
         {
             IUserMessage? newMessage = null;
             if (Channel is not null) { newMessage = await Channel.SendMessageAsync(MessageContent); }
-            if (newMessage is not null)
+            if (newMessage is not null && deleteLater)
             {
                 if (isStartingGrid) { discordMessages.latestStartingGridID.Add(newMessage.Id); }
                 else { discordMessages.latestMessageID.Add(newMessage.Id); }

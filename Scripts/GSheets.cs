@@ -176,8 +176,7 @@ namespace Scripts
                 driverEntry.EntryID = entry.ID;
                 entry.TeamID = driverTeam.TeamID;
                 if ((newEntry || entry.CarID == Basics.NoID) && CarID != Basics.NoID) { entry.CarID = CarID; }
-                entry.ScorePoints = ScorePoints;
-                entry.Permanent = ScorePoints;
+                if (newEntry) { entry.ScorePoints = ScorePoints; entry.Permanent = ScorePoints; }
                 if (RegisterDate < entry.RegisterDate) { entry.RegisterDate = RegisterDate; }
             }
             return newEntry || _newEntry;
