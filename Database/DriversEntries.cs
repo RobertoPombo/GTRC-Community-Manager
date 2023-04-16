@@ -23,6 +23,11 @@ namespace Database
         public DriversEntries(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public DriversEntries(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Driver objDriver = new(false);
+        private Entry objEntry = new(false);
+        [JsonIgnore][NotMapped] public Driver ObjDriver { get { return objDriver; } }
+        [JsonIgnore][NotMapped] public Entry ObjEntry { get { return objEntry; } }
+
         private int driverID = 0;
         private int entryID = 0;
         private string name3Digits = "";
@@ -30,13 +35,19 @@ namespace Database
         public int DriverID
         {
             get { return driverID; }
-            set { driverID = value; if (ReadyForList) { SetNextAvailable(); } Name3Digits = Driver.Statics.GetByID(driverID).Name3DigitsOptions[0]; }
+            set
+            {
+                driverID = value;
+                if (ReadyForList) { SetNextAvailable(); }
+                objDriver = Driver.Statics.GetByID(driverID);
+                Name3Digits = ObjDriver.Name3DigitsOptions[0];
+            }
         }
 
         public int EntryID
         {
             get { return entryID; }
-            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } objEntry = Entry.Statics.GetByID(entryID); }
         }
 
         public string Name3Digits
@@ -74,6 +85,9 @@ namespace Database
                     if (driverNr == startValueDriver) { break; }
                 }
             }
+
+            objDriver = Driver.Statics.GetByID(driverID);
+            objEntry = Entry.Statics.GetByID(entryID);
         }
 
         private static List<DriversEntries> GetListByDriverIDSeasonID(int driverID, int seasonID)
@@ -82,7 +96,7 @@ namespace Database
             List<DriversEntries> _driversEntries = Statics.GetBy(nameof(DriverID), driverID);
             foreach (DriversEntries _driverEntry in _driversEntries)
             {
-                if (Entry.Statics.GetByID(_driverEntry.EntryID).SeasonID == seasonID) { driversEntries.Add(_driverEntry); }
+                if (_driverEntry.ObjEntry.SeasonID == seasonID) { driversEntries.Add(_driverEntry); }
             }
             return driversEntries;
         }
@@ -92,8 +106,7 @@ namespace Database
             List<DriversEntries> driversEntries = Statics.GetBy(nameof(DriverID), driverID);
             foreach (DriversEntries _driverEntry in driversEntries)
             {
-                Entry entry = Entry.Statics.GetByID(_driverEntry.EntryID);
-                if (entry.ID != Basics.NoID && entry.SeasonID == seasonID) { return _driverEntry; }
+                if (_driverEntry.ObjEntry.ID != Basics.NoID && _driverEntry.ObjEntry.SeasonID == seasonID) { return _driverEntry; }
             }
             return new DriversEntries(false);
         }

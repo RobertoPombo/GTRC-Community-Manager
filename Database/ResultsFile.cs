@@ -24,6 +24,13 @@ namespace Database
         public ResultsFile(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public ResultsFile(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Server objServer = new(false);
+        private Track objTrack = new(false);
+        private Season objSeason = new(false);
+        [JsonIgnore][NotMapped] public Server ObjServer { get { return objServer; } }
+        [JsonIgnore][NotMapped] public Track ObjTrack { get { return objTrack; } }
+        [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
+
         private int serverID = 0;
         private DateTime date = Event.DateTimeMinValue;
         private int sessionType = 0;
@@ -34,7 +41,7 @@ namespace Database
         public int ServerID
         {
             get { return serverID; }
-            set { serverID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { serverID = value; if (ReadyForList) { SetNextAvailable(); } objServer = Server.Statics.GetByID(serverID); }
         }
 
         public DateTime Date
@@ -60,9 +67,9 @@ namespace Database
             get { return trackID; }
             set
             {
-                if (Track.Statics.IDList.Count == 0) { _ = new Track() { ID = 1 }; }
-                if (!Track.Statics.ExistsID(value)) { value = Track.Statics.IDList[0].ID; }
-                trackID = value;
+                if (Track.Statics.IDList.Count == 0) { objTrack = new Track() { ID = 1 }; }
+                if (!Track.Statics.ExistsID(value)) { objTrack = Track.Statics.IDList[0]; trackID = objTrack.ID; }
+                else { trackID = value; objTrack = Track.Statics.GetByID(trackID); }
             }
         }
 
@@ -71,9 +78,9 @@ namespace Database
             get { return seasonID; }
             set
             {
-                if (Season.Statics.IDList.Count == 0) { _ = new Season() { ID = 1 }; }
-                if (!Season.Statics.ExistsID(value)) { value = Season.Statics.IDList[0].ID; }
-                seasonID = value;
+                if (Season.Statics.IDList.Count == 0) { objSeason = new Season() { ID = 1 }; }
+                if (!Season.Statics.ExistsID(value)) { objSeason = Season.Statics.IDList[0]; seasonID = objSeason.ID; }
+                else { seasonID = value; objSeason = Season.Statics.GetByID(seasonID); }
             }
         }
 
@@ -114,6 +121,8 @@ namespace Database
                     if (serverNr == startValueServer) { break; }
                 }
             }
+
+            objServer = Server.Statics.GetByID(serverID);
         }
     }
 }

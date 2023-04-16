@@ -51,4 +51,14 @@ namespace Enums
         Decision = 3,
         Status = 4
     }
+
+    public enum FormationLapTypeEnum
+    {
+        Manual = 0,
+        ManualShort = 1,
+        Controlled = 2,
+        ControlledShort = 3,
+        Limiter = 4,
+        LimiterShort = 5
+    }
 }

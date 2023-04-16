@@ -3,6 +3,7 @@ using Scripts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Windows.Controls.Primitives;
 
 namespace Database
 {
@@ -24,6 +25,9 @@ namespace Database
         public Lap(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Lap(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private ResultsFile objResultsFile = new(false);
+        [JsonIgnore][NotMapped] public ResultsFile ObjResultsFile { get { return objResultsFile; } }
+
         private int resultsFileID = Basics.ID0;
         private long steamID = Driver.SteamIDMinValue;
         private bool isValid = false;
@@ -44,9 +48,9 @@ namespace Database
             get { return resultsFileID; }
             set
             {
-                if (ResultsFile.Statics.IDList.Count == 0) { _ = new ResultsFile() { ID = 1 }; }
-                if (!ResultsFile.Statics.ExistsID(value)) { value = ResultsFile.Statics.IDList[0].ID; }
-                resultsFileID = value;
+                if (ResultsFile.Statics.IDList.Count == 0) { objResultsFile = new ResultsFile() { ID = 1 }; }
+                if (!ResultsFile.Statics.ExistsID(value)) { objResultsFile = ResultsFile.Statics.IDList[0]; resultsFileID = objResultsFile.ID; }
+                else { resultsFileID = value; objResultsFile = ResultsFile.Statics.GetByID(resultsFileID); }
             }
         }
 

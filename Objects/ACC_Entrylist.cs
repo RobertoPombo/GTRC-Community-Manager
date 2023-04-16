@@ -52,7 +52,7 @@ namespace GTRC_Community_Manager
             {
                 for (int i2 = i; i2 < ListEntries.Count; i2++)
                 {
-                    if (Entry.Statics.GetByID(ListEntries[i].EntryID).RaceNumber > Entry.Statics.GetByID(ListEntries[i2].EntryID).RaceNumber)
+                    if (ListEntries[i].ObjEntry.RaceNumber > ListEntries[i2].ObjEntry.RaceNumber)
                     {
                         (ListEntries[i], ListEntries[i2]) = (ListEntries[i2], ListEntries[i]);
                     }
@@ -62,27 +62,25 @@ namespace GTRC_Community_Manager
             {
                 if (_eventsEntries.IsOnEntrylist)
                 {
-                    Entry entry = Entry.Statics.GetByID(_eventsEntries.EntryID);
                     bool isAdmin = false;
                     ACC_Entry accEntry = new();
                     entries.Add(accEntry);
                     accEntry.drivers = new List<ACC_Driver>();
-                    List<DriversEntries> ListDriverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), entry.ID);
+                    List<DriversEntries> ListDriverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _eventsEntries.ObjEntry.ID);
                     foreach (DriversEntries _driverEntries in ListDriverEntries)
                     {
-                        Driver driver = Driver.Statics.GetByID(_driverEntries.DriverID);
                         ACC_Driver accDriver = new();
                         accEntry.drivers.Add(accDriver);
-                        if (RaceControl.Statics.ExistsUniqProp(driver.ID)) { isAdmin = true;}
-                        accDriver.firstName = driver.FirstName;
-                        accDriver.lastName = driver.LastName;
+                        if (RaceControl.Statics.ExistsUniqProp(_driverEntries.ObjDriver.ID)) { isAdmin = true;}
+                        accDriver.firstName = _driverEntries.ObjDriver.FirstName;
+                        accDriver.lastName = _driverEntries.ObjDriver.LastName;
                         accDriver.shortName = _driverEntries.Name3Digits;
                         accDriver.driverCategory = _eventsEntries.Category;
-                        accDriver.playerID = "S" + driver.SteamID.ToString();
+                        accDriver.playerID = "S" + _driverEntries.ObjDriver.SteamID.ToString();
                     }
-                    accEntry.raceNumber = entry.RaceNumber;
-                    Car car = Car.Statics.GetByID(_eventsEntries.CarID);
-                    if (_forceCarModel && car.ID != Basics.NoID) { accEntry.forcedCarModel = car.AccCarID; ; } else { accEntry.forcedCarModel = -1; }
+                    accEntry.raceNumber = _eventsEntries.ObjEntry.RaceNumber;
+                    if (_forceCarModel && _eventsEntries.ObjCar.ID != Basics.NoID) { accEntry.forcedCarModel = _eventsEntries.ObjCar.AccCarID; }
+                    else { accEntry.forcedCarModel = -1; }
                     accEntry.overrideDriverInfo = 1;
                     accEntry.defaultGridPosition = -1;
                     accEntry.ballastKg = _eventsEntries.Ballast;
@@ -94,8 +92,7 @@ namespace GTRC_Community_Manager
             int raceNumber = 1;
             foreach (RaceControl admin in RaceControl.Statics.List)
             {
-                Driver _driverAdmin = Driver.Statics.GetByID(admin.DriverID);
-                DriversEntries _driverEntriesAdmin = DriversEntries.GetByDriverIDSeasonID(_driverAdmin.ID, _event.SeasonID);
+                DriversEntries _driverEntriesAdmin = DriversEntries.GetByDriverIDSeasonID(admin.ObjDriver.ID, _event.SeasonID);
                 EventsEntries _eventsEntriesAdmin = EventsEntries.GetAnyByUniqProp(_driverEntriesAdmin.EntryID, _event.ID);
                 if (!_eventsEntriesAdmin.IsOnEntrylist)
                 {
@@ -107,8 +104,7 @@ namespace GTRC_Community_Manager
                         usedRaceNumber = false;
                         foreach (EventsEntries _eventsEntries in ListEntries)
                         {
-                            Entry _entry = Entry.Statics.GetByID(_eventsEntries.EntryID);
-                            if (_eventsEntries.IsOnEntrylist && _entry.RaceNumber == raceNumber) { raceNumber++; usedRaceNumber = true; break; }
+                            if (_eventsEntries.IsOnEntrylist && _eventsEntries.ObjEntry.RaceNumber == raceNumber) { raceNumber++; usedRaceNumber = true; break; }
                         }
                     }
                     ACC_Entry accEntry = new();
@@ -120,7 +116,7 @@ namespace GTRC_Community_Manager
                     accDriver.lastName = admin.LastName;
                     accDriver.shortName = "SC" + adminNr.ToString();
                     accDriver.driverCategory = new Entry(false).Category;
-                    accDriver.playerID = "S" + _driverAdmin.SteamID.ToString();
+                    accDriver.playerID = "S" + admin.ObjDriver.SteamID.ToString();
                     accEntry.raceNumber = raceNumber;
                     accEntry.forcedCarModel = -1;
                     accEntry.overrideDriverInfo = 1;
@@ -139,7 +135,6 @@ namespace GTRC_Community_Manager
             int adminNr = 0;
             foreach (RaceControl admin in RaceControl.Statics.List)
             {
-                Driver _driverAdmin = Driver.Statics.GetByID(admin.DriverID);
                 adminNr++;
                 ACC_Entry accEntry = new();
                 entries.Add(accEntry);
@@ -150,7 +145,7 @@ namespace GTRC_Community_Manager
                 accDriver.lastName = admin.LastName;
                 accDriver.shortName = "SC" + adminNr.ToString();
                 accDriver.driverCategory = new Entry(false).Category;
-                accDriver.playerID = "S" + _driverAdmin.SteamID.ToString();
+                accDriver.playerID = "S" + admin.ObjDriver.SteamID.ToString();
                 accEntry.raceNumber = -1;
                 accEntry.forcedCarModel = -1;
                 accEntry.overrideDriverInfo = 1;

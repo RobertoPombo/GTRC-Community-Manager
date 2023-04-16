@@ -177,6 +177,7 @@ namespace Scripts
                 entry.TeamID = driverTeam.TeamID;
                 if ((newEntry || entry.CarID == Basics.NoID) && CarID != Basics.NoID) { entry.CarID = CarID; }
                 entry.ScorePoints = ScorePoints;
+                entry.Permanent = ScorePoints;
                 if (RegisterDate < entry.RegisterDate) { entry.RegisterDate = RegisterDate; }
             }
             return newEntry || _newEntry;
@@ -309,14 +310,13 @@ namespace Scripts
             int count0 = int.MaxValue;
             foreach (EventsCars eventCar in eventsCars)
             {
-                Car car = Car.Statics.GetByID(eventCar.CarID);
-                if (car.Category == "GT3" && car.IsLatestVersion)
+                if (eventCar.ObjCar.Category == "GT3" && eventCar.ObjCar.IsLatestVersion)
                 {
                     values = new List<object>();
                     if (eventCar.CountBoP == count0) { values.Add("'="); }
                     else { values.Add(pos.ToString() + "."); }
-                    values.Add(car.Name);
-                    values.Add(car.Year.ToString());
+                    values.Add(eventCar.ObjCar.Name);
+                    values.Add(eventCar.ObjCar.Year.ToString());
                     if (eventCar.CountBoP == 0) { values.Add(""); }
                     else { values.Add(eventCar.CountBoP.ToString() + "x"); }
                     if (eventCar.Ballast == 0) { values.Add("'-"); }
@@ -349,16 +349,13 @@ namespace Scripts
                 List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
                 if (_driverEntries.Count > 0)
                 {
-                    Driver _driver = Driver.Statics.GetByID(_driverEntries[0].DriverID);
                     EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
-                    Car _car = Car.Statics.GetByID(_eventsEntries.CarID);
-                    Team _team = Team.Statics.GetByID(_entry.TeamID);
                     values.Add(_entry.RegisterDate.ToString());
-                    values.Add(_driver.FirstName);
-                    values.Add(_driver.LastName);
-                    values.Add("S" + _driver.SteamID.ToString());
-                    values.Add(_car.Name_GTRC);
-                    values.Add(_team.Name);
+                    values.Add(_driverEntries[0].ObjDriver.FirstName);
+                    values.Add(_driverEntries[0].ObjDriver.LastName);
+                    values.Add("S" + _driverEntries[0].ObjDriver.SteamID.ToString());
+                    values.Add(_eventsEntries.ObjCar.Name_GTRC);
+                    values.Add(_entry.ObjTeam?.Name ?? "");
                     values.Add(_entry.RaceNumber.ToString());
                     if (_eventsEntries.ScorePoints) { values.Add("Stammfahrer"); } else { values.Add("Gaststarter"); }
                     values.Add("TRUE");
@@ -388,7 +385,6 @@ namespace Scripts
                 List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
                 if (_driverEntries.Count > 0)
                 {
-                    Driver _driver = Driver.Statics.GetByID(_driverEntries[0].DriverID);
                     for (int eventNr = 1; eventNr < listEvents.Count; eventNr++)
                     {
                         Event _event0 = listEvents[eventNr - 1];
@@ -398,9 +394,8 @@ namespace Scripts
                         if (_eventsEntries1.CarID != _eventsEntries0.CarID)
                         {
                             values = new List<object>();
-                            Track _track = Track.Statics.GetByID(_event0.TrackID);
-                            values.Add(_driver.FullName);
-                            values.Add(_track.Name_GTRC);
+                            values.Add(_driverEntries[0].ObjDriver.FullName);
+                            values.Add(_event0.ObjTrack.Name_GTRC);
                             rows.Add(values);
                         }
                     }

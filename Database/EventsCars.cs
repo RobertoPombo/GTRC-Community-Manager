@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using Scripts;
+using GTRC_Community_Manager;
 
 namespace Database
 {
@@ -24,6 +25,11 @@ namespace Database
         public EventsCars(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public EventsCars(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Car objCar = new(false);
+        private Event objEvent = new(false);
+        [JsonIgnore][NotMapped] public Car ObjCar { get { return objCar; } }
+        [JsonIgnore][NotMapped] public Event ObjEvent { get { return objEvent; } }
+
         private int carID = 0;
         private int eventID = 0;
         private int count = 0;
@@ -34,13 +40,13 @@ namespace Database
         public int CarID
         {
             get { return carID; }
-            set { carID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { carID = value; if (ReadyForList) { SetNextAvailable(); } objCar = Car.Statics.GetByID(carID); }
         }
 
         public int EventID
         {
             get { return eventID; }
-            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } objEvent = Event.Statics.GetByID(eventID); }
         }
 
         public int Count
@@ -111,6 +117,9 @@ namespace Database
                     if (carNr == startValueCar) { break; }
                 }
             }
+
+            objCar = Car.Statics.GetByID(carID);
+            objEvent = Event.Statics.GetByID(eventID);
         }
 
         public static void ForceIsUnique()
@@ -162,7 +171,7 @@ namespace Database
         {
             var linqList = from _eventCar in _list
                            where _eventCar.CountBoP > 0
-                           orderby _eventCar.CountBoP descending, _eventCar.Count descending, Car.Statics.GetByID(_eventCar.CarID).Name
+                           orderby _eventCar.CountBoP descending, _eventCar.Count descending, _eventCar.ObjCar.Name
                            select _eventCar;
             return linqList.Cast<EventsCars>().ToList();
         }

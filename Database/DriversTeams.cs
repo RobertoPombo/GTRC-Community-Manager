@@ -22,19 +22,24 @@ namespace Database
         public DriversTeams(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public DriversTeams(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Driver objDriver = new(false);
+        private Team objTeam = new(false);
+        [JsonIgnore][NotMapped] public Driver ObjDriver { get { return objDriver; } }
+        [JsonIgnore][NotMapped] public Team ObjTeam { get { return objTeam; } }
+
         private int driverID = 0;
         private int teamID = 0;
 
         public int DriverID
         {
             get { return driverID; }
-            set { driverID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { driverID = value; if (ReadyForList) { SetNextAvailable(); } objDriver = Driver.Statics.GetByID(driverID); }
         }
 
         public int TeamID
         {
             get { return teamID; }
-            set { teamID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { teamID = value; if (ReadyForList) { SetNextAvailable(); } objTeam = Team.Statics.GetByID(teamID); }
         }
 
         public static void PublishList() { }
@@ -66,6 +71,9 @@ namespace Database
                     if (driverNr == startValueDriver) { break; }
                 }
             }
+
+            objDriver = Driver.Statics.GetByID(driverID);
+            objTeam = Team.Statics.GetByID(teamID);
         }
     }
 }

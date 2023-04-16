@@ -28,6 +28,7 @@ namespace Database
         private string name = "";
         private int pitBoxesCount = 0;
         private int serverSlotsCount = 0;
+        private int accTimePenDT = 30;
         private string name_GTRC = "";
 
         public string AccTrackID
@@ -57,6 +58,12 @@ namespace Database
         {
             get { return serverSlotsCount; }
             set { if (value >= 0) { serverSlotsCount = value; } }
+        }
+
+        public int AccTimePenDT
+        {
+            get { return accTimePenDT; }
+            set { if (value >= 0) { accTimePenDT = value; } }
         }
 
         public string Name_GTRC

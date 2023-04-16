@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Scripts;
+using GTRC_Community_Manager;
 
 namespace Database
 {
@@ -23,6 +24,9 @@ namespace Database
         public RaceControl(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public RaceControl(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Driver objDriver = new(false);
+        [JsonIgnore][NotMapped] public Driver ObjDriver { get { return objDriver; } }
+
         private int driverID = 0;
         private string firstName = "";
         private string lastName = "";
@@ -30,7 +34,7 @@ namespace Database
         public int DriverID
         {
             get { return driverID; }
-            set { driverID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { driverID = value; if (ReadyForList) { SetNextAvailable(); } objDriver = Driver.Statics.GetByID(driverID); }
         }
 
         public string FirstName
@@ -61,7 +65,7 @@ namespace Database
         {
             int driverNr = 0;
             List<Driver> _idList = Driver.Statics.IDList;
-            if (_idList.Count == 0) { new Driver() { ID = 1 }; _idList = Driver.Statics.IDList; }
+            if (_idList.Count == 0) { _ = new Driver() { ID = 1 }; _idList = Driver.Statics.IDList; }
             Driver _driver = Driver.Statics.GetByID(driverID);
             if (_driver.ReadyForList) { driverNr = Driver.Statics.IDList.IndexOf(_driver); } else { driverID = _idList[0].ID; }
             int startValue = driverNr;
@@ -71,6 +75,8 @@ namespace Database
                 driverID = _idList[driverNr].ID;
                 if (driverNr == startValue) { break; }
             }
+
+            objDriver = Driver.Statics.GetByID(driverID);
         }
     }
 }

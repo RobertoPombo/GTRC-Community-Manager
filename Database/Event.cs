@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Scripts;
 
 using GTRC_Community_Manager;
-using Newtonsoft.Json.Linq;
 
 namespace Database
 {
@@ -20,7 +19,7 @@ namespace Database
             Statics = new StaticDbField<Event>(true)
             {
                 Table = "Events",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(SeasonID), nameof(EventDate) },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(SeasonID), nameof(Date) },
                     new List<string>() { nameof(SeasonID), nameof(Name) } },
                 ToStringPropertiesNames = new List<string>() { nameof(SeasonID), nameof(Name) },
                 PublishList = () => PublishList()
@@ -30,10 +29,20 @@ namespace Database
         public Event(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Event(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Season objSeason = new(false);
+        private Track objTrack = new(false);
+        [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
+        [JsonIgnore][NotMapped] public Track ObjTrack { get { return objTrack; } }
+
         private int seasonID = 0;
-        private DateTime eventDate = DateTime.Now;
+        private DateTime date = DateTime.Now;
         private int trackID = 0;
         private string name = DefaultName;
+        private int ambientTemp = 20;
+        private int cloudLevel = 0;
+        private int rainLevel = 0;
+        private int weatherRandomness = 0;
+        private bool fixedConditions = false;
 
         [JsonIgnore] public int EventNr
         {
@@ -57,13 +66,13 @@ namespace Database
         public int SeasonID
         {
             get { return seasonID; }
-            set { seasonID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { seasonID = value; if (ReadyForList) { SetNextAvailable(); } objSeason = Season.Statics.GetByID(seasonID); }
         }
 
-        public DateTime EventDate
+        public DateTime Date
         {
-            get { return eventDate; }
-            set { eventDate = value; if (ReadyForList) { SetNextAvailable(); } if (Statics.IDList.Contains(this)) { PublishList(); } }
+            get { return date; }
+            set { date = value; if (ReadyForList) { SetNextAvailable(); } if (Statics.IDList.Contains(this)) { PublishList(); } }
         }
 
         public int TrackID
@@ -71,9 +80,9 @@ namespace Database
             get { return trackID; }
             set
             {
-                if (Track.Statics.IDList.Count == 0) { _ = new Track() { ID = 1 }; }
-                if (!Track.Statics.ExistsID(value)) { value = Track.Statics.IDList[0].ID; }
-                trackID = value;
+                if (Track.Statics.IDList.Count == 0) { objTrack = new Track() { ID = 1 }; }
+                if (!Track.Statics.ExistsID(value)) { objTrack = Track.Statics.IDList[0]; trackID = objTrack.ID; }
+                else { trackID = value; objTrack = Track.Statics.GetByID(trackID); }
             }
         }
 
@@ -86,6 +95,36 @@ namespace Database
                 if (name == null || name == "") { name = DefaultName; }
                 if (ReadyForList) { SetNextAvailable(); }
             }
+        }
+
+        public int AmbientTemp
+        {
+            get { return ambientTemp; }
+            set { ambientTemp = value; }
+        }
+
+        public int CloudLevel
+        {
+            get { return cloudLevel; }
+            set { if (value < 0) { cloudLevel = 0; } else if (value > 100) { cloudLevel = 100; } else { cloudLevel = value; } }
+        }
+
+        public int RainLevel
+        {
+            get { return rainLevel; }
+            set { if (value < 0) { rainLevel = 0; } else if (value > 100) { rainLevel = 100; } else { rainLevel = value; } }
+        }
+
+        public int WeatherRandomness
+        {
+            get { return weatherRandomness; }
+            set { if (value < 0) { weatherRandomness = 0; } else if (value > 7) { weatherRandomness = 7; } else { weatherRandomness = value; } }
+        }
+
+        public bool FixedConditions
+        {
+            get { return fixedConditions; }
+            set { fixedConditions = value; }
         }
 
         public static void PublishList()
@@ -103,14 +142,14 @@ namespace Database
             if (_season.ReadyForList) { seasonNr = Season.Statics.IDList.IndexOf(_season); } else { seasonID = _idListSeason[0].ID; }
             int startValueSeason = seasonNr;
 
-            if (eventDate < DateTimeMinValue) { eventDate = DateTimeMinValue; }
-            else if (eventDate > DateTimeMaxValue) { eventDate = DateTimeMaxValue; }
-            DateTime startValue = eventDate;
+            if (date < DateTimeMinValue) { date = DateTimeMinValue; }
+            else if (date > DateTimeMaxValue) { date = DateTimeMaxValue; }
+            DateTime startValue = date;
 
             while (!IsUnique(0))
             {
-                if (eventDate < DateTimeMaxValue) { eventDate = eventDate.AddDays(1); } else { eventDate = DateTimeMinValue; }
-                if (eventDate == startValue)
+                if (date < DateTimeMaxValue) { date = date.AddDays(1); } else { date = DateTimeMinValue; }
+                if (date == startValue)
                 {
                     if (seasonNr + 1 < _idListSeason.Count) { seasonNr += 1; } else { seasonNr = 0; }
                     seasonID = _idListSeason[seasonNr].ID;
@@ -131,6 +170,8 @@ namespace Database
                     if (seasonNr == startValueSeason) { break; }
                 }
             }
+
+            objSeason = Season.Statics.GetByID(seasonID);
         }
 
         public static void SortByDate()
@@ -141,7 +182,7 @@ namespace Database
                 {
                     Event _event1 = Statics.List[_eventID1];
                     Event _event2 = Statics.List[_eventID2];
-                    if ((_event1.SeasonID > _event2.SeasonID) || ((_event1.SeasonID == _event2.SeasonID) && (_event1.EventDate > _event2.EventDate)))
+                    if ((_event1.SeasonID > _event2.SeasonID) || ((_event1.SeasonID == _event2.SeasonID) && (_event1.Date > _event2.Date)))
                     {
                         (Statics.List[_eventID2], Statics.List[_eventID1]) = (Statics.List[_eventID1], Statics.List[_eventID2]);
                     }
@@ -157,7 +198,7 @@ namespace Database
                 {
                     Event _event1 = listEvents[_eventID1];
                     Event _event2 = listEvents[_eventID2];
-                    if ((_event1.SeasonID > _event2.SeasonID) || ((_event1.SeasonID == _event2.SeasonID) && (_event1.EventDate > _event2.EventDate)))
+                    if ((_event1.SeasonID > _event2.SeasonID) || ((_event1.SeasonID == _event2.SeasonID) && (_event1.Date > _event2.Date)))
                     {
                         (listEvents[_eventID2], listEvents[_eventID1]) = (listEvents[_eventID1], listEvents[_eventID2]);
                     }
@@ -170,7 +211,7 @@ namespace Database
         {
             Event nextEvent = new(false);
             List<Event> eventList = SortByDate(Statics.GetBy(nameof(SeasonID), _seasonID));
-            foreach (Event _event in eventList) { nextEvent = _event; if (_event.EventDate > _date) { return nextEvent; } }
+            foreach (Event _event in eventList) { nextEvent = _event; if (_event.Date > _date) { return nextEvent; } }
             return nextEvent;
         }
     }

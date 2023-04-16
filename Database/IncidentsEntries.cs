@@ -24,6 +24,11 @@ namespace Database
         public IncidentsEntries(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public IncidentsEntries(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Incident objIncident = new(false);
+        private Entry objEntry = new(false);
+        [JsonIgnore][NotMapped] public Incident ObjIncident { get { return objIncident; } }
+        [JsonIgnore][NotMapped] public Entry ObjEntry { get { return objEntry; } }
+
         private int incidentID = 0;
         private int entryID = 0;
         private int driverID = Basics.ID0;
@@ -32,13 +37,13 @@ namespace Database
         public int IncidentID
         {
             get { return incidentID; }
-            set { incidentID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { incidentID = value; if (ReadyForList) { SetNextAvailable(); } objIncident = Incident.Statics.GetByID(incidentID); }
         }
 
         public int EntryID
         {
             get { return entryID; }
-            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } objEntry = Entry.Statics.GetByID(entryID); }
         }
 
         public int DriverID
@@ -95,6 +100,9 @@ namespace Database
                 entryID = _idListEntry[entryNr].ID;
                 if (entryNr == startValueEntry) { break; }
             }
+
+            objIncident = Incident.Statics.GetByID(incidentID);
+            objEntry = Entry.Statics.GetByID(entryID);
         }
     }
 }

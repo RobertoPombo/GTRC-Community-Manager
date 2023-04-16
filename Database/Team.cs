@@ -24,13 +24,16 @@ namespace Database
         public Team(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Team(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Season objSeason = new(false);
+        [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
+
         private int seasonID = 0;
         private string name = DefaultName;
 
         public int SeasonID
         {
             get { return seasonID; }
-            set { seasonID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { seasonID = value; if (ReadyForList) { SetNextAvailable(); } objSeason = Season.Statics.GetByID(seasonID); }
         }
 
         public string Name
@@ -68,6 +71,8 @@ namespace Database
                     if (seasonNr == startValueSeason) { break; }
                 }
             }
+
+            objSeason = Season.Statics.GetByID(seasonID);
         }
     }
 }

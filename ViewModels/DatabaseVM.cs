@@ -41,6 +41,8 @@ namespace GTRC_Community_Manager
             ListDataTypes.Add(new KeyValuePair<string, Type>(RaceControl.Statics.Table, typeof(RaceControl)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Series.Statics.Table, typeof(Series)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Season.Statics.Table, typeof(Season)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(PointsSystem.Statics.Table, typeof(PointsSystem)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(PointsPositions.Statics.Table, typeof(PointsPositions)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Server.Statics.Table, typeof(Server)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Team.Statics.Table, typeof(Team)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Entry.Statics.Table, typeof(Entry)));
@@ -278,8 +280,8 @@ namespace GTRC_Community_Manager
 
         public void ClearJson()
         {
-            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             ClearList();
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             WriteJson();
             IsRunning = false;
         }

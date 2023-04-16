@@ -37,6 +37,8 @@ namespace Database
         private DateTime registerDate = DateTime.Now;
         private DateTime banDate = Event.DateTimeMaxValue;
         private string name3Digits = "";
+        private int eloRating = 1500;
+        private int safetyRating = 50;
 
         [NotMapped][JsonIgnore] public List<string> Name3DigitsOptions = new() { "" };
 
@@ -104,6 +106,18 @@ namespace Database
                     UpdateName3DigitsOptions();
                 }
             }
+        }
+
+        public int EloRating
+        {
+            get { return eloRating; }
+            set { if (value < 0) { eloRating = 0; } else if (value > 9999) { eloRating = 9999; } else { eloRating = value; } }
+        }
+
+        public int SafetyRating
+        {
+            get { return safetyRating; }
+            set { if (value > 100) { safetyRating = 100; } else { safetyRating = value; } }
         }
 
         public static void PublishList() { }

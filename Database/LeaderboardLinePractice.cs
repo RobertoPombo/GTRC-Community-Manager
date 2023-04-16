@@ -15,14 +15,25 @@ namespace Database
             Statics = new StaticDbField<LeaderboardLinePractice>(true)
             {
                 Table = "LeaderboardLinesPractice",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(ServerID), nameof(EventID), nameof(EntryID), nameof(DriverID) } },
-                ToStringPropertiesNames = new List<string>() { nameof(Position), nameof(ServerID), nameof(EventID), nameof(EntryID), nameof(DriverID) },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(ServerID), nameof(EventID), nameof(EntryID), nameof(DriverID), nameof(CarID) } },
+                ToStringPropertiesNames = new List<string>() { nameof(Position), nameof(ServerID), nameof(EventID), nameof(EntryID), nameof(DriverID), nameof(CarID) },
                 PublishList = () => PublishList()
             };
         }
         public LeaderboardLinePractice() { This = this; Initialize(true, true); }
         public LeaderboardLinePractice(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public LeaderboardLinePractice(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private Server? objServer = new(false);
+        private Event objEvent = new(false);
+        private Entry objEntry = new(false);
+        private Driver? objDriver = new(false);
+        private Car? objCar = new(false);
+        [JsonIgnore][NotMapped] public Server? ObjServer { get { return objServer; } }
+        [JsonIgnore][NotMapped] public Event ObjEvent { get { return objEvent; } }
+        [JsonIgnore][NotMapped] public Entry ObjEntry { get { return objEntry; } }
+        [JsonIgnore][NotMapped] public Driver? ObjDriver { get { return objDriver; } }
+        [JsonIgnore][NotMapped] public Car? ObjCar { get { return objCar; } }
 
         private int serverID = 0;
         private int eventID = 0;
@@ -42,31 +53,49 @@ namespace Database
         public int ServerID
         {
             get { return serverID; }
-            set { serverID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set
+            {
+                serverID = value;
+                if (ReadyForList) { SetNextAvailable(); }
+                if (serverID == 0) { objServer = null; }
+                else { objServer = Server.Statics.GetByID(serverID); }
+            }
         }
 
         public int EventID
         {
             get { return eventID; }
-            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } objEvent = Event.Statics.GetByID(eventID); }
         }
 
         public int EntryID
         {
             get { return entryID; }
-            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } objEntry = Entry.Statics.GetByID(entryID); }
         }
 
         public int DriverID
         {
             get { return driverID; }
-            set { driverID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set
+            {
+                driverID = value;
+                if (ReadyForList) { SetNextAvailable(); }
+                if (driverID == 0) { objDriver = null; }
+                else { objDriver = Driver.Statics.GetByID(driverID); }
+            }
         }
 
         public int CarID
         {
             get { return carID; }
-            set { carID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set
+            {
+                carID = value;
+                if (ReadyForList) { SetNextAvailable(); }
+                if (carID == 0) { objCar = null; }
+                else { objCar = Car.Statics.GetByID(carID); }
+            }
         }
 
         public int Position
@@ -204,6 +233,12 @@ namespace Database
                     }
                 }
             }
+
+            if (serverID == 0) { objServer = null; } else { objServer = Server.Statics.GetByID(serverID); }
+            objEvent = Event.Statics.GetByID(eventID);
+            objEntry = Entry.Statics.GetByID(entryID);
+            if (driverID == 0) { objDriver = null; } else { objDriver = Driver.Statics.GetByID(driverID); }
+            if (carID == 0) { objCar = null; } else { objCar = Car.Statics.GetByID(carID); }
         }
     }
 }

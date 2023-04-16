@@ -5,6 +5,7 @@ using System.Linq;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using Scripts;
+using System.Windows.Controls.Primitives;
 
 namespace Database
 {
@@ -25,6 +26,13 @@ namespace Database
         public EventsEntries(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public EventsEntries(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Entry objEntry = new(false);
+        private Event objEvent = new(false);
+        private Car objCar = new(false);
+        [JsonIgnore][NotMapped] public Entry ObjEntry { get { return objEntry; } }
+        [JsonIgnore][NotMapped] public Event ObjEvent { get { return objEvent; } }
+        [JsonIgnore][NotMapped] public Car ObjCar { get { return objCar; } }
+
         private int entryID = 0;
         private int eventID = 0;
         private DateTime signindate = Event.DateTimeMaxValue;
@@ -36,34 +44,34 @@ namespace Database
         private bool scorepoints = new Entry(false).ScorePoints;
         private int carID = 0;
         private DateTime carchangedate = Event.DateTimeMinValue;
+        private int priority = int.MaxValue;
 
         public int EntryID
         {
             get { return entryID; }
-            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } SetParentProps(); }
+            set { entryID = value; if (ReadyForList) { SetNextAvailable(); } objEntry = Entry.Statics.GetByID(entryID); SetParentProps(); }
         }
 
         public int EventID
         {
             get { return eventID; }
-            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } SetParentProps(); }
+            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } objEvent = Event.Statics.GetByID(EventID); SetParentProps(); }
         }
 
         public DateTime SignInDate
         {
             get { return signindate; }
-            set
-            {
-                Entry _entry = Entry.Statics.GetByID(EntryID);
-                Event _event = Event.Statics.GetByID(EventID);
-                if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate) { signindate = value; }
-                else { signindate = Event.DateTimeMaxValue; }
-            }
+            set { if (RegisterState) { signindate = value; } else { signindate = Event.DateTimeMaxValue; } }
+        }
+
+        [JsonIgnore] public bool RegisterState
+        {
+            get { return objEntry.RegisterDate < objEvent.Date && objEntry.SignOutDate > objEvent.Date; }
         }
 
         [JsonIgnore] public bool SignInState
         {
-            get { return SignInDate < Event.Statics.GetByID(EventID).EventDate; }
+            get { return SignInDate < ObjEvent.Date; }
         }
 
         public bool IsOnEntrylist
@@ -124,21 +132,31 @@ namespace Database
             get { return carID; }
             set
             {
-                if (Car.Statics.IDList.Count == 0) { _ = new Car() { ID = 1 }; }
-                if (!Car.Statics.ExistsID(value)) { value = Car.Statics.IDList[0].ID; }
-                carID = value;
+                if (Car.Statics.IDList.Count == 0) { objCar = new Car() { ID = 1 }; }
+                if (!Car.Statics.ExistsID(value)) { objCar = Car.Statics.IDList[0]; carID = objCar.ID; }
+                else { carID = value; objCar = Car.Statics.GetByID(carID); }
             }
         }
 
         public DateTime CarChangeDate
         {
             get { return carchangedate; }
-            set { if (Entry.Statics.GetByID(EntryID).RegisterDate <= value) { carchangedate = value; } }
+            set { if (ObjEntry.RegisterDate <= value) { carchangedate = value; } }
+        }
+
+        public int Priority
+        {
+            get { return priority; }
+            set
+            {
+                if (value < 0) { priority = 0; }
+                else { priority = value; }
+            }
         }
 
         [JsonIgnore] public int EventNr
         {
-            get { return Event.Statics.GetByID(EventID).EventNr; }
+            get { return ObjEvent.EventNr; }
         }
 
         public static void PublishList()
@@ -183,22 +201,23 @@ namespace Database
                     if (entryNr == startValueEntry) { break; }
                 }
             }
+
+            objEntry = Entry.Statics.GetByID(entryID);
+            objEvent = Event.Statics.GetByID(EventID);
         }
 
         public void SetParentProps()
         {
-            Entry _entry = Entry.Statics.GetByID(EntryID);
-            Event _event = Event.Statics.GetByID(EventID);
-            if (_entry.RegisterDate < _event.EventDate && _entry.SignOutDate > _event.EventDate && _entry.ScorePoints) { SignInDate = Event.DateTimeMinValue; }
+            if (RegisterState && ObjEntry.Permanent) { SignInDate = Event.DateTimeMinValue; }
             else { SignInDate = Event.DateTimeMaxValue; }
             IsOnEntrylist = false;
             Attended = false;
-            Ballast = _entry.Ballast;
-            Restrictor = _entry.Restrictor;
-            Category = _entry.Category;
-            ScorePoints = _entry.ScorePoints;
-            CarID = _entry.CarID;
-            CarChangeDate = _entry.RegisterDate;
+            Ballast = ObjEntry.Ballast;
+            Restrictor = ObjEntry.Restrictor;
+            Category = ObjEntry.Category;
+            ScorePoints = ObjEntry.ScorePoints;
+            CarID = ObjEntry.CarID;
+            CarChangeDate = ObjEntry.RegisterDate;
         }
 
         public static EventsEntries GetAnyByUniqProp(int _entryID, int _eventID)
@@ -234,6 +253,19 @@ namespace Database
                     if (eventEntry.ReadyForList) { eventsEntries.Add(eventEntry); }
                 }
             }
+            else if ((propName == nameof(Event.SeasonID) || propName == nameof(Entry.SeasonID)) && id >= Basics.ID0)
+            {
+                List<Event> listEvents = Event.Statics.GetBy(nameof(Event.SeasonID), id);
+                List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), id);
+                foreach (Event _event in listEvents)
+                {
+                    foreach (Entry _entry in listEntries)
+                    {
+                        EventsEntries eventEntry = GetAnyByUniqProp(_entry.ID, _event.ID);
+                        if (eventEntry.ReadyForList) { eventsEntries.Add(eventEntry); }
+                    }
+                }
+            }
             return eventsEntries;
         }
 
@@ -243,9 +275,7 @@ namespace Database
             {
                 for (int eventEntryNr2 = eventEntryNr1; eventEntryNr2 < _list.Count; eventEntryNr2++)
                 {
-                    Event event1 = Event.Statics.GetByID(_list[eventEntryNr1].EventID);
-                    Event event2 = Event.Statics.GetByID(_list[eventEntryNr2].EventID);
-                    if (event1.EventDate > event2.EventDate)
+                    if (_list[eventEntryNr1].ObjEvent.Date > _list[eventEntryNr2].ObjEvent.Date)
                     {
                         (_list[eventEntryNr2], _list[eventEntryNr1]) = (_list[eventEntryNr1], _list[eventEntryNr2]);
                     }
@@ -257,9 +287,7 @@ namespace Database
         public static EventsEntries GetLatestEventsEntries(Entry _entry, DateTime carChangeDateMax)
         {
             List<EventsEntries> eventsEntriesList = Statics.GetBy(nameof(EntryID), _entry.ID);
-            var linqList = from _eventsEntries in eventsEntriesList
-                           orderby Event.Statics.GetByID(_eventsEntries.ID).EventDate
-                           select _eventsEntries;
+            var linqList = from _eventsEntries in eventsEntriesList orderby _eventsEntries.ObjEvent.Date select _eventsEntries;
             eventsEntriesList = linqList.Cast<EventsEntries>().ToList();
             EventsEntries eventsEntries = new(false);
             foreach (EventsEntries _eventsEntries in eventsEntriesList)
@@ -267,7 +295,7 @@ namespace Database
                 if (_eventsEntries.CarChangeDate < carChangeDateMax)
                 {
                     eventsEntries = _eventsEntries;
-                    if (Event.Statics.GetByID(_eventsEntries.EventID).EventDate > carChangeDateMax) { break; }
+                    if (_eventsEntries.ObjEvent.Date > carChangeDateMax) { break; }
                 }
                 else { break; }
             }

@@ -22,10 +22,10 @@ namespace GTRC_Community_Manager
         public static bool IsRunningExportEntrylist = false;
 
         private static ObservableCollection<Series> listSeries = new();
-        private static ObservableCollection<Season> listSeasons = new();
+        private static ObservableCollection<SeasonM> listSeasons = new();
 
         private int currentSeriesID = Basics.NoID;
-        private int currentSeasonID = Basics.NoID;
+        private SeasonM currentSeasonM = new (new Season(false));
         private Event currentEvent;
         private int slotsAvailable = 0;
         private int slotsTaken = 0;
@@ -36,27 +36,20 @@ namespace GTRC_Community_Manager
         private int entriesUpdateRemTime = 0;
         private bool isRunningEntries = false;
         private int waitQueueEntries = 0;
-        private bool isCheckedBallast = false;
-        private bool isCheckedRestriktor = false;
-        private bool isCheckedRegisterLimit = false;
-        private bool isCheckedBoPFreeze = false;
-        private bool isCheckedGridSlotsLimit = false;
-        private bool isCheckedSignOutLimit = false;
-        private bool isCheckedNoShowLimit = false;
-        private bool isCheckedCarChangeLimit = false;
-        private bool isCheckedUnlimitedCarVersionChanges = false;
-        private int carLimitBallast = 0;
-        private int carLimitRestriktor = 0;
-        private int carLimitRegisterLimit = 0;
-        private int gridSlotsLimit = 0;
-        private int signOutLimit = 0;
-        private int noShowLimit = 0;
-        private int carChangeLimit = 0;
-        private int gainBallast = 0;
-        private int gainRestriktor = 0;
-        private DateTime dateRegisterLimit = DateTime.Now;
-        private DateTime dateBoPFreeze = DateTime.Now;
-        private DateTime dateCarChangeLimit = DateTime.Now;
+        private bool isCheckedLapRange = false;
+        private int lapRange = 0;
+        private bool isCheckedMaxInvalidInRange = false;
+        private int maxInvalidInRange = 0;
+        private bool isCheckedMaxDeltaInRange = false;
+        private float maxDeltaInRange = 100;
+        private bool isCheckedOnlySectors13 = false;
+        private bool isCheckedMinConsecutiveValidLaps = false;
+        private int minConsecutiveValidLaps = -1;
+        private int minLapsCount = 1;
+        private int maxLapsCount = 1;
+        private bool forceLapsCountConsecutive = false;
+        private int lapsCountCombined = -1;
+        private int minLapsRequired = -1;
 
         public PreSeasonVM()
         {
@@ -65,6 +58,8 @@ namespace GTRC_Community_Manager
             SaveSettingsCmd = new UICmd((o) => SaveSettings());
             ResetEntriesCmd = new UICmd((o) => TriggerResetEntries());
             UpdateEntrylistBoPCmd = new UICmd((o) => UpdateEntrylistBoP());
+            SeasonSaveSQLCmd = new UICmd((o) => SeasonSaveSQL());
+            SeasonLoadSQLCmd = new UICmd((o) => SeasonLoadSQL());
             if (!File.Exists(PathSettings)) { SaveSettings(); }
             RestoreSettings();
             BackgroundWorkerResetEntries.DoWork += InfiniteLoopResetEntries;
@@ -72,7 +67,7 @@ namespace GTRC_Community_Manager
         }
 
         [JsonIgnore] public ObservableCollection<Series> ListSeries { get { return listSeries; } set { listSeries = value; } }
-        [JsonIgnore] public ObservableCollection<Season> ListSeasons { get { return listSeasons; } set { listSeasons = value; } }
+        [JsonIgnore] public ObservableCollection<SeasonM> ListSeasons { get { return listSeasons; } set { listSeasons = value; } }
         [JsonIgnore] public ObservableCollection<Event> ListEvents { get; set; }
 
         public int CurrentSeriesID
@@ -90,19 +85,27 @@ namespace GTRC_Community_Manager
 
         public int CurrentSeasonID
         {
-            get { return currentSeasonID; }
+            get { return currentSeasonM.Season.ID; }
             set
             {
-                CurrentSeason = Season.Statics.GetByID(value);
-                int _listSeasonsCount = ListSeasons.Count;
-                if (CurrentSeason.SeriesID != CurrentSeriesID && _listSeasonsCount > 0) { CurrentSeason = ListSeasons[_listSeasonsCount - 1]; }
+                if (value != CurrentSeasonID)
+                {
+                    for (int _seasonNr = 0; _seasonNr < listSeasons.Count; _seasonNr++)
+                    {
+                        if (listSeasons[_seasonNr].Season.ID == value || _seasonNr == listSeasons.Count - 1)
+                        {
+                            CurrentSeasonM = listSeasons[_seasonNr];
+                            break;
+                        }
+                    }
+                }
             }
         }
 
-        [JsonIgnore] public Season CurrentSeason
+        [JsonIgnore] public SeasonM CurrentSeasonM
         {
-            get { return Season.Statics.GetByID(currentSeasonID); }
-            set { if (value != null && value != CurrentSeason) { currentSeasonID = value.ID; RaisePropertyChanged(); UpdateListEvents(); } }
+            get { return currentSeasonM; }
+            set { if (value != null) { currentSeasonM = value; RaisePropertyChanged(); UpdateListEvents(); } }
         }
 
         [JsonIgnore] public Event CurrentEvent
@@ -118,7 +121,7 @@ namespace GTRC_Community_Manager
             {
                 if (currentEvent is not null)
                 {
-                    slotsAvailable = GetSlotsAvalable(Track.Statics.GetByID(CurrentEvent.TrackID));
+                    slotsAvailable = GetSlotsAvalable(CurrentEvent.ObjTrack, CurrentSeasonID);
                     SlotsTakenText = "?";
                 }
             }
@@ -195,136 +198,89 @@ namespace GTRC_Community_Manager
             set { if (value >= 0) { waitQueueEntries = value; SetStateEntries(); } }
         }
 
-        public bool IsCheckedBallast
+        public bool IsCheckedLapRange
         {
-            get { return isCheckedBallast; }
-            set { isCheckedBallast = value; RaisePropertyChanged(); }
+            get { return lapRange == int.MaxValue; }
+            set { lapRange = int.MaxValue; RaisePropertyChanged(); }
         }
 
-        public bool IsCheckedRestriktor
+        public int LapRange
         {
-            get { return isCheckedRestriktor; }
-            set { isCheckedRestriktor = value; RaisePropertyChanged(); }
+            get { if (lapRange == int.MaxValue) { return -1; } else { return lapRange; } }
+            set { if (value >= 0) { lapRange = value; RaisePropertyChanged(); } }
         }
 
-        public bool IsCheckedRegisterLimit
+        public bool IsCheckedMaxInvalidInRange
         {
-            get { return isCheckedRegisterLimit; }
-            set { isCheckedRegisterLimit = value; RaisePropertyChanged(); }
+            get { return maxInvalidInRange == int.MaxValue; }
+            set { maxInvalidInRange = int.MaxValue; RaisePropertyChanged(); }
         }
 
-        public bool IsCheckedBoPFreeze
+        public int MaxInvalidInRange
         {
-            get { return isCheckedBoPFreeze; }
-            set { isCheckedBoPFreeze = value; RaisePropertyChanged(); }
+            get { if (maxInvalidInRange == int.MaxValue) { return -1; } else { return maxInvalidInRange; } }
+            set { if (value >= 0) { maxInvalidInRange = value; RaisePropertyChanged(); } }
         }
 
-        public bool IsCheckedGridSlotsLimit
+        public bool IsCheckedMaxDeltaInRange
         {
-            get { return isCheckedGridSlotsLimit; }
-            set { isCheckedGridSlotsLimit = value; RaisePropertyChanged(); SlotsAvailable++; }
+            get { return maxDeltaInRange == int.MaxValue; }
+            set { if (value) { maxDeltaInRange = int.MaxValue; } else { } RaisePropertyChanged(); }
         }
 
-        public bool IsCheckedSignOutLimit
+        public float MaxDeltaInRange
         {
-            get { return isCheckedSignOutLimit; }
-            set { isCheckedSignOutLimit = value; RaisePropertyChanged(); }
+            get { if (maxDeltaInRange == int.MaxValue) { return -1; } else { return maxDeltaInRange; } }
+            set { if (value >= 100) { maxDeltaInRange = value; RaisePropertyChanged(); } }
         }
 
-        public bool IsCheckedNoShowLimit
+        public bool IsCheckedOnlySectors13
         {
-            get { return isCheckedNoShowLimit; }
-            set { isCheckedNoShowLimit = value; RaisePropertyChanged(); }
+            get { return isCheckedOnlySectors13; }
+            set { isCheckedOnlySectors13 = value; }
         }
 
-        public bool IsCheckedCarChangeLimit
+        public bool IsCheckedConsecutiveValidLapsMin
         {
-            get { return isCheckedCarChangeLimit; }
-            set { isCheckedCarChangeLimit = value; RaisePropertyChanged(); }
+            get { return minConsecutiveValidLaps == 0; }
+            set { minConsecutiveValidLaps = 0; }
         }
 
-        public bool IsCheckedUnlimitedCarVersionChanges
+        public int MinConsecutiveValidLaps
         {
-            get { return isCheckedUnlimitedCarVersionChanges; }
-            set { isCheckedUnlimitedCarVersionChanges = value; RaisePropertyChanged(); }
+            get { return minConsecutiveValidLaps; }
+            set { minConsecutiveValidLaps = value; }
         }
 
-        public int CarLimitBallast
+        public int MinLapsCount
         {
-            get { return carLimitBallast; }
-            set { carLimitBallast = value; RaisePropertyChanged(); }
+            get { return minLapsCount; }
+            set { minLapsCount = value; }
         }
 
-        public int CarLimitRestriktor
+        public int MaxLapsCount
         {
-            get { return carLimitRestriktor; }
-            set { carLimitRestriktor = value; RaisePropertyChanged(); }
+            get { return maxLapsCount; }
+            set { maxLapsCount = value; }
         }
 
-        public int CarLimitRegisterLimit
+        public bool ForceLapsCountConsecutive
         {
-            get { return carLimitRegisterLimit; }
-            set { carLimitRegisterLimit = value; RaisePropertyChanged(); }
+            get { return forceLapsCountConsecutive; }
+            set { forceLapsCountConsecutive = value; }
         }
 
-        public int GridSlotsLimit
+        public int LapsCountCombined
         {
-            get { return gridSlotsLimit; }
-            set { gridSlotsLimit = value; RaisePropertyChanged(); SlotsAvailable++; }
+            get { return lapsCountCombined; }
+            set { lapsCountCombined = value; }
         }
 
-        public int SignOutLimit
-        {
-            get { return signOutLimit; }
-            set { signOutLimit = value; RaisePropertyChanged(); }
-        }
+        public string ExplanationLeaderboardSettings { get; set; }
 
-        public int NoShowLimit
+        public int GetSlotsAvalable(Track track, int _seasonID)
         {
-            get { return noShowLimit; }
-            set { noShowLimit = value; RaisePropertyChanged(); }
-        }
-
-        public int CarChangeLimit
-        {
-            get { return carChangeLimit; }
-            set { carChangeLimit = value; RaisePropertyChanged(); }
-        }
-
-        public int GainBallast
-        {
-            get { return gainBallast; }
-            set { gainBallast = value; RaisePropertyChanged(); }
-        }
-
-        public int GainRestriktor
-        {
-            get { return gainRestriktor; }
-            set { gainRestriktor = value; RaisePropertyChanged(); }
-        }
-
-        public DateTime DateRegisterLimit
-        {
-            get { return dateRegisterLimit; }
-            set { dateRegisterLimit = value; RaisePropertyChanged(); }
-        }
-
-        public DateTime DateBoPFreeze
-        {
-            get { return dateBoPFreeze; }
-            set { dateBoPFreeze = value; RaisePropertyChanged(); }
-        }
-
-        public DateTime DateCarChangeLimit
-        {
-            get { return dateCarChangeLimit; }
-            set { dateCarChangeLimit = value; RaisePropertyChanged(); }
-        }
-
-        public int GetSlotsAvalable(Track track)
-        {
-            if (IsCheckedGridSlotsLimit) { return Math.Min(GridSlotsLimit, track.ServerSlotsCount); }
-            else { return track.ServerSlotsCount; }
+            return Math.Min(Season.Statics.GetByID(_seasonID).GridSlotsLimit, track.ServerSlotsCount);
         }
 
         public static void UpdateListSeries()
@@ -342,14 +298,18 @@ namespace GTRC_Community_Manager
 
         public static void UpdateListSeasons()
         {
-            listSeasons = new ObservableCollection<Season>();
-            if (Instance is null) { foreach (Season _season in Season.Statics.List) { listSeasons.Add(_season); } }
+            if (Instance is null)
+            {
+                listSeasons = new ObservableCollection<SeasonM>();
+                foreach (Season _season in Season.Statics.List) { listSeasons.Add(new SeasonM(_season)); }
+            }
             else
             {
-                foreach (Season _season in Season.Statics.List) { if (_season.SeriesID == Instance.CurrentSeriesID) { listSeasons.Add(_season); } }
                 int backupCurrentSeasonID = Instance.CurrentSeasonID;
+                listSeasons = new ObservableCollection<SeasonM>();
+                foreach (Season _season in Season.Statics.List) { if (_season.SeriesID == Instance.CurrentSeriesID) { listSeasons.Add(new SeasonM(_season)); } }
                 Instance.RaisePropertyChanged(nameof(ListSeasons));
-                Instance.CurrentSeasonID = Basics.NoID;
+                Instance.CurrentSeasonM = new (new Season(false));
                 Instance.CurrentSeasonID = backupCurrentSeasonID;
             }
         }
@@ -444,13 +404,12 @@ namespace GTRC_Community_Manager
 
         public int ThreadUpdateEntrylistBoP_Int(Event _event)
         {
-            PreSeason.UpdateEntryPriority(_event.SeasonID);
             PreSeason.UpdateName3Digits(_event.SeasonID);
-            PreSeason.EntryAutoSignOut(_event, SignOutLimit, NoShowLimit);
+            PreSeason.SetEntry_NotScorePoints_NotPermanent(_event);
             UpdateBoPForEvent(_event);
-            (List<Entry> EntriesSignedIn, List<Entry> EntriesSignedOut) = PreSeason.DetermineEntrylist(_event, SlotsAvailable, DateRegisterLimit);
-            int tempSlotsTaken = EntriesSignedIn.Count;
-            (EntriesSignedIn, EntriesSignedOut) = PreSeason.FillUpEntrylist(_event, SlotsAvailable, EntriesSignedIn, EntriesSignedOut);
+            (List<EventsEntries> SignedIn, List<EventsEntries> SignedOut) = PreSeason.DetermineEntrylist(_event, SlotsAvailable);
+            int tempSlotsTaken = SignedIn.Count;
+            (SignedIn, SignedOut) = PreSeason.FillUpEntrylist(SlotsAvailable, SignedIn, SignedOut);
             GSheets.UpdateEntriesCurrentEvent(GSheet.ListIDs[6].DocID, GSheet.ListIDs[6].SheetID, CurrentEvent);
             GSheets.UpdateCarChanges(GSheet.ListIDs[7].DocID, GSheet.ListIDs[7].SheetID, _event.SeasonID);
             if (_event.ID == CurrentEvent.ID)
@@ -466,27 +425,27 @@ namespace GTRC_Community_Manager
 
         public void UpdateBoPForEvent(Event _event)
         {
-            PreSeason.CountCars(_event, DateRegisterLimit, CarLimitRegisterLimit, DateBoPFreeze, IsCheckedRegisterLimit, IsCheckedBoPFreeze);
-            PreSeason.CalcBoP(_event, CarLimitBallast, CarLimitRestriktor, GainBallast, GainRestriktor, IsCheckedBallast, IsCheckedRestriktor);
+            PreSeason.CountCars(_event);
+            PreSeason.CalcBoP(_event);
         }
 
         public int CarChangeCount(Entry entry, DateTime maxEventDate)
         {
             int carChangeCount = 0;
-            if (IsCheckedCarChangeLimit && entry.ScorePoints)
+            if (entry.ObjSeason.CarChangeLimit < int.MaxValue && entry.ObjSeason.DateCarChangeLimit < Event.DateTimeMaxValue && entry.ScorePoints)
             {
                 List<EventsEntries> eventList = EventsEntries.GetAnyBy(nameof(EventsEntries.EntryID), entry.ID);
                 eventList = EventsEntries.SortByDate(eventList);
-                Car currentCar = Car.Statics.GetByID(entry.CarID);
+                Car currentCar = entry.ObjCar;
                 for (int index = 0; index < eventList.Count; index++)
                 {
-                    Event _event = Event.Statics.GetByID(eventList[index].EventID);
-                    Car _eventCar = Car.Statics.GetByID(eventList[index].CarID);
+                    Car _eventCar = eventList[index].ObjCar;
                     bool carChange = _eventCar.ID != currentCar.ID;
                     bool isVersionChange = _eventCar.Manufacturer == currentCar.Manufacturer && _eventCar.Category == currentCar.Category;
-                    carChange = carChange && (!IsCheckedUnlimitedCarVersionChanges || !isVersionChange);
-                    if (eventList[index].CarChangeDate > DateCarChangeLimit && _event.EventDate < maxEventDate && carChange) { carChangeCount++; }
-                    currentCar = Car.Statics.GetByID(eventList[index].CarID);
+                    carChange = carChange && (!entry.ObjSeason.UnlimitedCarVersionChanges || !isVersionChange);
+                    bool changedAfterDeadline = eventList[index].CarChangeDate > entry.ObjSeason.DateCarChangeLimit;
+                    if (changedAfterDeadline && eventList[index].ObjEvent.Date < maxEventDate && carChange){ carChangeCount++; }
+                    currentCar = eventList[index].ObjCar;
                 }
             }
             return carChangeCount;
@@ -498,30 +457,9 @@ namespace GTRC_Community_Manager
             {
                 dynamic obj = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(PathSettings, Encoding.Unicode));
                 CurrentSeriesID = obj?.CurrentSeriesID ?? currentSeriesID;
-                CurrentSeasonID = obj?.CurrentSeasonID ?? currentSeasonID;
+                CurrentSeasonID = obj?.CurrentSeasonID ?? CurrentSeasonID;
                 StateAutoUpdateEntries = obj?.StateAutoUpdateEntries ?? stateAutoUpdateEntries;
                 IntervallMinRefreshEntries = obj?.IntervallMinRefreshEntries ?? intervallMinRefreshEntries;
-                IsCheckedBallast = obj?.IsCheckedBallast ?? isCheckedBallast;
-                IsCheckedRestriktor = obj?.IsCheckedRestriktor ?? isCheckedRestriktor;
-                IsCheckedRegisterLimit = obj?.IsCheckedRegisterLimit ?? isCheckedRegisterLimit;
-                IsCheckedBoPFreeze = obj?.IsCheckedBoPFreeze ?? isCheckedBoPFreeze;
-                IsCheckedGridSlotsLimit = obj?.IsCheckedGridSlotsLimit ?? isCheckedGridSlotsLimit;
-                IsCheckedSignOutLimit = obj?.IsCheckedSignOutLimit ?? isCheckedSignOutLimit;
-                IsCheckedNoShowLimit = obj?.IsCheckedNoShowLimit ?? isCheckedNoShowLimit;
-                IsCheckedCarChangeLimit = obj?.IsCheckedCarChangeLimit ?? isCheckedCarChangeLimit;
-                IsCheckedUnlimitedCarVersionChanges = obj?.IsCheckedUnlimitedCarVersionChanges ?? isCheckedUnlimitedCarVersionChanges;
-                CarLimitBallast = obj?.CarLimitBallast ?? carLimitBallast;
-                CarLimitRestriktor =    obj?.CarLimitRestriktor ?? carLimitRestriktor;
-                CarLimitRegisterLimit = obj?.CarLimitRegisterLimit ?? carLimitRegisterLimit;
-                GridSlotsLimit = obj?.GridSlotsLimit ?? gridSlotsLimit;
-                SignOutLimit = obj?.SignOutLimit ?? signOutLimit;
-                NoShowLimit = obj?.NoShowLimit ?? noShowLimit;
-                CarChangeLimit = obj?.CarChangeLimit ?? carChangeLimit;
-                GainBallast = obj?.GainBallast ?? gainBallast;
-                GainRestriktor = obj?.GainRestriktor ?? gainRestriktor;
-                DateRegisterLimit = obj?.DateRegisterLimit ?? dateRegisterLimit;
-                DateBoPFreeze = obj?.DateBoPFreeze ?? dateBoPFreeze;
-                DateCarChangeLimit = obj?.DateCarChangeLimit ?? dateCarChangeLimit;
                 MainVM.List[0].LogCurrentText = "Pre-Season settings restored.";
             }
             catch { MainVM.List[0].LogCurrentText = "Restore pre-Season settings failed!"; }
@@ -534,9 +472,23 @@ namespace GTRC_Community_Manager
             MainVM.List[0].LogCurrentText = "Pre-Season settings saved.";
         }
 
+        public void SeasonSaveSQL()
+        {
+            CurrentSeasonM.Season = Season.Statics.WriteSQL(CurrentSeasonM.Season);
+            MainVM.List[0].LogCurrentText = "Season settings saved to SQL Database.";
+        }
+
+        public void SeasonLoadSQL()
+        {
+            CurrentSeasonM.Season = Season.Statics.GetByIdSQL(CurrentSeasonM.Season.ID);
+            MainVM.List[0].LogCurrentText = "Season settings restored from SQL Database.";
+        }
+
         [JsonIgnore] public UICmd RestoreSettingsCmd { get; set; }
         [JsonIgnore] public UICmd SaveSettingsCmd { get; set; }
         [JsonIgnore] public UICmd ResetEntriesCmd { get; set; }
         [JsonIgnore] public UICmd UpdateEntrylistBoPCmd { get; set; }
+        [JsonIgnore] public UICmd SeasonSaveSQLCmd { get; set; }
+        [JsonIgnore] public UICmd SeasonLoadSQLCmd { get; set; }
     }
 }

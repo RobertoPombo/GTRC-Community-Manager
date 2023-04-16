@@ -7,6 +7,7 @@ using Scripts;
 using Enums;
 
 using GTRC_Community_Manager;
+using System.Windows.Controls.Primitives;
 
 namespace Database
 {
@@ -29,6 +30,9 @@ namespace Database
         public Server() { This = this; Initialize(true, true); }
         public Server(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Server(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
+
+        private Season objSeason = new(false);
+        [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
 
         private string name = DefaultName;
         private string path = NoPath;
@@ -76,9 +80,9 @@ namespace Database
             get { return seasonID; }
             set
             {
-                if (Season.Statics.IDList.Count == 0) { _ = new Season() { ID = 1 }; }
-                if (!Season.Statics.ExistsID(value)) { value = Season.Statics.IDList[0].ID; }
-                seasonID = value;
+                if (Season.Statics.IDList.Count == 0) { objSeason = new Season() { ID = 1 }; }
+                if (!Season.Statics.ExistsID(value)) { objSeason = Season.Statics.IDList[0]; seasonID = objSeason.ID; }
+                else { seasonID = value; objSeason = Season.Statics.GetByID(seasonID); }
             }
         }
 

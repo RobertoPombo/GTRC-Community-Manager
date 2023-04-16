@@ -162,12 +162,13 @@ namespace Database
             bool _delayPL = DelayPL; DelayPL = true;
             ListClear(forceDel);
             JsonConvert.DeserializeObject<DbType[]>(File.ReadAllText(Path, Encoding.Unicode));
-            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            SortList(); FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public void WriteJson()
         {
             bool _delayPL = DelayPL; DelayPL = true;
+            SortList();
             string text = JsonConvert.SerializeObject(List, Formatting.Indented);
             File.WriteAllText(Path, text, Encoding.Unicode);
             FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
@@ -180,7 +181,7 @@ namespace Database
             string SqlQry = "SELECT * FROM " + Table + ";";
             try { SQL.Connection.Query<DbType>(SqlQry); }
             catch { MainVM.List[0].LogCurrentText = "Loading SQL table '" + Table + "' failed!"; }
-            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            SortList(); FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
 
         public List<DbType> GetBySQL(List<string> propertyNames, List<dynamic> values)
@@ -257,7 +258,7 @@ namespace Database
             }
             List<DbType> listObj = new();
             if (_obj.ID == Basics.NoID && _dict.Count > 0) { listObj = GetBySQL(propertyNames, values); } else { listObj.Add(GetByIdSQL(_obj.ID)); }
-            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            SortList(); FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
             if (listObj.Count > 0) { return listObj[0]; } else { return _obj; }
         }
 
@@ -459,6 +460,22 @@ namespace Database
                     }
                 }
             }
+        }
+
+        public void SortList()
+        {
+            bool _delayPL = DelayPL; DelayPL = true;
+            for (int rowNr1 = 0; rowNr1 < List.Count - 1; rowNr1++)
+            {
+                for (int rowNr2 = rowNr1 + 1; rowNr2 < List.Count; rowNr2++)
+                {
+                    if (List[rowNr1].ID > List[rowNr2].ID)
+                    {
+                        (List[rowNr1], List[rowNr2]) = (List[rowNr2], List[rowNr1]);
+                    }
+                }
+            }
+            DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
         }
     }
 

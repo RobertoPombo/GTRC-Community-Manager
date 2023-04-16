@@ -40,11 +40,10 @@ namespace GTRC_Community_Manager
                 {
                     if (eventCar.Ballast > 0 || eventCar.Restrictor > 0)
                     {
-                        Car car = Car.Statics.GetByID(eventCar.CarID);
                         ACC_BoP_Entry accBoPEntry = new();
                         entries.Add(accBoPEntry);
                         accBoPEntry.track = _track.AccTrackID;
-                        accBoPEntry.carModel = car.AccCarID;
+                        accBoPEntry.carModel = eventCar.ObjCar.AccCarID;
                         accBoPEntry.ballastKg = eventCar.Ballast;
                         accBoPEntry.restrictor = eventCar.Restrictor;
                     }

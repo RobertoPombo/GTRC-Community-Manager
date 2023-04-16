@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Media;
 using System.Data;
+using System.Text;
 
 namespace GTRC_Community_Manager
 {
@@ -20,7 +21,7 @@ namespace GTRC_Community_Manager
         public static ObservableCollection<ServerM> List = new();
 
         [JsonIgnore] public Process AccServerProcess;
-        [JsonIgnore] public int ServerOutputTimeoutSekMax = 60;
+        [JsonIgnore] public int ServerOutputTimeoutSekMax = 600;
 
         private Server server;
         private FileSystemWatcher resultswatcher;
@@ -31,6 +32,7 @@ namespace GTRC_Community_Manager
         private bool isRunning = false;
         private int waitQueue = 0;
         private int serverOutputTimeoutSek = 0;
+        private string _debug = "";
 
         public ServerM() { }
 
@@ -100,10 +102,10 @@ namespace GTRC_Community_Manager
 
         [JsonIgnore] public string SeriesName
         {
-            get { return Series.Statics.GetByID(Season.Statics.GetByID(Server.SeasonID).SeriesID).Name; }
+            get { return Server.ObjSeason.ObjSeries.Name; }
             set
             {
-                int oldVal = Season.Statics.GetByID(Server.SeasonID).SeriesID;
+                int oldVal = Server.ObjSeason.SeriesID;
                 int newVal = Series.Statics.GetByUniqProp(value).ID;
                 List<Season> _seasonList = Season.Statics.GetBy(nameof(Season.SeriesID), newVal);
                 int _seasonListCount = _seasonList.Count;
@@ -120,7 +122,7 @@ namespace GTRC_Community_Manager
 
         [JsonIgnore] public string SeasonName
         {
-            get { return Season.Statics.GetByID(Server.SeasonID).Name; }
+            get { return Server.ObjSeason.Name; }
             set
             {
                 int oldVal = Server.SeasonID;
@@ -186,9 +188,10 @@ namespace GTRC_Community_Manager
                         setOnline = value;
                         if (setOnline)
                         {
-                            new Thread(ThreadStartAccServer).Start();
+                            _debug = "";
                             serverOutputTimeoutSek = ServerOutputTimeoutSekMax;
                             new Thread(ThreadCountdownServerTimeout).Start();
+                            new Thread(ThreadStartAccServer).Start();
                         }
                         else { StopAccServer(); serverOutputTimeoutSek = -1; }
                         RaisePropertyChanged();
@@ -267,7 +270,7 @@ namespace GTRC_Community_Manager
             get
             {
                 ObservableCollection<string> listSeasonNames = new();
-                foreach (Season _season in Season.Statics.List) { if (_season.SeriesID == Season.Statics.GetByID(Server.SeasonID).SeriesID) { listSeasonNames.Add(_season.Name); } }
+                foreach (Season _season in Season.Statics.List) { if (_season.SeriesID == Server.ObjSeason.SeriesID) { listSeasonNames.Add(_season.Name); } }
                 return listSeasonNames;
             }
         }
@@ -275,14 +278,7 @@ namespace GTRC_Community_Manager
         [JsonIgnore] public int ServerOutputTimeoutSek
         {
             get { return serverOutputTimeoutSek; }
-            set { if (value <= 0) { CountOnline = 0; } else if (serverOutputTimeoutSek >= 0) { serverOutputTimeoutSek = value; }
-                string text = "";
-                foreach (ServerM _k in List)
-                {
-                    text += _k.ServerID.ToString() + ": " + _k.ServerOutputTimeoutSek.ToString() + " | ";
-                }
-                MainVM.List[0].LogCurrentText = text;
-            }
+            set { if (value <= 0) { CountOnline = 0; } else if (serverOutputTimeoutSek >= 0) { serverOutputTimeoutSek = value; } }
         }
 
         public void SetStateResults()
@@ -311,38 +307,60 @@ namespace GTRC_Community_Manager
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     WindowStyle = ProcessWindowStyle.Minimized
                 }
             };
             AccServerProcess.OutputDataReceived += (sender, argsx) => ReadServerOutput(argsx.Data);
+            AccServerProcess.ErrorDataReceived += (sender, argsx) => ReadServerOutput(argsx.Data);
             AccServerProcess.Start();
             AccServerProcess.BeginOutputReadLine();
+            AccServerProcess.BeginErrorReadLine();
+            /*string outputStr = "";
+            while (true)
+            {
+                if (SetOnline)
+                {
+                    int _charInt = AccServerProcess.StandardOutput.Read();
+                    if (_charInt > 0)
+                    {
+                        char _char = (char)_charInt;
+                        if (_char == '\n') { ReadServerOutput(outputStr); outputStr = ""; }
+                        else { outputStr += _char; }
+                    }
+                }
+                else { ReadServerOutput(outputStr); break; }
+            }*/
             AccServerProcess.WaitForExit();
             SetOnline = false;
         }
 
         public void ReadServerOutput(string? accServerOutput)
         {
-            List<string> prefixes = new() { "Udp message count (", "Tcp message count (", "Updated lobby with ", "Updated leaderboard for ", "Alive cars: " };
-            //List<string> suffixes = new List<string>() { "driver", "client" };
-            List<string> messageBlacklist = new() { "==ERR:", "	EntryList entry: " };
+            List<string> prefixes = new() { "Udp message count (", "Tcp message count (", "Updated lobby with ", "Updated leaderboard for ", "Alive cars: ",
+                "Alive connections: " };
             if (accServerOutput is not null && accServerOutput.Length > 0)
             {
-                ServerOutputTimeoutSek = ServerOutputTimeoutSekMax;
-                foreach (string message in messageBlacklist)
+                string[] accServerOutputLines = accServerOutput.Split('\n');
+                foreach (string accServerOutputLine in accServerOutputLines)
                 {
-                    if (accServerOutput.Length > message.Length && accServerOutput[..message.Length] == message) { break; }
-                }
-                foreach (string prefix in prefixes)
-                {
-                    if (accServerOutput.Length > prefix.Length && accServerOutput[..prefix.Length] == prefix)
+                    _debug += DateTime.Now.ToString() + " | " + accServerOutputLine + '\n';
+                    File.WriteAllText(MainWindow.dataDirectory + "debug server output #" + List.IndexOf(this).ToString() + ".txt", _debug, Encoding.Unicode);
+
+                    ServerOutputTimeoutSek = ServerOutputTimeoutSekMax;
+                    bool prefixFound = false;
+                    foreach (string prefix in prefixes)
                     {
-                        for (int charCount = 1; charCount <= accServerOutput.Length - prefix.Length; charCount++)
+                        if (accServerOutputLine.Length > prefix.Length && accServerOutputLine[..prefix.Length] == prefix)
                         {
-                            string strDriverCount = accServerOutput.Substring(prefix.Length, charCount);
-                            if (int.TryParse(strDriverCount, out int _currentDriverCount)) { CountOnline = _currentDriverCount; }
-                            else { break; }
+                            for (int charCount = 1; charCount <= accServerOutputLine.Length - prefix.Length; charCount++)
+                            {
+                                string strDriverCount = accServerOutputLine.Substring(prefix.Length, charCount);
+                                if (int.TryParse(strDriverCount, out int _currentDriverCount)) { CountOnline = _currentDriverCount; prefixFound = true; }
+                                else { break; }
+                            }
                         }
+                        if (prefixFound) { break; }
                     }
                 }
             }

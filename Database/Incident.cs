@@ -27,14 +27,18 @@ namespace Database
         public Incident(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Incident(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Event objEvent = new(false);
+        [JsonIgnore][NotMapped] public Event ObjEvent { get { return objEvent; } }
+
         private int eventID = 0;
         private int sessionID = -1;
         private string raceNumbers = "";
         private int timeStamp = 0;
         private int reportReason = 0;
         private int replayTime = Basics.NoID;
+        private int eloRatingPenalty = 0;
+        private int safetyRatingPenalty = 0;
         private bool warning = false;
-        private int penaltyPoints = 0;
         private int timePenalty = 0;
         private int timeLoss = 0;
         private int status = 0;
@@ -43,7 +47,7 @@ namespace Database
         public int EventID
         {
             get { return eventID; }
-            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } objEvent = Event.Statics.GetByID(EventID); }
         }
 
         public int SessionID
@@ -114,16 +118,22 @@ namespace Database
             set { reportReason = (int)value; }
         }
 
+        public int EloRatingPenalty
+        {
+            get { return eloRatingPenalty; }
+            set { eloRatingPenalty = value; }
+        }
+
+        public int SafetyRatingPenalty
+        {
+            get { return safetyRatingPenalty; }
+            set { if (value < 0) { value = 0; } safetyRatingPenalty = value; }
+        }
+
         public bool Warning
         {
             get { return warning; }
             set { warning = value; if (warning) { TimePenalty = 0; } }
-        }
-
-        public int PenaltyPoints
-        {
-            get { return penaltyPoints; }
-            set { if (value < 0) { value = 0; } penaltyPoints = value; }
         }
 
         public int TimePenalty
@@ -193,6 +203,8 @@ namespace Database
                 if (timeStamp + 1 < int.MaxValue) { timeStamp += 1; } else { timeStamp = 0; }
                 if (timeStamp == startValueReplayTime) { break; }
             }
+
+            objEvent = Event.Statics.GetByID(EventID);
         }
     }
 }

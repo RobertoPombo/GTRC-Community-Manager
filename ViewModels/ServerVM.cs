@@ -174,7 +174,7 @@ namespace GTRC_Community_Manager
             Lap.Statics.LoadSQL();
             if (PreSeasonVM.Instance is not null)
             {
-                //PreSeason.UpdateLeaderboard(_server);
+                PreSeason.UpdateLeaderboard(_server);
                 //PreSeason.UpdatePreQResults(PreSeasonVM.Instance.CurrentSeasonID);
                 //GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
             }

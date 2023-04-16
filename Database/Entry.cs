@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection;
 using Scripts;
 using Newtonsoft.Json.Linq;
 
@@ -28,6 +27,13 @@ namespace Database
         public Entry(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public Entry(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private Season objSeason = new(false);
+        private Team? objTeam = new(false);
+        private Car objCar = new(false);
+        [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
+        [JsonIgnore][NotMapped] public Team? ObjTeam { get { return objTeam; } }
+        [JsonIgnore][NotMapped] public Car ObjCar { get { return objCar; } }
+
         private int seasonID = 0;
         private int raceNumber = DefaultRaceNumber;
         private int teamID = Basics.NoID;
@@ -38,12 +44,13 @@ namespace Database
         private int restrictor = 0;
         private int category = 3;
         private bool scorePoints = true;
-        private int priority = int.MaxValue;
+        private bool permanent = true;
+        private int warnings = 0;
 
         public int SeasonID
         {
             get { return seasonID; }
-            set { seasonID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { seasonID = value; if (ReadyForList) { SetNextAvailable(); } objSeason = Season.Statics.GetByID(seasonID); }
         }
 
         public int RaceNumber
@@ -61,7 +68,12 @@ namespace Database
         public int TeamID
         {
             get { return teamID; }
-            set { Team _team = Team.Statics.GetByID(value); if (_team.ID != value || _team.SeasonID != seasonID) { value = Basics.NoID; } teamID = value; }
+            set
+            {
+                objTeam = Team.Statics.GetByID(value);
+                if (objTeam.ID != value || objTeam.SeasonID != seasonID) { value = Basics.NoID; objTeam = null; }
+                teamID = value;
+            }
         }
 
         public int CarID
@@ -69,14 +81,14 @@ namespace Database
             get { return carID; }
             set
             {
-                if (Car.Statics.IDList.Count == 0) { _ = new Car() { ID = 1 }; }
-                if (!Car.Statics.ExistsID(value)) { value = Car.Statics.IDList[0].ID; }
+                if (Car.Statics.IDList.Count == 0) { objCar = new Car() { ID = 1 }; }
+                if (!Car.Statics.ExistsID(value)) { objCar = Car.Statics.IDList[0]; carID = objCar.ID; }
+                else { carID = value; objCar = Car.Statics.GetByID(carID); }
                 if (!Statics.DelayPL)
                 {
                     List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                    foreach (EventsEntries _eventEntry in listEventsEntries) { if (_eventEntry.CarChangeDate == registerDate) { _eventEntry.CarID = value; } }
+                    foreach (EventsEntries _eventEntry in listEventsEntries) { if (_eventEntry.CarChangeDate == registerDate) { _eventEntry.CarID = carID; } }
                 }
-                carID = value;
             }
         }
 
@@ -106,16 +118,16 @@ namespace Database
                 {
                     DateTime previousSignOutDate = signOutDate;
                     signOutDate = value;
-                    if (!Statics.DelayPL && ScorePoints)
+                    if (!Statics.DelayPL)
                     {
                         List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
                         foreach (EventsEntries _eventEntry in listEventsEntries)
                         {
-                            Event _event = Event.Statics.GetByID(_eventEntry.EventID);
-                            if (_event.EventDate > signOutDate) { _eventEntry.SignInDate = Event.DateTimeMaxValue; }
-                            else if (_event.EventDate > DateTime.Now && _event.EventDate > previousSignOutDate && _event.EventDate < signOutDate)
+                            Event _event = _eventEntry.ObjEvent;
+                            if (_event.Date > signOutDate) { _eventEntry.SignInDate = Event.DateTimeMaxValue; }
+                            else if (_event.Date > DateTime.Now && _event.Date > previousSignOutDate && _event.Date < signOutDate && Permanent)
                             {
-                                _eventEntry.SignInDate = DateTime.Now;
+                                _eventEntry.SignInDate = Event.DateTimeMinValue;
                             }
                         }
                     }
@@ -170,16 +182,7 @@ namespace Database
                         List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
                         foreach (EventsEntries _eventEntry in listEventsEntries)
                         {
-                            if (_eventEntry.ScorePoints == scorePoints)
-                            {
-                                _eventEntry.ScorePoints = value;
-                                Event _event = Event.Statics.GetByID(_eventEntry.EventID);
-                                if (registerDate < _event.EventDate && signOutDate > _event.EventDate && _event.EventDate > DateTime.Now)
-                                {
-                                    if (value) { _eventEntry.SignInDate = Event.DateTimeMinValue; }
-                                    else if (_eventEntry.SignInDate <= Event.DateTimeMinValue) { _eventEntry.SignInDate = Event.DateTimeMaxValue; }
-                                }
-                            }
+                            if (_eventEntry.ObjEvent.Date > DateTime.Now) { _eventEntry.ScorePoints = value; }
                         }
                     }
                     scorePoints = value;
@@ -188,13 +191,37 @@ namespace Database
             }
         }
 
-        public int Priority
+        public bool Permanent
         {
-            get { return priority; }
+            get { return permanent; }
             set
             {
-                if (value < 0) { priority = 0; }
-                else { priority = value; }
+                if (permanent != value)
+                {
+                    if (!Statics.DelayPL)
+                    {
+                        List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
+                        foreach (EventsEntries _eventEntry in listEventsEntries)
+                        {
+                            if (_eventEntry.RegisterState && _eventEntry.ObjEvent.Date > DateTime.Now)
+                            {
+                                if (value) { _eventEntry.SignInDate = Event.DateTimeMinValue; }
+                                else if (_eventEntry.SignInDate <= Event.DateTimeMinValue) { _eventEntry.SignInDate = Event.DateTimeMaxValue; }
+                            }
+                        }
+                    }
+                    permanent = value;
+                }
+            }
+        }
+
+        public int Warnings
+        {
+            get { return warnings; }
+            set
+            {
+                if (value < 0) { warnings = 0; }
+                else { warnings = value; }
             }
         }
 
@@ -222,8 +249,47 @@ namespace Database
                 }
             }
 
-            Team _team = Team.Statics.GetByID(teamID);
-            if (_team.ID != teamID || _team.SeasonID != seasonID) { teamID = Basics.NoID; }
+            objSeason = Season.Statics.GetByID(seasonID);
+            objTeam = Team.Statics.GetByID(teamID);
+            if (objTeam.ID != teamID || objTeam.SeasonID != seasonID) { teamID = Basics.NoID; objTeam = null; }
+        }
+
+        public int CountSignOut(Event nextEvent)
+        {
+            int signOutCount = 0;
+            if (nextEvent.SeasonID != SeasonID) { return signOutCount; }
+            List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), SeasonID));
+            foreach (Event _event in listEvents)
+            {
+                if (RegisterDate < _event.Date)
+                {
+                    if (_event.Date > nextEvent.Date) { return signOutCount; }
+                    if (_event.Date > SignOutDate) { return signOutCount; }
+                    if (!EventsEntries.GetAnyByUniqProp(ID, _event.ID).SignInState) { signOutCount++; }
+                }
+            }
+            return signOutCount;
+        }
+
+        public int CountNoShow(Event nextEvent, bool includeNextEvent)
+        {
+            int e = raceNumber;
+            int noShowCount = 0;
+            if (nextEvent.SeasonID != SeasonID) { return noShowCount; }
+            List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), SeasonID));
+            for (int eventNr = 0; eventNr < listEvents.Count; eventNr++)
+            {
+                if (RegisterDate < listEvents[eventNr].Date)
+                {
+                    bool reachedNextEvent1 = includeNextEvent && listEvents[eventNr].Date > nextEvent.Date;
+                    bool reachedNextEvent2 = !includeNextEvent && listEvents[eventNr].Date >= nextEvent.Date;
+                    if (reachedNextEvent1 || reachedNextEvent2) { return noShowCount; }
+                    if (listEvents[eventNr].Date > SignOutDate || listEvents[eventNr].Date > DateTime.Now) { return noShowCount; } //checken ob das event vllt gerade läuft!
+                    EventsEntries _eventEntry = EventsEntries.GetAnyByUniqProp(ID, listEvents[eventNr].ID);
+                    if (_eventEntry.SignInState && _eventEntry.IsOnEntrylist && !_eventEntry.Attended) { noShowCount++; }
+                }
+            }
+            return noShowCount;
         }
     }
 }
