@@ -375,6 +375,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
                                     <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5">
@@ -414,6 +415,7 @@
                                     <Label Grid.Row="4" Grid.Column="0" Content="Channel ID" Style="{StaticResource LabelStyle}" Margin="5"/>
                                     <Label Grid.Row="5" Grid.Column="0" Content="Admin Role ID" Style="{StaticResource LabelStyle}" Margin="5"/>
                                     <Label Grid.Row="6" Grid.Column="0" Content="Max Message Size" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    <Label Grid.Row="7" Grid.Column="0" Content="Season" Style="{StaticResource LabelStyle}" Margin="5"/>
 
                                     <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDisBotPreset.PresetName}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
                                     <ComboBox Grid.Row="2" Grid.Column="1" Margin="10,5"
@@ -424,6 +426,10 @@
                                     <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding SelectedDisBotPreset.ChannelID}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
                                     <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding SelectedDisBotPreset.AdminRoleID}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
                                     <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SelectedDisBotPreset.CharLimit}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
+                                    <ComboBox Grid.Row="7" Grid.Column="1" Margin="10,5"
+                                              ItemsSource="{Binding ListSeasons, UpdateSourceTrigger=PropertyChanged}"
+                                              SelectedValue="{Binding SelectedDisBotPreset.CurrentSeasonM, UpdateSourceTrigger=PropertyChanged}"
+                                              DisplayMemberPath="Name" Style="{StaticResource ComboBoxStyle}" Cursor="Hand"/>
                                 </Grid>
                             </StackPanel>
 

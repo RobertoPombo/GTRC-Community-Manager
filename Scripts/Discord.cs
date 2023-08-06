@@ -236,11 +236,11 @@ namespace Scripts
         [Command("abmelden")]
         public async Task SignOutCmd_alt()
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
                 RegisterType = false;
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await SignInOut();
             }
         }
@@ -248,11 +248,11 @@ namespace Scripts
         [Command("anmelden")]
         public async Task SignInCmd_alt()
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
                 RegisterType = true;
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await SignInOut();
             }
         }
@@ -296,11 +296,11 @@ namespace Scripts
         [Command("zurückziehen")]
         public async Task PullOutCmd_alt()
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
                 RegisterType = false;
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await PullInOut();
             }
         }
@@ -308,11 +308,11 @@ namespace Scripts
         [Command("zurückziehen")]
         public async Task PullOutCmd_alt(string strDiscordID)
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
                 RegisterType = false;
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ParseDiscordID(strDiscordID);
                 await PullInOut();
             }
@@ -321,11 +321,11 @@ namespace Scripts
         [Command("dochnichtzurückziehen")]
         public async Task UndoPullOutCmd_alt(string strDiscordID)
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
                 RegisterType = true;
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ParseDiscordID(strDiscordID);
                 await PullInOut();
             }
@@ -334,10 +334,10 @@ namespace Scripts
         [Command("fahrzeugwechsel")]
         public async Task ChangeCarCmd_alt(string strCarNr)
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ParseCarID(strCarNr);
                 await ChangeCar();
             }
@@ -346,10 +346,10 @@ namespace Scripts
         [Command("fahrzeugwechsel")]
         public async Task ChangeCarCmd_alt(string strCarNr, string strDiscordID)
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ParseCarID(strCarNr); await ParseDiscordID(strDiscordID);
                 await ChangeCar();
             }
@@ -366,10 +366,10 @@ namespace Scripts
         [Command("fahrzeugliste")]
         public async Task ShowCarsCmd_alt()
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ShowCars();
                 await UserMessage!.DeleteAsync();
             }
@@ -378,10 +378,10 @@ namespace Scripts
         [Command("bop")]
         public async Task ShowBoPCmd_alt()
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ShowBoP();
                 await UserMessage!.DeleteAsync();
             }
@@ -399,10 +399,10 @@ namespace Scripts
         [Command("starterfeld")]
         public async Task ShowStarterfeldCmd_alt()
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseEventID(Event.GetNextEvent(Settings.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 var tempReply = await ReplyAsync(":sleeping:");
                 while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
                 await ShowStartingGrid(false, false);
@@ -459,9 +459,9 @@ namespace Scripts
 
         public async Task ParseEventID(string strEventNr)
         {
-            if (int.TryParse(strEventNr, out int intEventNr) && iPreSVM is not null)
+            if (int.TryParse(strEventNr, out int intEventNr) && Settings is not null)
             {
-                List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), iPreSVM.CurrentSeasonID));
+                List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), Settings.CurrentSeasonID));
                 LogText = "Bitte eine Event-Nr zwischen 1 und " + listEvents.Count.ToString() + " angeben.";
                 if (intEventNr < 1) { await ErrorResponse(); await ShowEvents(); }
                 else if (intEventNr > listEvents.Count) { await ErrorResponse(); await ShowEvents(); }
@@ -496,7 +496,7 @@ namespace Scripts
                     }
                     else
                     {
-                        Entry entry = DriversEntries.GetByDriverIDSeasonID(_driver.ID, iPreSVM.CurrentSeasonID).ObjEntry;
+                        Entry entry = DriversEntries.GetByDriverIDSeasonID(_driver.ID, Settings.CurrentSeasonID).ObjEntry;
                         if (entry.ID == Basics.NoID)
                         {
                             if (DiscordID_Driver == DiscordID_Author) { LogText = "Du bist noch nicht für die Meisterschaft registriert. Falls du dich gerade erst angemeldet hast, versuche es doch bitte in " + iPreSVM.EntriesUpdateRemTime + " erneut. " + adminRoleTag + " schaut euch das Problem bitte an."; await ErrorResponse(); }
@@ -507,7 +507,7 @@ namespace Scripts
                 }
                 else if (int.TryParse(DiscordID_Driver.ToString(), out int _raceNumber))
                 {
-                    Entry entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { iPreSVM.CurrentSeasonID, _raceNumber });
+                    Entry entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { Settings.CurrentSeasonID, _raceNumber });
                     if (entry.ID == Basics.NoID) { LogText = "Die Startnummer " + _raceNumber.ToString() + " ist noch nicht für die Meisterschaft registriert. Falls du dich gerade erst angemeldet hast, versuche es doch bitte in " + iPreSVM.EntriesUpdateRemTime + " erneut. " + adminRoleTag + " schaut euch das Problem bitte an."; await ErrorResponse(); }
                     else { EntryID = entry.ID; CheckAuthorInEntry(); SetDiscordIDs_Drivers(); }
                 }
@@ -599,7 +599,7 @@ namespace Scripts
             var tempReply = await ReplyAsync(":sleeping:");
             while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             await ParseEntryID();
-            if (EntryID != Basics.NoID && CarID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
+            if (EntryID != Basics.NoID && CarID != Basics.NoID && Settings is not null && UserMessage is not null)
             {
                 if (DiscordID_Author == DiscordID_Driver || IsAdmin)
                 {
@@ -656,7 +656,7 @@ namespace Scripts
             var tempReply = await ReplyAsync(":sleeping:");
             while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             await ParseEntryID();
-            if (EntryID != Basics.NoID && EventID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
+            if (EntryID != Basics.NoID && EventID != Basics.NoID && Settings is not null && UserMessage is not null)
             {
                 if (DiscordID_Author == DiscordID_Driver || IsAdmin)
                 {
@@ -714,7 +714,7 @@ namespace Scripts
             var tempReply = await ReplyAsync(":sleeping:");
             while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             await ParseEntryID();
-            if (EntryID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
+            if (EntryID != Basics.NoID && Settings is not null && UserMessage is not null)
             {
                 Entry _entry = Entry.Statics.GetByID(EntryID);
                 bool currentRegisterState = _entry.SignOutDate > DateTime.Now;
@@ -758,11 +758,11 @@ namespace Scripts
 
         public async Task ShowEvents()
         {
-            if (iPreSVM is not null)
+            if (Settings is not null)
             {
                 while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
-                List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), iPreSVM.CurrentSeasonID));
-                string text = "**Rennkalender " + iPreSVM.CurrentSeasonM.Season.Name + "**\n";
+                List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), Settings.CurrentSeasonID));
+                string text = "**Rennkalender " + Settings.CurrentSeasonM.Season.Name + "**\n";
                 foreach (Event _event in listEvents)
                 {
                     text += (_event.EventNr).ToString() + ".\t";
@@ -841,7 +841,7 @@ namespace Scripts
 
         public async Task ShowStartingGrid(bool printCar, bool printCarChange)
         {
-            if (EventID != Basics.NoID && iPreSVM is not null)
+            if (EventID != Basics.NoID && iPreSVM is not null && Settings is not null)
             {
                 await CreateStartingGridMessage(EventID, printCar, printCarChange);
             }
@@ -850,11 +850,11 @@ namespace Scripts
         public static async Task CreateStartingGridMessage(int eventID, bool printCar, bool printCarChange)
         {
             if (PreSeasonVM.Instance is not null && iPreSVM is null) { iPreSVM = PreSeasonVM.Instance; }
-            if (eventID != Basics.NoID && iPreSVM is not null)
+            if (eventID != Basics.NoID && iPreSVM is not null && Settings is not null)
             {
                 Event _event = Event.Statics.GetByID(eventID);
                 int SlotsTaken = iPreSVM.ThreadUpdateEntrylistBoP_Int(_event);
-                //if (iPreSVM.IsCheckedRegisterLimit && iPreSVM.DateRegisterLimit < DateTime.Now) { printCarChange = true; }
+                //if (Settings.CurrentSeasonM.DateRegisterLimit < DateTime.Now) { printCarChange = true; }
 
                 List<EventsEntries> listSortPriority = EventsEntries.GetAnyBy(nameof(EventsEntries.EventID), _event.ID);
                 var linqList = from _eventEntry in listSortPriority

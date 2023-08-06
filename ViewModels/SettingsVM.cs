@@ -11,6 +11,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using Newtonsoft.Json.Linq;
 
 namespace GTRC_Community_Manager
 {
@@ -148,7 +149,7 @@ namespace GTRC_Community_Manager
 
         //Discord Bot Settings:
 
-        public static readonly ObservableCollection<DiscordBot> discordBotList = new ObservableCollection<DiscordBot>() {
+        public static readonly ObservableCollection<DiscordBot> discordBotList = new() {
             new DiscordBot() { Name = "Azubi des Monats", Token = "MTAwNDc5NTMxNjQ2MzIyNzA0MA.G4Qg1w.-_7ccWcVoZrun6jx-k_7KreF-1fE-blNNhrJzc", DiscordID = 1004795316463227040 },
             new DiscordBot() { Name = "Mitarbeiter des Monats", Token = "MTAwODQwMDUyMzM5MDYzNjE4NA.GuiMFH.L0A38VZ9n1enIUMCyAn5-HTqVlLl99XzsqFLW0", DiscordID = 1008400523390636184 }
         };
@@ -156,6 +157,9 @@ namespace GTRC_Community_Manager
 
         private ObservableCollection<DisBotPreset> disBotPresetList = new();
         public ObservableCollection<DisBotPreset> DisBotPresetList { get { return disBotPresetList; } set { disBotPresetList = value; RaisePropertyChanged(); } }
+
+        private static ObservableCollection<SeasonM> listSeasons = new();
+        public ObservableCollection<SeasonM> ListSeasons { get { return listSeasons; } set { listSeasons = value; RaisePropertyChanged(); } }
 
         private DisBotPreset? activeDisBotPreset = null;
         public DisBotPreset? ActiveDisBotPreset
@@ -207,6 +211,27 @@ namespace GTRC_Community_Manager
         private DisBotPreset selectedDisBotPreset;
         public DisBotPreset SelectedDisBotPreset { get { return selectedDisBotPreset; } set { selectedDisBotPreset = value; RaisePropertyChanged(); } }
 
+        public static void UpdateListSeasons()
+        {
+            if (Instance is null)
+            {
+                listSeasons = new ObservableCollection<SeasonM>();
+                foreach (Season _season in Season.Statics.List) { listSeasons.Add(new SeasonM(_season)); }
+            }
+            else
+            {
+                int backupCurrentSeasonID = Instance?.ActiveDisBotPreset?.CurrentSeasonM.Season.ID ?? Basics.NoID;
+                listSeasons = new ObservableCollection<SeasonM>();
+                foreach (Season _season in Season.Statics.List) { listSeasons.Add(new SeasonM(_season)); }
+                Instance!.RaisePropertyChanged(nameof(ListSeasons));
+                if (Instance.ActiveDisBotPreset is not null && backupCurrentSeasonID > Basics.NoID)
+                {
+                    Instance.ActiveDisBotPreset.CurrentSeasonM = new(new Season(false));
+                    Instance.ActiveDisBotPreset.CurrentSeasonID = backupCurrentSeasonID;
+                }
+            }
+        }
+
         public void RestoreDisBotSettings()
         {
             try
@@ -217,7 +242,7 @@ namespace GTRC_Community_Manager
                 MainVM.List[0].LogCurrentText = "Discord bot settings restored.";
             }
             catch { MainVM.List[0].LogCurrentText = "Restore discord bot settings failed!"; }
-            if (DisBotPresetList.Count == 0) { DisBotPresetList.Add(new DisBotPreset()); }
+            if (DisBotPresetList?.Count == 0) { DisBotPresetList.Add(new DisBotPreset()); }
             UpdateActiveDiscordBot();
             if (ActiveDisBotPreset == null) { SelectedDisBotPreset = DisBotPresetList[0]; } else { SelectedDisBotPreset = ActiveDisBotPreset; }
         }
@@ -402,6 +427,7 @@ namespace GTRC_Community_Manager
         private long channelID = Driver.DiscordIDMinValue;
         private long adminRoleID = Driver.DiscordIDMinValue;
         private int charLimit = 2000;
+        private SeasonM currentSeasonM = new(new Season(false));
         private bool isActive = false;
 
         public DisBotPreset() { PresetName = "Preset"; }
@@ -455,6 +481,29 @@ namespace GTRC_Community_Manager
         {
             get { return charLimit; }
             set { if (value < 0) { charLimit = 0; } else { charLimit = value; } }
+        }
+        public int CurrentSeasonID
+        {
+            get { return currentSeasonM.Season.ID; }
+            set
+            {
+                if (value != CurrentSeasonID)
+                {
+                    for (int _seasonNr = 0; _seasonNr < SettingsVM.Instance.ListSeasons.Count; _seasonNr++)
+                    {
+                        if (SettingsVM.Instance.ListSeasons[_seasonNr].Season.ID == value || _seasonNr == SettingsVM.Instance.ListSeasons.Count - 1)
+                        {
+                            CurrentSeasonM = SettingsVM.Instance.ListSeasons[_seasonNr];
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        [JsonIgnore] public SeasonM CurrentSeasonM
+        {
+            get { return currentSeasonM; }
+            set { if (value != null) { currentSeasonM = value; RaisePropertyChanged(); } }
         }
         public bool IsActive
         {

@@ -163,6 +163,7 @@ namespace Database
         public static void PublishList()
         {
             PreSeasonVM.UpdateListSeasons();
+            SettingsVM.UpdateListSeasons();
         }
 
         public override void SetNextAvailable()
