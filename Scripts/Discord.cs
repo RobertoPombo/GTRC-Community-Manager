@@ -133,6 +133,7 @@ namespace Scripts
         public string strDiscordID_Driver = Basics.NoID.ToString();
         public int CarID = Basics.NoID;
         public int EventID = Basics.NoID;
+        public int DriverID = Basics.NoID;
         public int EntryID = Basics.NoID;
 
         public Commands()
@@ -424,6 +425,28 @@ namespace Scripts
             await UserMessage!.DeleteAsync();
         }
 
+        [Command("elo")]
+        public async Task ShowELOCmd_alt()
+        {
+            if (Settings is not null)
+            {
+                SetDefaultProperties();
+                await ShowELO();
+                await UserMessage!.DeleteAsync();
+            }
+        }
+
+        [Command("sr")]
+        public async Task ShowSRCmd_alt()
+        {
+            if (Settings is not null)
+            {
+                SetDefaultProperties();
+                await ShowSR();
+                await UserMessage!.DeleteAsync();
+            }
+        }
+
 
 
         public async Task ErrorResponse()
@@ -476,33 +499,41 @@ namespace Scripts
             else { LogText = "Bitte eine gültige Discord-ID oder Startnummer angeben."; await ErrorResponse(); }
         }
 
+        public async Task ParseDriverID()
+        {
+            DriverID = Driver.Statics.GetByUniqProp(DiscordID_Driver, 1).ID;
+            if (DriverID == Basics.NoID)
+            {
+                if (DiscordID_Driver == DiscordID_Author) { LogText = "Du bist nicht in der Datenbank eingetragen. Vermutlich haben die " + adminRoleTag + " nur vergessen, deine Discord-ID zu speichern."; await ErrorResponse(); }
+                else { LogText = "Der Fahrer ist nicht in der Datenbank eingetragen. " + adminRoleTag + "Möglicherweise fehlt seine Discord-ID."; await ErrorResponse(); }
+            }
+        }
+
         public async Task ParseEntryID()
         {
             if (iPreSVM is not null && Settings is not null)
             {
                 if (Driver.IsValidDiscordID(DiscordID_Driver))
                 {
-                    Driver _driver = Driver.Statics.GetByUniqProp(DiscordID_Driver, 1);
                     if (DiscordID_Driver == Settings.DisBot.DiscordID)
                     {
                         await UserMessage!.AddReactionAsync(emojiRaceCar);
                         if (RegisterType) { await UserMessage.AddReactionAsync(emojiPartyFace); }
                         else { await UserMessage.AddReactionAsync(emojiCry); }
                     }
-                    else if (_driver.ID == Basics.NoID)
-                    {
-                        if (DiscordID_Driver == DiscordID_Author) { LogText = "Du bist nicht in der Datenbank eingetragen. Vermutlich haben die " + adminRoleTag + " nur vergessen, deine Discord-ID zu speichern."; await ErrorResponse(); }
-                        else { LogText = "Der Fahrer ist nicht in der Datenbank eingetragen. " + adminRoleTag + "Möglicherweise fehlt seine Discord-ID."; await ErrorResponse(); }
-                    }
                     else
                     {
-                        Entry entry = DriversEntries.GetByDriverIDSeasonID(_driver.ID, Settings.CurrentSeasonID).ObjEntry;
-                        if (entry.ID == Basics.NoID)
+                        await ParseDriverID();
+                        if (DriverID > Basics.NoID)
                         {
-                            if (DiscordID_Driver == DiscordID_Author) { LogText = "Du bist noch nicht für die Meisterschaft registriert. Falls du dich gerade erst angemeldet hast, versuche es doch bitte in " + iPreSVM.EntriesUpdateRemTime + " erneut. " + adminRoleTag + " schaut euch das Problem bitte an."; await ErrorResponse(); }
-                            else { LogText = "Der Fahrer ist nicht für die Meisterschaft registriert. Die Datenbank wird das nächste Mal in " + iPreSVM.EntriesUpdateRemTime + " synchronisiert."; await ErrorResponse(); }
+                            Entry entry = DriversEntries.GetByDriverIDSeasonID(DriverID, Settings.CurrentSeasonID).ObjEntry;
+                            if (entry.ID == Basics.NoID)
+                            {
+                                if (DiscordID_Driver == DiscordID_Author) { LogText = "Du bist noch nicht für die Meisterschaft registriert. Falls du dich gerade erst angemeldet hast, versuche es doch bitte in " + iPreSVM.EntriesUpdateRemTime + " erneut. " + adminRoleTag + " schaut euch das Problem bitte an."; await ErrorResponse(); }
+                                else { LogText = "Der Fahrer ist nicht für die Meisterschaft registriert. Die Datenbank wird das nächste Mal in " + iPreSVM.EntriesUpdateRemTime + " synchronisiert."; await ErrorResponse(); }
+                            }
+                            else { EntryID = entry.ID; SetDiscordIDs_Drivers(); }
                         }
-                        else { EntryID = entry.ID; SetDiscordIDs_Drivers(); }
                     }
                 }
                 else if (int.TryParse(DiscordID_Driver.ToString(), out int _raceNumber))
@@ -581,6 +612,8 @@ namespace Scripts
                 text += "`!zurückziehen 612` | StartNr/DiscordID 612 aus der aktuellen Meisterschaft entfernen\n";
                 text += "`!dochnichtzurückziehen 612` | Rückzug der StartNr/DiscordID 612 aus der aktuellen Meisterschaft rückgängig machen\n";
                 text += "`!fahrzeugwechsel 10 612` | StartNr/DiscordID 612 auf das Auto 10 umschreiben";
+                text += "`!elo 612` | ELO-Rating von StartNr/DiscordID 612 ausgeben";
+                text += "`!sr 10 612` | Safety-Rating von StartNr/DiscordID 612 ausgeben";
             }
             text += "\n\nStatt das `!` zu verwenden kannst du mich auch direkt mit `@` ansprechen.";
             await SendMessage(text, false);
@@ -835,6 +868,44 @@ namespace Scripts
                 }
                 await SendMessage(text, false);
                 await tempReply.DeleteAsync();
+                IsRunning = false;
+            }
+        }
+
+        public async Task ShowELO()
+        {
+            if (iPreSVM is not null)
+            {
+                var tempReply = await ReplyAsync(":sleeping:");
+                while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); }
+                IsRunning = true;
+                await ParseDriverID();
+                if (DriverID > Basics.NoID)
+                {
+                    string text = "Fahrer: " + Driver.Statics.GetByID(DriverID).FullName;
+                    text += "\nELO-Rating: " + Driver.Statics.GetByID(DriverID).EloRating.ToString();
+                    await SendMessage(text, false);
+                    await tempReply.DeleteAsync();
+                }
+                IsRunning = false;
+            }
+        }
+
+        public async Task ShowSR()
+        {
+            if (iPreSVM is not null)
+            {
+                var tempReply = await ReplyAsync(":sleeping:");
+                while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); }
+                IsRunning = true;
+                await ParseDriverID();
+                if (DriverID > Basics.NoID)
+                {
+                    string text = "Fahrer: " + Driver.Statics.GetByID(DriverID).FullName;
+                    text += "\nSafety-Rating: " + Driver.Statics.GetByID(DriverID).SafetyRating.ToString();
+                    await SendMessage(text, false);
+                    await tempReply.DeleteAsync();
+                }
                 IsRunning = false;
             }
         }
