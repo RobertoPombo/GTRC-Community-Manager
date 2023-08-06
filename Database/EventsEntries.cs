@@ -5,7 +5,7 @@ using System.Linq;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using Scripts;
-using System.Windows.Controls.Primitives;
+using System.Windows.Controls;
 
 namespace Database
 {
@@ -28,22 +28,18 @@ namespace Database
 
         private Entry objEntry = new(false);
         private Event objEvent = new(false);
-        private Car objCar = new(false);
         [JsonIgnore][NotMapped] public Entry ObjEntry { get { return objEntry; } }
         [JsonIgnore][NotMapped] public Event ObjEvent { get { return objEvent; } }
-        [JsonIgnore][NotMapped] public Car ObjCar { get { return objCar; } }
 
         private int entryID = 0;
         private int eventID = 0;
-        private DateTime signindate = Event.DateTimeMaxValue;
-        private bool isonentrylist = false;
+        private DateTime signInDate = Basics.DateTimeMaxValue;
+        private bool isOnEntrylist = false;
         private bool attended = false;
         private int ballast = new Entry(false).Ballast;
         private int restrictor = new Entry(false).Restrictor;
         private int category = new Entry(false).Category;
-        private bool scorepoints = new Entry(false).ScorePoints;
-        private int carID = 0;
-        private DateTime carchangedate = Event.DateTimeMinValue;
+        private bool scorePoints = new Entry(false).ScorePoints;
         private int priority = int.MaxValue;
 
         public int EntryID
@@ -60,8 +56,12 @@ namespace Database
 
         public DateTime SignInDate
         {
-            get { return signindate; }
-            set { if (RegisterState) { signindate = value; } else { signindate = Event.DateTimeMaxValue; } }
+            get { return signInDate; }
+            set
+            {
+                if (RegisterState) { if (value >= Basics.DateTimeMinValue) { signInDate = value; } else { signInDate = Basics.DateTimeMinValue; } }
+                else { signInDate = Basics.DateTimeMaxValue; }
+            }
         }
 
         [JsonIgnore] public bool RegisterState
@@ -76,8 +76,8 @@ namespace Database
 
         public bool IsOnEntrylist
         {
-            get { return isonentrylist; }
-            set { isonentrylist = value; }
+            get { return isOnEntrylist; }
+            set { isOnEntrylist = value; }
         }
 
         public bool Attended
@@ -123,25 +123,8 @@ namespace Database
 
         public bool ScorePoints
         {
-            get { return scorepoints; }
-            set { if (scorepoints != value) { scorepoints = value; if (scorepoints) { Category = 3; } else { Category = 1; } } }
-        }
-
-        public int CarID
-        {
-            get { return carID; }
-            set
-            {
-                if (Car.Statics.IDList.Count == 0) { objCar = new Car() { ID = 1 }; }
-                if (!Car.Statics.ExistsID(value)) { objCar = Car.Statics.IDList[0]; carID = objCar.ID; }
-                else { carID = value; objCar = Car.Statics.GetByID(carID); }
-            }
-        }
-
-        public DateTime CarChangeDate
-        {
-            get { return carchangedate; }
-            set { if (ObjEntry.RegisterDate <= value) { carchangedate = value; } }
+            get { return scorePoints; }
+            set { if (scorePoints != value) { scorePoints = value; if (scorePoints) { Category = 3; } else { Category = 1; } } }
         }
 
         public int Priority
@@ -208,16 +191,13 @@ namespace Database
 
         public void SetParentProps()
         {
-            if (RegisterState && ObjEntry.Permanent) { SignInDate = Event.DateTimeMinValue; }
-            else { SignInDate = Event.DateTimeMaxValue; }
+            if (RegisterState && ObjEntry.Permanent) { SignInDate = Basics.DateTimeMinValue; }
+            else { SignInDate = Basics.DateTimeMaxValue; }
             IsOnEntrylist = false;
             Attended = false;
             Ballast = ObjEntry.Ballast;
             Restrictor = ObjEntry.Restrictor;
-            Category = ObjEntry.Category;
-            ScorePoints = ObjEntry.ScorePoints;
-            CarID = ObjEntry.CarID;
-            CarChangeDate = ObjEntry.RegisterDate;
+            ScorePoints = ObjEntry.GetEntriesDatetimesByDate(ObjEvent.Date).ScorePoints;
         }
 
         public static EventsEntries GetAnyByUniqProp(int _entryID, int _eventID)
@@ -282,24 +262,6 @@ namespace Database
                 }
             }
             return _list;
-        }
-
-        public static EventsEntries GetLatestEventsEntries(Entry _entry, DateTime carChangeDateMax)
-        {
-            List<EventsEntries> eventsEntriesList = Statics.GetBy(nameof(EntryID), _entry.ID);
-            var linqList = from _eventsEntries in eventsEntriesList orderby _eventsEntries.ObjEvent.Date select _eventsEntries;
-            eventsEntriesList = linqList.Cast<EventsEntries>().ToList();
-            EventsEntries eventsEntries = new(false);
-            foreach (EventsEntries _eventsEntries in eventsEntriesList)
-            {
-                if (_eventsEntries.CarChangeDate < carChangeDateMax)
-                {
-                    eventsEntries = _eventsEntries;
-                    if (_eventsEntries.ObjEvent.Date > carChangeDateMax) { break; }
-                }
-                else { break; }
-            }
-            return eventsEntries;
         }
     }
 }

@@ -13,6 +13,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Windows.Documents;
+using System.Windows.Shapes;
 
 namespace GTRC_Community_Manager
 {
@@ -37,6 +38,7 @@ namespace GTRC_Community_Manager
             SaveSettingsCmd = new UICmd((o) => SaveSettings());
             ReloadAllResultsJsonCmd = new UICmd((o) => ReloadAllResultsJson(o));
             ReloadAllServerAllResultsJsonCmd = new UICmd((o) => ReloadAllServerAllResultsJson());
+            CreateServerFolderCmd = new UICmd((o) => CreateServerFolder(o));
             if (!File.Exists(PathSettings)) { SaveSettings(); }
             RestoreSettingsTrigger();
             BackgroundWorkerRestartServer.DoWork += InfiniteLoopRestartServer;
@@ -175,8 +177,8 @@ namespace GTRC_Community_Manager
             if (PreSeasonVM.Instance is not null)
             {
                 PreSeason.UpdateLeaderboard(_server);
-                //PreSeason.UpdatePreQResults(PreSeasonVM.Instance.CurrentSeasonID);
-                //GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
+                PreSeason.UpdatePreQResults(PreSeasonVM.Instance.CurrentSeasonID);
+                GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
             }
             _server.IsRunning = false;
         }
@@ -321,7 +323,7 @@ namespace GTRC_Community_Manager
             int attemptMax = 1000;
 
             DateTime dateTime = ResultsPath2DateTime(_path);
-            if (dateTime < Event.DateTimeMaxValue)
+            if (dateTime < Basics.DateTimeMaxValue)
             {
                 for (int attemptNr = 0; attemptNr < attemptMax; attemptNr++)
                 {
@@ -430,7 +432,7 @@ namespace GTRC_Community_Manager
 
         public static DateTime ResultsPath2DateTime(string path)
         {
-            DateTime dateTime = Event.DateTimeMaxValue;
+            DateTime dateTime = Basics.DateTimeMaxValue;
             string[] pathRoot = path.Split('\\');
             if (pathRoot.Length > 0)
             {
@@ -451,11 +453,33 @@ namespace GTRC_Community_Manager
             return dateTime;
         }
 
+        public void CreateServerFolder(object obj)
+        {
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); }
+            IsRunning = true;
+            if (obj.GetType() == typeof(ServerM))
+            {
+                ServerM _serverM = (ServerM)obj;
+                if (!_serverM.PathIsForbidden)
+                {
+                    string PathAccServerExe = MainWindow.dataDirectory + Server.FileNameAccServerExe;
+                    foreach (string currentPath in new List<string> { _serverM.Server.PathCfg, _serverM.Server.PathResults })
+                    {
+                        if (!Directory.Exists(currentPath)) { Directory.CreateDirectory(currentPath); }
+                    }
+                    if (!File.Exists(_serverM.Server.PathExe) && File.Exists(PathAccServerExe)) { File.Copy(PathAccServerExe, _serverM.Server.PathExe); }
+                    _serverM.PathExists = true;
+                }
+            }
+            IsRunning = false;
+        }
+
         [JsonIgnore] public UICmd AddServerCmd { get; set; }
         [JsonIgnore] public UICmd DelServerCmd { get; set; }
         [JsonIgnore] public UICmd RestoreSettingsCmd { get; set; }
         [JsonIgnore] public UICmd SaveSettingsCmd { get; set; }
         [JsonIgnore] public UICmd ReloadAllResultsJsonCmd { get; set; }
         [JsonIgnore] public UICmd ReloadAllServerAllResultsJsonCmd { get; set; }
+        [JsonIgnore] public UICmd CreateServerFolderCmd { get; set; }
     }
 }

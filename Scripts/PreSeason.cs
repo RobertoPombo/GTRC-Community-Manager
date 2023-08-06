@@ -12,6 +12,8 @@ using System.Reflection;
 using GTRC_Community_Manager;
 using Enums;
 using System.Runtime.ConstrainedExecution;
+using System.Windows.Controls;
+using System.Windows.Documents;
 
 namespace Scripts
 {
@@ -37,7 +39,7 @@ namespace Scripts
                     List<ResultsFile> listResultsFiles = ResultsFile.Statics.GetBy(propNames, propValues);
                     foreach (ResultsFile _resultsFile in listResultsFiles)
                     {
-                        DateTime previousEventDate = Event.DateTimeMinValue;
+                        DateTime previousEventDate = Basics.DateTimeMinValue;
                         if (eventNr > 0) { previousEventDate = listEvents[eventNr - 1].Date; }
                         if (_resultsFile.Date > previousEventDate && _resultsFile.Date < _event.Date)
                         {
@@ -87,12 +89,12 @@ namespace Scripts
             }
         }
 
-        /*public static void ResetPreQResults(int seasonID)
+        public static void ResetPreQResults(int seasonID)
         {
-            PreQualiResultLine.Statics.ResetSQL();
+            PreQualiResultLine.Statics.ResetSQL(true);
             PreQualiResultLine.Statics.LoadSQL();
             List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), seasonID);
-            foreach (Entry _entry in listEntries) { _ = new PreQualiResultLine { EntryID = _entry.RaceNumber }; }
+            foreach (Entry _entry in listEntries) { _ = new PreQualiResultLine { EntryID = _entry.ID }; }
             PreQualiResultLine.Statics.WriteJson();
             PreQualiResultLine.Statics.WriteSQL();
         }
@@ -102,64 +104,71 @@ namespace Scripts
             //Sollte dynamisch sein:
             double timeFactorMax = 1.07;
             int lapsCountStintMin = 10;
-            Dictionary<string, int> QualiTracks = new() { { "nurburgring", 0 }, { "misano", 1 } };
+            List<int> listTracks = new() { 1, 17 };
 
             ResetPreQResults(seasonID);
+
+            List<string> propNames = new() { nameof(ResultsFile.TrackID), nameof(ResultsFile.SeasonID), nameof(ResultsFile.ServerType) };
+            List<dynamic> propValues = new() { Basics.NoID, seasonID, ServerTypeEnum.PreQuali };
+            List<List<ResultsFile>> listResultsFiles = new ();
+            foreach (int _track in listTracks) { propValues[0] = _track; listResultsFiles.Add(ResultsFile.Statics.GetBy(propNames, propValues)); }
+
             foreach (PreQualiResultLine preQualiResultLine in PreQualiResultLine.Statics.List)
             {
-                List<Lap> lapsEntry = new();
-                foreach (Lap _lap in Lap.Statics.List)
-                {
-                    if (_lap.EntryID == preQualiResultLine.EntryID)
-                    {
-                        lapsEntry.Add(_lap);
-                    }
-                }
-                foreach (int _trackID in QualiTracks.Values)
+                List <DriversEntries> _driversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), preQualiResultLine.EntryID);
+                List<long> listSteamIDs = new();
+                foreach (DriversEntries _driverEntry in _driversEntries) { if (_driverEntry.ObjDriver.ReadyForList) { listSteamIDs.Add(_driverEntry.ObjDriver.SteamID); } }
+                for (int trackNr = 0; trackNr < listTracks.Count; trackNr++)
                 {
                     List<Lap> lapsEntryTrack = new();
-                    foreach (Lap _lap in lapsEntry)
+                    foreach (ResultsFile preQualiResultFile in listResultsFiles[trackNr])
                     {
-                        if (_lap.Track == _trackID)
+                        foreach (long _steamID in listSteamIDs)
                         {
-                            lapsEntryTrack.Add(_lap);
-                            preQualiResultLine.LapsCount++;
-                            if (_lap.Valid) { preQualiResultLine.ValidLapsCount++; }
-                            switch (_trackID)
+                            propNames = new() { nameof(Lap.ResultsFileID), nameof(Lap.SteamID) };
+                            propValues = new() { preQualiResultFile.ID, _steamID };
+                            List<Lap> lapsEntryTrackResultsFile = Lap.Statics.GetBy(propNames, propValues);
+                            foreach (Lap lap in lapsEntryTrackResultsFile)
                             {
-                                case 0:
-                                    preQualiResultLine.LapsCount1++;
-                                    if (_lap.Valid) { preQualiResultLine.ValidLapsCount1++; }
-                                    break;
-                                case 1:
-                                    preQualiResultLine.LapsCount2++;
-                                    if (_lap.Valid) { preQualiResultLine.ValidLapsCount2++; }
-                                    break;
+                                lapsEntryTrack.Add(lap);
                             }
                         }
                     }
-                    for (int lapNr = 0; lapNr < lapsEntryTrack.Count; lapNr++)
+                    foreach (Lap lap in lapsEntryTrack)
                     {
-                        if (lapsEntryTrack[lapNr].Valid)
+                        preQualiResultLine.LapsCount++;
+                        if (lap.IsValid) { preQualiResultLine.ValidLapsCount++; }
+                        switch (trackNr)
                         {
-                            switch (_trackID)
+                            case 0:
+                                preQualiResultLine.LapsCount1++;
+                                if (lap.IsValid) { preQualiResultLine.ValidLapsCount1++; }
+                                break;
+                            case 1:
+                                preQualiResultLine.LapsCount2++;
+                                if (lap.IsValid) { preQualiResultLine.ValidLapsCount2++; }
+                                break;
+                        }
+                        if (lap.IsValid)
+                        {
+                            switch (trackNr)
                             {
-                                case 0: 
-                                    preQualiResultLine.BestLap1 = Math.Min(preQualiResultLine.BestLap1, lapsEntryTrack[lapNr].Time);
-                                    preQualiResultLine.BestSector1a = Math.Min(preQualiResultLine.BestSector1a, lapsEntryTrack[lapNr].Sector1);
-                                    preQualiResultLine.BestSector3a = Math.Min(preQualiResultLine.BestSector3a, lapsEntryTrack[lapNr].Sector3);
+                                case 0:
+                                    preQualiResultLine.BestLap1 = Math.Min(preQualiResultLine.BestLap1, lap.Time);
+                                    preQualiResultLine.BestSector1a = Math.Min(preQualiResultLine.BestSector1a, lap.Sector1);
+                                    preQualiResultLine.BestSector3a = Math.Min(preQualiResultLine.BestSector3a, lap.Sector3);
                                     break;
                                 case 1:
-                                    preQualiResultLine.BestLap2 = Math.Min(preQualiResultLine.BestLap2, lapsEntryTrack[lapNr].Time);
-                                    preQualiResultLine.BestSector1b = Math.Min(preQualiResultLine.BestSector1b, lapsEntryTrack[lapNr].Sector1);
-                                    preQualiResultLine.BestSector3b = Math.Min(preQualiResultLine.BestSector3b, lapsEntryTrack[lapNr].Sector3);
+                                    preQualiResultLine.BestLap2 = Math.Min(preQualiResultLine.BestLap2, lap.Time);
+                                    preQualiResultLine.BestSector1b = Math.Min(preQualiResultLine.BestSector1b, lap.Sector1);
+                                    preQualiResultLine.BestSector3b = Math.Min(preQualiResultLine.BestSector3b, lap.Sector3);
                                     break;
                             }
                         }
                     }
                     int time107 = int.MaxValue;
                     int s1s3_107 = int.MaxValue;
-                    switch (_trackID)
+                    switch (trackNr)
                     {
                         case 0:
                             time107 = (int)Math.Round(preQualiResultLine.BestLap1 * timeFactorMax, 0);
@@ -172,10 +181,10 @@ namespace Scripts
                     }
                     bool newStint = true;
                     List<Lap> lapsEntryTrackStint = new();
-                    foreach (Lap _lap in lapsEntryTrack)
+                    foreach (Lap lap in lapsEntryTrack)
                     {
-                        if (_lap.Time > time107 && _lap.Sector1 + _lap.Sector3 > s1s3_107) { lapsEntryTrackStint = new List<Lap>(); newStint = true; }
-                        else if (_lap.Valid) { lapsEntryTrackStint.Add(_lap); }
+                        if (lap.Time > time107 && lap.Sector1 + lap.Sector3 > s1s3_107) { lapsEntryTrackStint = new List<Lap>(); newStint = true; }
+                        else if (lap.IsValid) { lapsEntryTrackStint.Add(lap); }
                         if (lapsEntryTrackStint.Count >= lapsCountStintMin)
                         {
                             List<int> bestTimes = new();
@@ -194,7 +203,7 @@ namespace Scripts
                             {
                                 newStint = false;
                                 preQualiResultLine.ValidStintsCount++;
-                                switch (_trackID)
+                                switch (trackNr)
                                 {
                                     case 0: preQualiResultLine.ValidStintsCount1++; break;
                                     case 1: preQualiResultLine.ValidStintsCount2++; break;
@@ -203,7 +212,7 @@ namespace Scripts
                             double totalTime = 0;
                             for (int lapNr = 0; lapNr < lapsCountStintMin; lapNr++) { totalTime += bestTimes[lapNr]; }
                             int newAverage = (int)Math.Round(totalTime / lapsCountStintMin, 0);
-                            switch (_trackID)
+                            switch (trackNr)
                             {
                                 case 0: preQualiResultLine.Average1 = Math.Min(preQualiResultLine.Average1, newAverage); break;
                                 case 1: preQualiResultLine.Average2 = Math.Min(preQualiResultLine.Average2, newAverage); break;
@@ -285,13 +294,17 @@ namespace Scripts
                            Entry.Statics.GetByID(_resultsLine.EntryID).RegisterDate
                            select _resultsLine;
             PreQualiResultLine.Statics.List = linqList.Cast<PreQualiResultLine>().ToList();
+            for (int lineNr = 0; lineNr < PreQualiResultLine.Statics.List.Count; lineNr++) { PreQualiResultLine.Statics.List[lineNr].Position = lineNr + 1; }
             PreQualiResultLine.Statics.WriteJson();
             PreQualiResultLine.Statics.WriteSQL();
-        }*/
+            linqList = from _resultsLine in PreQualiResultLine.Statics.List
+                           orderby _resultsLine.Position
+                           select _resultsLine;
+            PreQualiResultLine.Statics.List = linqList.Cast<PreQualiResultLine>().ToList();
+        }
 
         public static void SetEntry_NotScorePoints_NotPermanent(Event nextEvent)
         {
-            bool saveSQL = false;
             string delimiter = "#!#";
             List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), nextEvent.SeasonID);
             foreach (Entry _entry in listEntries)
@@ -301,19 +314,20 @@ namespace Scripts
                 signOutCount += noShowCount;
                 if (_entry.SignOutDate > DateTime.Now)
                 {
+                    EntriesDatetimes _entryDate = _entry.GetEntriesDatetimesByDate(nextEvent.Date);
                     if (noShowCount > nextEvent.ObjSeason.NoShowLimit)
                     {
-                        if (_entry.ScorePoints || _entry.Permanent)
+                        if (_entryDate.ScorePoints || _entryDate.Permanent)
                         {
                             string message = delimiter + "Da du das Limit von " + nextEvent.ObjSeason.NoShowLimit.ToString() +
                                 " Nichtteilnahmen trotz Anmeldung pro Saison überschritten hast, ";
-                            if (_entry.ScorePoints && _entry.Permanent)
+                            if (_entryDate.ScorePoints && _entryDate.Permanent)
                             {
                                 message += "sammelst du ab jetzt keine Meisterschaftspunkte mehr und musst dich zu jedem Event einzeln anmelden." +
                                     " Startplätze werden bevorzugt an Teilnehmer vergeben, die nicht außerhalb der Wertung fahren" +
                                     " und für jedes Rennen automatisch angemeldet sind.";
                             }
-                            else if (_entry.ScorePoints)
+                            else if (_entryDate.ScorePoints)
                             {
                                 message += "sammelst du ab jetzt keine Meisterschaftspunkte mehr." +
                                     " Startplätze werden bevorzugt an Teilnehmer vergeben, die nicht außerhalb der Wertung fahren.";
@@ -324,24 +338,26 @@ namespace Scripts
                                     " Startplätze werden bevorzugt an Teilnehmer vergeben, die für jedes Rennen automatisch angemeldet sind.";
                             }
                             _ = Commands.NotifyEntry(_entry, message, delimiter);
-                            _entry.ScorePoints = false;
-                            _entry.Permanent = false;
+                            EntriesDatetimes newEntryDate = EntriesDatetimes.GetAnyByUniqProp(_entry.ID, DateTime.Now);
+                            newEntryDate.ScorePoints = false;
+                            newEntryDate.Permanent = false;
+                            _ = EntriesDatetimes.Statics.WriteSQL(newEntryDate);
                         }
                     }
                     else if (signOutCount > nextEvent.ObjSeason.SignOutLimit)
                     {
-                        if (_entry.Permanent)
+                        if (_entryDate.Permanent)
                         {
                             string message = delimiter + "Da du das Limit von " + nextEvent.ObjSeason.SignOutLimit.ToString() +
                                 " Abmeldungen/Nichtteilnahmen pro Saison überschritten hast, musst du dich ab jetzt zu jedem Event einzeln anmelden." +
                                 " Startplätze werden bevorzugt an Teilnehmer vergeben, die für jedes Rennen automatisch angemeldet sind.";
                             _ = Commands.NotifyEntry(_entry, message, "#!#");
-                            _entry.Permanent = false;
+                            EntriesDatetimes newEntryDate = EntriesDatetimes.GetAnyByUniqProp(_entry.ID, DateTime.Now);
+                            newEntryDate.Permanent = false;
                         }
                     }
                 }
             }
-            if (saveSQL) { EventsEntries.Statics.WriteSQL(); Entry.Statics.WriteSQL(); }
         }
 
         public static void CountCars(Event _event)
@@ -350,7 +366,7 @@ namespace Scripts
             Season _season = _event.ObjSeason;
             var linqList = from _entry in Entry.Statics.List
                            where _entry.SeasonID == _event.SeasonID
-                           orderby EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID).CarChangeDate
+                           orderby _entry.GetLatestCarChangeDate(_event.Date)
                            select _entry;
             List<Entry> Entrylist = linqList.Cast<Entry>().ToList();
 
@@ -364,17 +380,41 @@ namespace Scripts
                     DateTime carChangeDateMax = _event.Date;
                     if (_season.DateBoPFreeze < _event.Date) { carChangeDateMax = _season.DateBoPFreeze; }
                     int carID = _entry.CarID;
-                    EventsEntries eventsEntries = EventsEntries.GetLatestEventsEntries(_entry, carChangeDateMax);
-                    if (eventsEntries.ReadyForList) { carID = eventsEntries.CarID; }
-                    DateTime carChangeDateBeforeFreeze = _entry.RegisterDate;
-                    if (eventsEntries.ReadyForList) { carChangeDateBeforeFreeze = eventsEntries.CarChangeDate; }
-                    EventsCars _eventCar = EventsCars.GetAnyByUniqProp(_eventsEntries.CarID, _event.ID);
-                    EventsCars _eventCarAtFreeze = EventsCars.GetAnyByUniqProp(carID, _event.ID);
+                    int carIDBeforeFreze = _entry.CarID;
+                    EntriesDatetimes entryDatetime = _entry.GetEntriesDatetimesByDate(_event.Date);
+                    EntriesDatetimes entryDatetimeBeforeFreze = _entry.GetEntriesDatetimesByDate(carChangeDateMax);
+                    if (entryDatetime.ReadyForList) { carID = entryDatetime.CarID; }
+                    if (entryDatetimeBeforeFreze.ReadyForList) { carIDBeforeFreze = entryDatetimeBeforeFreze.CarID; }
+                    DateTime carChangeDate = _entry.RegisterDate;
+                    DateTime carChangeDateBeforeFreze = _entry.RegisterDate;
+                    carChangeDate = _entry.GetLatestCarChangeDate(_event.Date);
+                    carChangeDateBeforeFreze = _entry.GetLatestCarChangeDate(carChangeDateMax);
+                    EventsCars _eventCar = EventsCars.GetAnyByUniqProp(carID, _event.ID);
+                    EventsCars _eventCarAtFreeze = EventsCars.GetAnyByUniqProp(carIDBeforeFreze, _event.ID);
+                    int carCount = _eventCar.Count;
+                    int carCountBoP = _eventCarAtFreeze.CountBoP;
+                    if (_season.GroupCarLimits)
+                    {
+                        carCount = 0;
+                        carCountBoP = 0;
+                        foreach (EventsCars _eventCar2 in _eventsCars)
+                        {
+                            Car _car2 = _eventCar2.ObjCar;
+                            if (_eventCar.ObjCar.Manufacturer == _car2.Manufacturer && _eventCar.ObjCar.Category == _car2.Category)
+                            {
+                                carCount += _eventCar2.CountBoP;
+                            }
+                            if (_eventCarAtFreeze.ObjCar.Manufacturer == _car2.Manufacturer && _eventCarAtFreeze.ObjCar.Category == _car2.Category)
+                            {
+                                carCountBoP += _eventCar2.CountBoP;
+                            }
+                        }
+                    }
                     bool validCar = _eventCar.ReadyForList;
                     bool validCarAtFreeze = _eventCarAtFreeze.ReadyForList;
-                    bool respectsRegLimit = _eventsEntries.CarChangeDate < _season.DateRegisterLimit || _eventCar.Count < _season.CarLimitRegisterLimit;
-                    bool respectsRegLimitAtFreeze0 = carChangeDateBeforeFreeze < _season.DateRegisterLimit;
-                    bool respectsRegLimitAtFreeze = respectsRegLimitAtFreeze0 || _eventCarAtFreeze.CountBoP < _season.CarLimitRegisterLimit;
+                    bool respectsRegLimit = carChangeDate < _season.DateRegisterLimit || carCount < _season.CarLimitRegisterLimit;
+                    bool respectsRegLimitAtFreeze0 = carChangeDateBeforeFreze < _season.DateRegisterLimit;
+                    bool respectsRegLimitAtFreeze = respectsRegLimitAtFreeze0 || carCountBoP < _season.CarLimitRegisterLimit;
                     bool isRegistered = _entry.SignOutDate > _event.Date;
                     bool isRegisteredAtFreeze0 = _entry.RegisterDate < _season.DateBoPFreeze;
                     bool isRegisteredAtFreeze = isRegisteredAtFreeze0 && (_entry.SignOutDate > _season.DateBoPFreeze || _entry.SignOutDate > _event.Date);
@@ -407,11 +447,6 @@ namespace Scripts
                                 {
                                     message += " Solltest du beim kommenden Rennen gerne um Punkte fahren wollen," +
                                     " kannst du dir die `!fahrzeugliste` anzeigen lassen und einen `!fahrzeugwechsel` versuchen.";
-                                }
-                                else if (_season.UnlimitedCarVersionChanges)
-                                {
-                                    message += " Solltest du beim kommenden Rennen gerne um Punkte fahren wollen, kannst du dir die `!fahrzeugliste` anzeigen" +
-                                        " lassen und einen `!fahrzeugwechsel` auf einen anderen" + _eventCar.ObjCar.Manufacturer + " durchführen.";
                                 }
                                 _ = Commands.NotifyEntry(_entry, message, "#!#");
                                 _eventsEntries.ScorePoints = false;
@@ -463,8 +498,20 @@ namespace Scripts
             List<EventsCars> listEventsCars = EventsCars.GetAnyBy(nameof(EventsCars.EventID), _event.ID);
             foreach (EventsCars _eventCar in listEventsCars)
             {
-                _eventCar.Ballast = Math.Max(0, _eventCar.CountBoP - _event.ObjSeason.CarLimitBallast) * _event.ObjSeason.GainBallast;
-                _eventCar.Restrictor = Math.Max(0, _eventCar.CountBoP - _event.ObjSeason.CarLimitRestriktor) * _event.ObjSeason.GainRestriktor;
+                int carCount = _eventCar.CountBoP;
+                if (_event.ObjSeason.GroupCarLimits)
+                {
+                    carCount = 0;
+                    foreach (EventsCars _eventCar2 in listEventsCars)
+                    {
+                        if (_eventCar.ObjCar.Manufacturer == _eventCar2.ObjCar.Manufacturer && _eventCar.ObjCar.Category == _eventCar2.ObjCar.Category)
+                        {
+                            carCount += _eventCar2.CountBoP;
+                        }
+                    }
+                }
+                _eventCar.Ballast = Math.Max(0, carCount - _event.ObjSeason.CarLimitBallast) * _event.ObjSeason.GainBallast;
+                _eventCar.Restrictor = Math.Max(0, carCount - _event.ObjSeason.CarLimitRestrictor) * _event.ObjSeason.GainRestrictor;
             }
             EventsCars.Statics.WriteSQL();
         }
@@ -545,6 +592,29 @@ namespace Scripts
                 {
                     EventsEntries _eventEntry1 = listEventsEntries[index1];
                     EventsEntries _eventEntry2 = listEventsEntries[index2];
+                    List<DriversEntries> _driversEntries1 = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _eventEntry1.EntryID);
+                    List<DriversEntries> _driversEntries2 = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _eventEntry2.EntryID);
+                    int posPreQ1 = PreQualiResultLine.Statics.GetByUniqProp(_eventEntry1.EntryID).Position;
+                    int posPreQ2 = PreQualiResultLine.Statics.GetByUniqProp(_eventEntry2.EntryID).Position;
+                    int fixPosPreQ1 = PreQualiResultLine.SteamIDsFixPreQ.Count;
+                    int fixPosPreQ2 = PreQualiResultLine.SteamIDsFixPreQ.Count;
+                    for (int fixPosPreQ = 0; fixPosPreQ < PreQualiResultLine.SteamIDsFixPreQ.Count; fixPosPreQ++)
+                    {
+                        foreach (DriversEntries _driverEntry in _driversEntries1)
+                        {
+                            if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == PreQualiResultLine.SteamIDsFixPreQ[fixPosPreQ])
+                            {
+                                fixPosPreQ1 = Math.Min(fixPosPreQ1, fixPosPreQ);
+                            }
+                        }
+                        foreach (DriversEntries _driverEntry in _driversEntries2)
+                        {
+                            if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == PreQualiResultLine.SteamIDsFixPreQ[fixPosPreQ])
+                            {
+                                fixPosPreQ2 = Math.Min(fixPosPreQ2, fixPosPreQ);
+                            }
+                        }
+                    }
                     if (_eventEntry1.RegisterState == _eventEntry2.RegisterState)
                     {
                         if (_eventEntry1.ScorePoints == _eventEntry2.ScorePoints)
@@ -553,15 +623,28 @@ namespace Scripts
                             {
                                 if (_eventEntry1.SignInDate == _eventEntry2.SignInDate || _eventEntry1.ObjEntry.Permanent)
                                 {
-                                    //PreQuali-Position
-                                    if (_eventEntry1.ObjEntry.RegisterDate == _eventEntry2.ObjEntry.RegisterDate)
+                                    if (fixPosPreQ1 == fixPosPreQ2)
                                     {
-                                        if (_eventEntry1.ObjEntry.RaceNumber > _eventEntry2.ObjEntry.RaceNumber)
+                                        if (posPreQ1 == posPreQ2)
+                                        {
+                                            if (_eventEntry1.ObjEntry.RegisterDate == _eventEntry2.ObjEntry.RegisterDate)
+                                            {
+                                                if (_eventEntry1.ObjEntry.RaceNumber > _eventEntry2.ObjEntry.RaceNumber)
+                                                {
+                                                    (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
+                                                }
+                                            }
+                                            else if (_eventEntry1.ObjEntry.RegisterDate > _eventEntry2.ObjEntry.RegisterDate)
+                                            {
+                                                (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
+                                            }
+                                        }
+                                        else if (posPreQ1 > posPreQ2)
                                         {
                                             (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
                                         }
                                     }
-                                    else if (_eventEntry1.ObjEntry.RegisterDate > _eventEntry2.ObjEntry.RegisterDate)
+                                    else if (fixPosPreQ1 > fixPosPreQ2)
                                     {
                                         (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
                                     }

@@ -32,7 +32,7 @@ namespace Database
         [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
 
         private int serverID = 0;
-        private DateTime date = Event.DateTimeMinValue;
+        private DateTime date = Basics.DateTimeMinValue;
         private int sessionType = 0;
         private int trackID = Basics.ID0;
         private int seasonID = 0;
@@ -107,13 +107,13 @@ namespace Database
             if (_server.ReadyForList) { serverNr = Server.Statics.IDList.IndexOf(_server); } else { serverID = _idListServer[0].ID; }
             int startValueServer = serverNr;
 
-            if (date < Event.DateTimeMinValue) { date = Event.DateTimeMinValue; }
-            else if (date > Event.DateTimeMaxValue) { date = Event.DateTimeMaxValue; }
+            if (date < Basics.DateTimeMinValue) { date = Basics.DateTimeMinValue; }
+            else if (date > Basics.DateTimeMaxValue) { date = Basics.DateTimeMaxValue; }
             DateTime startValue = date;
 
             while (!IsUnique())
             {
-                if (date < Event.DateTimeMaxValue) { date = date.AddDays(1); } else { date = Event.DateTimeMinValue; }
+                if (date < Basics.DateTimeMaxValue) { date = date.AddDays(1); } else { date = Basics.DateTimeMinValue; }
                 if (date == startValue)
                 {
                     if (serverNr + 1 < _idListServer.Count) { serverNr += 1; } else { serverNr = 0; }

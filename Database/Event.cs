@@ -10,8 +10,6 @@ namespace Database
 {
     public class Event : DatabaseObject<Event>
     {
-        public static readonly DateTime DateTimeMinValue = DateTime.MinValue.AddYears(1800);
-        public static readonly DateTime DateTimeMaxValue = DateTime.MaxValue.AddDays(-1);
         public static readonly string DefaultName = "Event #1";
         [NotMapped][JsonIgnore] public static StaticDbField<Event> Statics { get; set; }
         static Event()
@@ -142,13 +140,13 @@ namespace Database
             if (_season.ReadyForList) { seasonNr = Season.Statics.IDList.IndexOf(_season); } else { seasonID = _idListSeason[0].ID; }
             int startValueSeason = seasonNr;
 
-            if (date < DateTimeMinValue) { date = DateTimeMinValue; }
-            else if (date > DateTimeMaxValue) { date = DateTimeMaxValue; }
+            if (date < Basics.DateTimeMinValue) { date = Basics.DateTimeMinValue; }
+            else if (date > Basics.DateTimeMaxValue) { date = Basics.DateTimeMaxValue; }
             DateTime startValue = date;
 
             while (!IsUnique(0))
             {
-                if (date < DateTimeMaxValue) { date = date.AddDays(1); } else { date = DateTimeMinValue; }
+                if (date < Basics.DateTimeMaxValue) { date = date.AddDays(1); } else { date = Basics.DateTimeMinValue; }
                 if (date == startValue)
                 {
                     if (seasonNr + 1 < _idListSeason.Count) { seasonNr += 1; } else { seasonNr = 0; }

@@ -16,7 +16,6 @@ using System.Threading;
 using System.Collections;
 
 using GTRC_Community_Manager;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Scripts
 {
@@ -241,7 +240,7 @@ namespace Scripts
             {
                 SetDefaultProperties();
                 RegisterType = false;
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await SignInOut();
             }
         }
@@ -253,7 +252,7 @@ namespace Scripts
             {
                 SetDefaultProperties();
                 RegisterType = true;
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await SignInOut();
             }
         }
@@ -301,7 +300,7 @@ namespace Scripts
             {
                 SetDefaultProperties();
                 RegisterType = false;
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await PullInOut();
             }
         }
@@ -313,7 +312,7 @@ namespace Scripts
             {
                 SetDefaultProperties();
                 RegisterType = false;
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ParseDiscordID(strDiscordID);
                 await PullInOut();
             }
@@ -326,7 +325,7 @@ namespace Scripts
             {
                 SetDefaultProperties();
                 RegisterType = true;
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ParseDiscordID(strDiscordID);
                 await PullInOut();
             }
@@ -338,26 +337,22 @@ namespace Scripts
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ParseCarID(strCarNr);
                 await ChangeCar();
             }
         }
 
         [Command("fahrzeugwechsel")]
-        public async Task ChangeCarCmd_alt(string strCarNr, string strEventNr)
+        public async Task ChangeCarCmd_alt(string strCarNr, string strDiscordID)
         {
-            SetDefaultProperties();
-            await ParseCarID(strCarNr); await ParseEventID(strEventNr);
-            await ChangeCar();
-        }
-
-        [Command("fahrzeugwechsel")]
-        public async Task ChangeCarCmd_alt(string strCarNr, string strEventNr, string strDiscordID)
-        {
-            SetDefaultProperties();
-            await ParseCarID(strCarNr); await ParseEventID(strEventNr); await ParseDiscordID(strDiscordID);
-            await ChangeCar();
+            if (iPreSVM is not null)
+            {
+                SetDefaultProperties();
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
+                await ParseCarID(strCarNr); await ParseDiscordID(strDiscordID);
+                await ChangeCar();
+            }
         }
 
         [Command("kalender")]
@@ -374,7 +369,7 @@ namespace Scripts
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ShowCars();
                 await UserMessage!.DeleteAsync();
             }
@@ -386,7 +381,7 @@ namespace Scripts
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 await ShowBoP();
                 await UserMessage!.DeleteAsync();
             }
@@ -407,7 +402,7 @@ namespace Scripts
             if (iPreSVM is not null)
             {
                 SetDefaultProperties();
-                await ParseEventID((Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr).ToString());
+                await ParseEventID(Event.GetNextEvent(iPreSVM.CurrentSeasonID, DateTime.Now).EventNr.ToString());
                 var tempReply = await ReplyAsync(":sleeping:");
                 while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
                 await ShowStartingGrid(false, false);
@@ -571,8 +566,7 @@ namespace Scripts
             text += "`!abmelden` | Vom nächsten Event abmelden\n";
             text += "`!abmelden 4` | Vom 4. Event abmelden\n";
             text += "`!zurückziehen` | Aus der aktuellen Meisterschaft zurückziehen\n";
-            text += "`!fahrzeugwechsel 10` | Zum nächsten Event auf das Auto 10 wechseln\n";
-            text += "`!fahrzeugwechsel 10 4` | Zum 4. Event auf das Auto 10 wechseln\n\n";
+            text += "`!fahrzeugwechsel 10` | Auf das Auto 10 wechseln\n";
             text += "`!starterfeld` | Starterfeld, Warteliste & Abmeldungen des nächsten Events anzeigen\n";
             text += "`!starterfeld 4` | Starterfeld, Warteliste & Abmeldungen des 4. Events anzeigen\n";
             text += "`!bop` | BoP des nächsten Events anzeigen\n";
@@ -586,7 +580,7 @@ namespace Scripts
                 text += "`!abmelden 4 612` | StartNr/DiscordID 612 vom 4. Event abmelden\n";
                 text += "`!zurückziehen 612` | StartNr/DiscordID 612 aus der aktuellen Meisterschaft entfernen\n";
                 text += "`!dochnichtzurückziehen 612` | Rückzug der StartNr/DiscordID 612 aus der aktuellen Meisterschaft rückgängig machen\n";
-                text += "`!fahrzeugwechsel 10 4 612` | Zum 4. Event StartNr/DiscordID 612 auf das Auto 10 umschreiben";
+                text += "`!fahrzeugwechsel 10 612` | StartNr/DiscordID 612 auf das Auto 10 umschreiben";
             }
             text += "\n\nStatt das `!` zu verwenden kannst du mich auch direkt mit `@` ansprechen.";
             await SendMessage(text, false);
@@ -605,32 +599,34 @@ namespace Scripts
             var tempReply = await ReplyAsync(":sleeping:");
             while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); } IsRunning = true;
             await ParseEntryID();
-            if (EntryID != Basics.NoID && CarID != Basics.NoID && EventID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
+            if (EntryID != Basics.NoID && CarID != Basics.NoID && iPreSVM is not null && UserMessage is not null)
             {
                 if (DiscordID_Author == DiscordID_Driver || IsAdmin)
                 {
-                    EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(EntryID, EventID);
-                    Event _event = _eventsEntries.ObjEvent;
-                    Entry _entry = _eventsEntries.ObjEntry;
-                    Car _car = Car.Statics.GetByID(CarID);
+                    Entry _entry = Entry.Statics.GetByID(EntryID);
+                    Event _event = Event.Statics.GetByID(EventID);
+                    EntriesDatetimes _entryDatetime = _entry.GetEntriesDatetimesByDate(_event.Date);
+                    Car newCar = Car.Statics.GetByID(CarID);
+                    Car oldCar = Car.Statics.GetByID(_entryDatetime.CarID);
+                    DateTime limitCarChangeCountback = Basics.DateTimeMinValue;
+                    List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), _event.SeasonID));
+                    int eventNr = listEvents.IndexOf(_event);
+                    if (eventNr > 0) { limitCarChangeCountback = listEvents[eventNr - 1].Date; }
                     if (_entry.SignOutDate < DateTime.Now)
                     {
                         if (DiscordID_Author == DiscordID_Driver) { LogText = "Du hast dich aus der Meisterschaft zurückgezogen."; }
                         else { LogText = "Der Teilnehmer hat sich aus der Meisterschaft zurückgezogen."; }
                         await ErrorResponse();
                     }
-                    else if (_event.Date < DateTime.Now && !IsAdmin)
+                    else if (_entryDatetime.CarID == CarID)
                     {
-                        await ReplyAsync("Das Rennen ist doch schon vorbei.");
+                        if (DiscordID_Author == DiscordID_Driver) { await ReplyAsync("Du bist doch schon auf dem " + newCar.Name + " angemeldet."); }
+                        else { await ReplyAsync("Der Teilnehmer ist bereits auf dem " + newCar.Name + " angemeldet."); }
                         await UserMessage.AddReactionAsync(emojiThinking);
                     }
-                    else if (_eventsEntries.CarID == CarID)
-                    {
-                        if (DiscordID_Author == DiscordID_Driver) { await ReplyAsync("Du bist doch schon auf dem " + _car.Name + " angemeldet."); }
-                        else { await ReplyAsync("Der Teilnehmer ist bereits auf dem " + _car.Name + " angemeldet."); }
-                        await UserMessage.AddReactionAsync(emojiThinking);
-                    }
-                    else if (iPreSVM.CarChangeCount(_entry, _event.Date) >= _event.ObjSeason.CarChangeLimit)
+                    
+                    else if (_entry.CarChangeCount(limitCarChangeCountback) >= _entry.ObjSeason.CarChangeLimit &&
+                        (!_event.ObjSeason.GroupCarLimits || newCar.Category != oldCar.Category || newCar.Manufacturer != oldCar.Manufacturer))
                     {
                         if (DiscordID_Author == DiscordID_Driver) { LogText = "Du kannst dein Fahrzeug nicht mehr wechseln."; }
                         else { LogText = "Dieser Teilnehmer kann das Fahrzeug nicht mehr wechseln."; }
@@ -638,35 +634,11 @@ namespace Scripts
                     }
                     else
                     {
-                        iPreSVM.UpdateBoPForEvent(_event);
-                        List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), _event.SeasonID));
-                        for (int _eventNr = _event.EventNr; _eventNr <= listEvents.Count; _eventNr++)
-                        {
-                            EventsEntries _tempEventsEntries = EventsEntries.GetAnyByUniqProp(EntryID, listEvents[_eventNr - 1].ID);
-                            _tempEventsEntries.CarID = CarID;
-                            _tempEventsEntries.CarChangeDate = DateTime.Now;
-                            _ = EventsEntries.Statics.WriteSQL(_tempEventsEntries);
-                        }
+                        EntriesDatetimes newEntryDate = EntriesDatetimes.GetAnyByUniqProp(EntryID, DateTime.Now);
+                        newEntryDate.CarID = CarID;
+                        _ = EntriesDatetimes.Statics.WriteSQL(newEntryDate);
                         await ShowStartingGrid(true, true);
                         await UserMessage.AddReactionAsync(emojiSuccess);
-                        _eventsEntries = EventsEntries.Statics.GetByUniqProp(new List<dynamic>() { EntryID, EventID });
-                        if (_entry.ScorePoints && !_eventsEntries.ScorePoints)
-                        {
-                            string message = TagDiscordIDs(DiscordIDs_Drivers, false) + "Seit dem " +
-                                Basics.Date2String(_event.ObjSeason.DateCarChangeLimit, "DD.MM.YY") +
-                                " um " + Basics.Date2String(_event.ObjSeason.DateCarChangeLimit, "hh:mm") +
-                                " Uhr kann eigentlich nicht mehr auf dieses Fahrzeug gewechselt werden, da die Obergrenze von " +
-                                _event.ObjSeason.CarLimitRegisterLimit.ToString() + " Fahrzeugen erreicht wurde. Daher fährst du in dieser Meisterschaft mit dem " +
-                                _car.Name + " ab jetzt außerhalb der Wertung mit und sammelst keine Meisterschaftspunkte";
-                            if (_event.ObjSeason.DateBoPFreeze > DateTime.Now)
-                            {
-                                message += ", bis dieses Fahrzeug wieder weniger als " +
-                                _event.ObjSeason.CarLimitRegisterLimit.ToString() + "x in der Meisterschaft vertreten ist.";
-                            }
-                            else { message += "."; }
-                            message += " Solltest du auch beim nächsten Rennen gerne weiterhin Punkte bekommen wollen, wähle bitte ein anderes Fahrzeug aus.";
-                            await ReplyAsync(message);
-                        }
                     }
                 }
                 else
@@ -713,7 +685,7 @@ namespace Scripts
                     else
                     {
                         if (RegisterType) { _eventsEntries.SignInDate = DateTime.Now; }
-                        else { _eventsEntries.SignInDate = Event.DateTimeMaxValue; }
+                        else { _eventsEntries.SignInDate = Basics.DateTimeMaxValue; }
                         EventsEntries.Statics.WriteSQL();
                         await ShowStartingGrid(false, false);
                         await UserMessage.AddReactionAsync(emojiSuccess);
@@ -746,7 +718,7 @@ namespace Scripts
             {
                 Entry _entry = Entry.Statics.GetByID(EntryID);
                 bool currentRegisterState = _entry.SignOutDate > DateTime.Now;
-                if (RegisterType) { currentRegisterState = _entry.SignOutDate >= Event.DateTimeMaxValue; }
+                if (RegisterType) { currentRegisterState = _entry.SignOutDate >= Basics.DateTimeMaxValue; }
                 if (currentRegisterState == RegisterType)
                 {
                     if (RegisterType && DiscordID_Author == DiscordID_Driver) { await ReplyAsync("Keine Sorge, du bist noch in der Meisterschaft eingeschrieben."); }
@@ -772,7 +744,7 @@ namespace Scripts
                 }
                 else
                 {
-                    if (RegisterType) { _entry.SignOutDate = Event.DateTimeMaxValue; }
+                    if (RegisterType) { _entry.SignOutDate = Basics.DateTimeMaxValue; }
                     else { _entry.SignOutDate = DateTime.Now; }
                     EventsEntries.Statics.WriteSQL();
                     Entry.Statics.WriteSQL();
@@ -853,7 +825,7 @@ namespace Scripts
                 List<EventsCars> eventsCars = EventsCars.SortByCount(EventsCars.GetAnyBy(nameof(EventsCars.EventID), EventID));
                 foreach (EventsCars eventCar in eventsCars)
                 {
-                    if (eventCar.ObjCar.Category == "GT3" && eventCar.CountBoP > 0)
+                    if (eventCar.CountBoP > 0)
                     {
                         text += eventCar.CountBoP.ToString() + "x\t";
                         text += eventCar.Ballast.ToString() + " kg\t";
@@ -947,16 +919,17 @@ namespace Scripts
         public static (string, int) AddStartingGridLine(string text, int pos, EventsEntries eventEntry, bool printCar, bool printCarChange, bool printPos)
         {
             Entry _entry = eventEntry.ObjEntry;
+            EntriesDatetimes entryDatetime = _entry.GetEntriesDatetimesByDate(eventEntry.ObjEvent.Date);
             if (printPos) { text += pos.ToString() + ".\t"; }
             text += _entry.RaceNumber.ToString() + "\t";
             List<Driver> listDrivers = new();
             List<DriversEntries> listDriverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
             foreach (DriversEntries driverEntry in listDriverEntries) { listDrivers.Add(driverEntry.ObjDriver); }
             text += Driver.DriverList2String(listDrivers, nameof(Driver.FullName));
-            if (printCar) { text += " | " + eventEntry.ObjCar.Name; }
-            if (printCarChange && _entry.ScorePoints && iPreSVM is not null)
+            if (printCar) { text += " | " + entryDatetime.ObjCar.Name; }
+            if (printCarChange && _entry.ScorePoints && _entry.ObjSeason.CarChangeLimit < int.MaxValue && _entry.ObjSeason.DateCarChangeLimit < Basics.DateTimeMaxValue)
             {
-                int ccCount = iPreSVM.CarChangeCount(_entry, Event.DateTimeMaxValue);
+                int ccCount = _entry.CarChangeCount(eventEntry.ObjEvent.Date);
                 if (ccCount >= _entry.ObjSeason.CarChangeLimit) { text += " | **" + ccCount.ToString() + "/" + _entry.ObjSeason.CarChangeLimit.ToString() + "**"; }
                 else { text += " | " + ccCount.ToString() + "/" + _entry.ObjSeason.CarChangeLimit.ToString(); }
             }
@@ -967,10 +940,10 @@ namespace Scripts
                     List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), _entry.SeasonID));
                     bool notScorePointsFirstEvent = listEvents.Count > 0 && !EventsEntries.GetAnyByUniqProp(_entry.ID, listEvents[0].ID).ScorePoints;
                     bool exceedsNoShowLimit = _entry.CountNoShow(eventEntry.ObjEvent, false) > _entry.ObjSeason.NoShowLimit;
-                    if (!notScorePointsFirstEvent && exceedsNoShowLimit) { text += " | *außer Wertung (wg. Abw. trotz Anm.)*"; }
-                    else { text += " | *außer Wertung*"; }
+                    if (!notScorePointsFirstEvent && exceedsNoShowLimit) { text += " | *Gaststarter (wg. Abw. trotz Anm.)*"; }
+                    else { text += " | *Gaststarter*"; }
                 }
-                else { text += " | *außer Wertung (wg. Fzglimit)*"; }
+                else { text += " | *Gaststarter (wg. Fzglimit)*"; }
             }
             bool eventBan = false; foreach (Driver _driver in listDrivers) { if (_driver.SafetyRating <= 0) { eventBan = true; } } //Von Event abhängig!!!
             if (eventBan) { text += " | **GESPERRT**"; }

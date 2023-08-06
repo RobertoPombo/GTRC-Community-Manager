@@ -358,10 +358,10 @@ namespace GTRC_Community_Manager
             WaitQueueEntries--;
             //Lap.Statics.LoadSQL();
             ResetEntries();
-            //PreSeason.UpdatePreQResults(CurrentSeasonID);
+            PreSeason.UpdatePreQResults(CurrentSeasonID);
             UpdateBoPForEvent(CurrentEvent);
             GSheets.UpdateBoPStandings(CurrentEvent, GSheet.ListIDs[2].DocID, GSheet.ListIDs[2].SheetID);
-            //GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
+            GSheets.UpdatePreQStandings(GSheet.ListIDs[1].DocID, GSheet.ListIDs[1].SheetID);
             IsRunningEntries = false;
         }
 
@@ -412,7 +412,7 @@ namespace GTRC_Community_Manager
             int tempSlotsTaken = SignedIn.Count;
             (SignedIn, SignedOut) = PreSeason.FillUpEntrylist(SlotsAvailable, SignedIn, SignedOut);
             GSheets.UpdateEntriesCurrentEvent(GSheet.ListIDs[6].DocID, GSheet.ListIDs[6].SheetID, CurrentEvent);
-            GSheets.UpdateCarChanges(GSheet.ListIDs[7].DocID, GSheet.ListIDs[7].SheetID, _event.SeasonID);
+            GSheets.UpdatePointsResets(GSheet.ListIDs[7].DocID, GSheet.ListIDs[7].SheetID, _event.SeasonID);
             if (_event.ID == CurrentEvent.ID)
             {
                 SlotsTaken = tempSlotsTaken;
@@ -428,28 +428,6 @@ namespace GTRC_Community_Manager
         {
             PreSeason.CountCars(_event);
             PreSeason.CalcBoP(_event);
-        }
-
-        public int CarChangeCount(Entry entry, DateTime maxEventDate)
-        {
-            int carChangeCount = 0;
-            if (entry.ObjSeason.CarChangeLimit < int.MaxValue && entry.ObjSeason.DateCarChangeLimit < Event.DateTimeMaxValue && entry.ScorePoints)
-            {
-                List<EventsEntries> eventList = EventsEntries.GetAnyBy(nameof(EventsEntries.EntryID), entry.ID);
-                eventList = EventsEntries.SortByDate(eventList);
-                Car currentCar = entry.ObjCar;
-                for (int index = 0; index < eventList.Count; index++)
-                {
-                    Car _eventCar = eventList[index].ObjCar;
-                    bool carChange = _eventCar.ID != currentCar.ID;
-                    bool isVersionChange = _eventCar.Manufacturer == currentCar.Manufacturer && _eventCar.Category == currentCar.Category;
-                    carChange = carChange && (!entry.ObjSeason.UnlimitedCarVersionChanges || !isVersionChange);
-                    bool changedAfterDeadline = eventList[index].CarChangeDate > entry.ObjSeason.DateCarChangeLimit;
-                    if (changedAfterDeadline && eventList[index].ObjEvent.Date < maxEventDate && carChange){ carChangeCount++; }
-                    currentCar = eventList[index].ObjCar;
-                }
-            }
-            return carChangeCount;
         }
 
         public void PublishTrackReport()

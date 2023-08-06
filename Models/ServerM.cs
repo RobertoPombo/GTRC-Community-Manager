@@ -32,7 +32,6 @@ namespace GTRC_Community_Manager
         private bool isRunning = false;
         private int waitQueue = 0;
         private int serverOutputTimeoutSek = 0;
-        private string _debug = "";
 
         public ServerM() { }
 
@@ -85,8 +84,10 @@ namespace GTRC_Community_Manager
         [JsonIgnore] public string Path
         {
             get { PathExists = true; return Server.Path; }
-            set { Server.Path = value; PathExists = true; RaisePropertyChanged(); }
+            set { Server.Path = value; PathExists = true; RaisePropertyChanged(); RaisePropertyChanged(nameof(PathIsForbidden)); }
         }
+
+        [JsonIgnore] public bool PathIsForbidden { get { return Server.PathIsForbidden(); } }
 
         [JsonIgnore] public bool PathExists
         {
@@ -188,7 +189,6 @@ namespace GTRC_Community_Manager
                         setOnline = value;
                         if (setOnline)
                         {
-                            _debug = "";
                             serverOutputTimeoutSek = ServerOutputTimeoutSekMax;
                             new Thread(ThreadCountdownServerTimeout).Start();
                             new Thread(ThreadStartAccServer).Start();
@@ -344,9 +344,6 @@ namespace GTRC_Community_Manager
                 string[] accServerOutputLines = accServerOutput.Split('\n');
                 foreach (string accServerOutputLine in accServerOutputLines)
                 {
-                    _debug += DateTime.Now.ToString() + " | " + accServerOutputLine + '\n';
-                    File.WriteAllText(MainWindow.dataDirectory + "debug server output #" + List.IndexOf(this).ToString() + ".txt", _debug, Encoding.Unicode);
-
                     ServerOutputTimeoutSek = ServerOutputTimeoutSekMax;
                     bool prefixFound = false;
                     foreach (string prefix in prefixes)

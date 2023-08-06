@@ -1,5 +1,6 @@
 ﻿using Core;
 using Database;
+using Scripts;
 using System;
 
 namespace GTRC_Community_Manager
@@ -12,8 +13,8 @@ namespace GTRC_Community_Manager
         private int gridSlotsLimit = 0;
         private int carLimitBallast = 1;
         private int gainBallast = 1;
-        private int carLimitRestriktor = 1;
-        private int gainRestriktor = 1;
+        private int carLimitRestrictor = 1;
+        private int gainRestrictor = 1;
         private int carLimitRegisterLimit = 0;
         private DateTime dateRegisterLimit = DateTime.Now;
         private DateTime dateBoPFreeze = DateTime.Now;
@@ -90,40 +91,40 @@ namespace GTRC_Community_Manager
             }
         }
 
-        public bool IsCheckedRestriktor
+        public bool IsCheckedRestrictor
         {
-            get { return season.CarLimitRestriktor < int.MaxValue && season.GainRestriktor > 0; }
+            get { return season.CarLimitRestrictor < int.MaxValue && season.GainRestrictor > 0; }
             set
             {
-                if (value) { CarLimitRestriktor = carLimitRestriktor; GainRestriktor = gainRestriktor; }
-                else { CarLimitRestriktor = int.MaxValue; GainRestriktor = 0; }
+                if (value) { CarLimitRestrictor = carLimitRestrictor; GainRestrictor = gainRestrictor; }
+                else { CarLimitRestrictor = int.MaxValue; GainRestrictor = 0; }
                 RaisePropertyChanged();
             }
         }
 
-        public int CarLimitRestriktor
+        public int CarLimitRestrictor
         {
-            get { if (IsCheckedRestriktor) { return season.CarLimitRestriktor; } else { return carLimitRestriktor; } }
+            get { if (IsCheckedRestrictor) { return season.CarLimitRestrictor; } else { return carLimitRestrictor; } }
             set
             {
-                if (season.CarLimitRestriktor != value)
+                if (season.CarLimitRestrictor != value)
                 {
-                    season.CarLimitRestriktor = value;
-                    if (value < int.MaxValue) { carLimitRestriktor = value; }
+                    season.CarLimitRestrictor = value;
+                    if (value < int.MaxValue) { carLimitRestrictor = value; }
                     RaisePropertyChanged();
                 }
             }
         }
 
-        public int GainRestriktor
+        public int GainRestrictor
         {
-            get { if (IsCheckedRestriktor) { return season.GainRestriktor; } else { return gainRestriktor; } }
+            get { if (IsCheckedRestrictor) { return season.GainRestrictor; } else { return gainRestrictor; } }
             set
             {
-                if (season.GainRestriktor != value)
+                if (season.GainRestrictor != value)
                 {
-                    season.GainRestriktor = value;
-                    if (value > 0) { gainRestriktor = value; }
+                    season.GainRestrictor = value;
+                    if (value > 0) { gainRestrictor = value; }
                     RaisePropertyChanged();
                 }
             }
@@ -131,11 +132,11 @@ namespace GTRC_Community_Manager
 
         public bool IsCheckedRegisterLimit
         {
-            get { return season.CarLimitRegisterLimit < int.MaxValue && season.DateRegisterLimit < Event.DateTimeMaxValue; }
+            get { return season.CarLimitRegisterLimit < int.MaxValue && season.DateRegisterLimit < Basics.DateTimeMaxValue; }
             set
             {
                 if (value) { CarLimitRegisterLimit = carLimitRegisterLimit; DateRegisterLimit = dateRegisterLimit; } 
-                else { CarLimitRegisterLimit = int.MaxValue; DateRegisterLimit = Event.DateTimeMaxValue; }
+                else { CarLimitRegisterLimit = int.MaxValue; DateRegisterLimit = Basics.DateTimeMaxValue; }
                 RaisePropertyChanged();
             }
         }
@@ -162,7 +163,7 @@ namespace GTRC_Community_Manager
                 if (season.DateRegisterLimit != value)
                 {
                     season.DateRegisterLimit = value;
-                    if (value < Event.DateTimeMaxValue) { dateRegisterLimit = value; }
+                    if (value < Basics.DateTimeMaxValue) { dateRegisterLimit = value; }
                     RaisePropertyChanged();
                 }
             }
@@ -170,11 +171,11 @@ namespace GTRC_Community_Manager
 
         public bool IsCheckedBoPFreeze
         {
-            get { return season.DateBoPFreeze < Event.DateTimeMaxValue; }
+            get { return season.DateBoPFreeze < Basics.DateTimeMaxValue; }
             set
             {
                 if (value) { DateBoPFreeze = dateBoPFreeze; }
-                else { DateBoPFreeze = Event.DateTimeMaxValue; }
+                else { DateBoPFreeze = Basics.DateTimeMaxValue; }
                 RaisePropertyChanged();
             }
         }
@@ -187,7 +188,7 @@ namespace GTRC_Community_Manager
                 if (season.DateBoPFreeze != value)
                 {
                     season.DateBoPFreeze = value;
-                    if (value < Event.DateTimeMaxValue) { dateBoPFreeze = value; }
+                    if (value < Basics.DateTimeMaxValue) { dateBoPFreeze = value; }
                     RaisePropertyChanged();
                 }
             }
@@ -245,13 +246,12 @@ namespace GTRC_Community_Manager
 
         public bool IsCheckedCarChangeLimit
         {
-            get { return season.CarChangeLimit < int.MaxValue && season.DateCarChangeLimit < Event.DateTimeMaxValue; }
+            get { return season.CarChangeLimit < int.MaxValue && season.DateCarChangeLimit < Basics.DateTimeMaxValue; }
             set
             {
                 if (value) { CarChangeLimit = carChangeLimit; DateCarChangeLimit = dateCarChangeLimit; }
-                else { CarChangeLimit = int.MaxValue; DateCarChangeLimit = Event.DateTimeMaxValue; }
+                else { CarChangeLimit = int.MaxValue; DateCarChangeLimit = Basics.DateTimeMaxValue; }
                 RaisePropertyChanged();
-                RaisePropertyChanged(nameof(IsCheckedUnlimitedCarVersionChanges));
             }
         }
 
@@ -277,26 +277,16 @@ namespace GTRC_Community_Manager
                 if (season.DateCarChangeLimit != value)
                 {
                     season.DateCarChangeLimit = value;
-                    if (value < Event.DateTimeMaxValue) { dateCarChangeLimit = value; }
+                    if (value < Basics.DateTimeMaxValue) { dateCarChangeLimit = value; }
                     RaisePropertyChanged();
                 }
             }
         }
 
-        public bool IsCheckedUnlimitedCarVersionChanges
+        public bool IsCheckedGroupCarLimits
         {
-            get { return season.UnlimitedCarVersionChanges; }
-            set
-            {
-                if (season.UnlimitedCarVersionChanges != value)
-                {
-                    season.UnlimitedCarVersionChanges = value;
-                    RaisePropertyChanged();
-                    RaisePropertyChanged(nameof(IsCheckedCarChangeLimit));
-                    RaisePropertyChanged(nameof(CarChangeLimit));
-                    RaisePropertyChanged(nameof(DateCarChangeLimit));
-                }
-            }
+            get { return season.GroupCarLimits; }
+            set { if (season.GroupCarLimits != value) { season.GroupCarLimits = value; RaisePropertyChanged(); } }
         }
 
         public string ExplanationStintAnalisisSettings { get { return ExplainStintAnalisisSettings(); } set { } }

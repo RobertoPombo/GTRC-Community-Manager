@@ -12,7 +12,6 @@ using System.Windows.Documents;
 using Scripts;
 
 using GTRC_Community_Manager;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Database
 {
@@ -132,7 +131,7 @@ namespace Database
                     if (!List[objIndex0].IsChild()) { List.Remove(List[objIndex0]); }
                 }
             }
-            FilterList(); if (!_delayPL) { PublishList(); } DelayPL = _delayPL;
+            if (!_delayPL) { FilterList(); PublishList(); } DelayPL = _delayPL;
         }
 
         public void ListRemoveAt(int index, bool forceDel = false)
@@ -140,7 +139,7 @@ namespace Database
             if (List.Count > index)
             {
                 if (forceDel) { List[index].RemoveAllChilds(); }
-                if (!List[index].IsChild()) { List.RemoveAt(index); FilterList(); if (!DelayPL) { PublishList(); } }
+                if (!List[index].IsChild()) { List.RemoveAt(index); if (!DelayPL) { FilterList(); PublishList(); } }
             }
         }
 
@@ -154,7 +153,7 @@ namespace Database
                 if (forceDel) { _obj.RemoveAllChilds(); }
                 if (!_obj.IsChild()) { List.Remove(_obj); }
             }
-            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            DelayPL = _delayPL; if (!DelayPL) { FilterList(); PublishList(); }
         }
 
         public void ReadJson(bool forceDel = false)
@@ -162,7 +161,7 @@ namespace Database
             bool _delayPL = DelayPL; DelayPL = true;
             ListClear(forceDel);
             JsonConvert.DeserializeObject<DbType[]>(File.ReadAllText(Path, Encoding.Unicode));
-            SortList(); FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            DelayPL = _delayPL; if (!DelayPL) { SortList(); FilterList(); PublishList(); }
         }
 
         public void WriteJson()
@@ -171,7 +170,7 @@ namespace Database
             SortList();
             string text = JsonConvert.SerializeObject(List, Formatting.Indented);
             File.WriteAllText(Path, text, Encoding.Unicode);
-            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            DelayPL = _delayPL; if (!DelayPL) { FilterList(); PublishList(); }
         }
 
         public void LoadSQL(bool forceDel = false)
@@ -181,7 +180,7 @@ namespace Database
             string SqlQry = "SELECT * FROM " + Table + ";";
             try { SQL.Connection.Query<DbType>(SqlQry); }
             catch { MainVM.List[0].LogCurrentText = "Loading SQL table '" + Table + "' failed!"; }
-            SortList(); FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            SortList(); DelayPL = _delayPL; if (!DelayPL) { FilterList(); PublishList(); }
         }
 
         public List<DbType> GetBySQL(List<string> propertyNames, List<dynamic> values)
@@ -193,14 +192,19 @@ namespace Database
             {
                 for (int index = 0; index < propertyNames.Count; index++)
                 {
-                    SqlQry += propertyNames[index] + " = '" + values[index] + "' AND ";
+                    if (values[index] is DateTime)
+                    {
+                        values[index] = Basics.Date2String(values[index], "YYYY-MM-DD hh:mm:ss");
+                        SqlQry += "DATEADD(ms, -DATEPART(ms, " + propertyNames[index] + "), " + propertyNames[index] + ")" + " = '" + values[index] + "' AND ";
+                    }
+                    else { SqlQry += propertyNames[index] + " = '" + values[index] + "' AND "; }
                 }
                 SqlQry = SqlQry[..^5] + ";";
                 try { listObj = SQL.Connection.Query<DbType>(SqlQry).ToList(); }
                 catch { MainVM.List[0].LogCurrentText = "Loading object from SQL table '" + Table + "' failed!"; }
             }
             else { MainVM.List[0].LogCurrentText = "Loading object from SQL table '" + Table + "' failed!"; }
-            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            DelayPL = _delayPL; if (!DelayPL) { FilterList(); PublishList(); }
             return listObj;
         }
 
@@ -240,7 +244,7 @@ namespace Database
                 else { SQL.AddSQL(Table, newObj); }
             }
             LoadSQL();
-            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            DelayPL = _delayPL; if (!DelayPL) { FilterList(); PublishList(); }
         }
 
         public DbType WriteSQL(DbType _obj)
@@ -253,12 +257,11 @@ namespace Database
             foreach (PropertyInfo prop in _dict.Keys)
             {
                 propertyNames.Add(prop.Name);
-                if (prop.PropertyType.ToString() == "System.DateTime") { values.Add(Basics.Date2String(_dict[prop], "YYYY-MM-DD hh:mm:ss")); }
-                else { values.Add(_dict[prop]); }
+                values.Add(_dict[prop]);
             }
             List<DbType> listObj = new();
             if (_obj.ID == Basics.NoID && _dict.Count > 0) { listObj = GetBySQL(propertyNames, values); } else { listObj.Add(GetByIdSQL(_obj.ID)); }
-            SortList(); FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            DelayPL = _delayPL; if (!DelayPL) { SortList(); FilterList(); PublishList(); }
             if (listObj.Count > 0) { return listObj[0]; } else { return _obj; }
         }
 
@@ -268,7 +271,7 @@ namespace Database
             ListClear(forceDel);
             WriteSQL();
             if (List.Count == 0) { SQL.ReseedSQL(Table, 0); }
-            FilterList(); DelayPL = _delayPL; if (!DelayPL) { PublishList(); }
+            DelayPL = _delayPL; if (!DelayPL) { FilterList(); PublishList(); }
         }
 
         public DbType GetByIdSQL(int id)
@@ -577,7 +580,7 @@ namespace Database
             if (ReadyForList && !StaticFields.List.Contains(This))
             {
                 StaticFields.List.Add(This);
-                StaticFields.FilterList(); if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
+                if (!StaticFields.DelayPL) { StaticFields.FilterList(); StaticFields.PublishList(); }
             }
         }
 
@@ -589,7 +592,7 @@ namespace Database
                 if (ReadyForList && !StaticFields.List.Contains(This))
                 {
                     StaticFields.List.Insert(index, This);
-                    StaticFields.FilterList(); if (!StaticFields.DelayPL) { StaticFields.PublishList(); }
+                    if (!StaticFields.DelayPL) { StaticFields.FilterList(); StaticFields.PublishList(); }
                 }
             }
         }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 
 using GTRC_Community_Manager;
+using System.Linq;
 
 namespace Scripts
 {
@@ -174,6 +175,37 @@ namespace Scripts
                 DriversEntries driverEntry = DriversEntries.GetByDriverIDSeasonID(driverTeam.DriverID, entry.SeasonID);
                 if (driverEntry.ID == Basics.NoID) { driverEntry = DriversEntries.Statics.WriteSQL(new DriversEntries { DriverID = driverTeam.DriverID }); }
                 driverEntry.EntryID = entry.ID;
+                /*if (MaxDriversPerCar == 1)
+                {
+                    List<DriversEntries> driversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), entry.ID);
+                    int curSeriesID = Season.Statics.GetByID(seasonID).SeriesID;
+                    List<int> _seasonIDs = new() { seasonID };
+                    List<Event> _events = Event.SortByDate(Event.Statics.List);
+                    foreach (Event _event in _events) { if (_event.ObjSeason.SeriesID == curSeriesID && !_seasonIDs.Contains(_event.SeasonID)) { _seasonIDs.Add(_event.SeasonID); } }
+                    foreach (Event _event in _events) { if (!_seasonIDs.Contains(_event.SeasonID)) { _seasonIDs.Add(_event.SeasonID); } }
+                    _seasonIDs.RemoveAt(0);
+                    List<int> matchDriverIDs = new();
+                    foreach (int _seasonID in _seasonIDs)
+                    {
+                        Entry _entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { _seasonID, RaceNumber });
+                        List<DriversEntries> _driversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
+                        matchDriverIDs = new();
+                        foreach (DriversEntries _driversEntries1 in driversEntries)
+                        {
+                            foreach (DriversEntries _driversEntries2 in _driversEntries)
+                            {
+                                if (_driversEntries1.DriverID == _driversEntries2.DriverID) { matchDriverIDs.Add(_driversEntries1.DriverID); }
+                            }
+                        }
+                        if (matchDriverIDs.Count == 1) { break; }
+                    }
+                    int prefDriverID = driverTeam.DriverID;
+                    if (matchDriverIDs.Count == 1) { prefDriverID = matchDriverIDs[0]; }
+                    foreach (DriversEntries _driversEntries in driversEntries)
+                    {
+                        Entry entry2 = Entry.Statics.WriteSQL(new Entry { SeasonID = seasonID });
+                    }
+                }*/
                 entry.TeamID = driverTeam.TeamID;
                 if ((newEntry || entry.CarID == Basics.NoID) && CarID != Basics.NoID) { entry.CarID = CarID; }
                 if (newEntry) { entry.ScorePoints = ScorePoints; entry.Permanent = ScorePoints; }
@@ -231,14 +263,30 @@ namespace Scripts
                 "Anzahl Runden", "Anzahl Runden", "Anzahl Runden", "Anzahl gültige Runden", "Anzahl gültige Runden", "Anzahl gültige Runden", "Bestzeit", "Bestzeit",
                 "Bestzeit", "Anzahl Stints", "Anzahl Stints", "Anzahl Stints" };
             rows.Add(values);
-            values = new List<object>() { "Pos", "Fahrer", "Nr", "Team", "Fahrzeug", "Schnitt", "Abstand", "Intervall", "Nürburgring", "Misano", "Differenz", "Gesamt",
-                "Nürburgring", "Misano", "Gesamt", "Nürburgring", "Misano", "Nürburgring", "Misano", "Differenz", "Gesamt", "Nürburgring", "Misano" };
+            values = new List<object>() { "Pos", "Fahrer", "Nr", "Team", "Fahrzeug", "Schnitt", "Abstand", "Intervall", "Barcelona", "Snetterton", "Differenz", "Gesamt",
+                "Barcelona", "Snetterton", "Gesamt", "Barcelona", "Snetterton", "Barcelona", "Snetterton", "Differenz", "Gesamt", "Barcelona", "Snetterton" };
             rows.Add(values);
             if (PreQualiResultLine.Statics.List.Count > 0)
             {
+                values = new List<object>() { "FIX QUALIFIZIERT - Top 10 Fahrerwertung letzter Saison", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+                    "", "", "", "", "" };
+                rows.Add(values);
+                int pos = 0;
                 int average0 = PreQualiResultLine.Statics.List[0].Average;
+                foreach (long _steamIDfixPreQ in PreQualiResultLine.SteamIDsFixPreQ)
+                {
+                    pos++;
+                    string fullName = Driver.Statics.GetByUniqProp(_steamIDfixPreQ).FullName;
+                    values = new List<object>() { pos.ToString() + ".", fullName, "-", "-", "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
+                    rows.Add(values);
+                }
+                values = new List<object>() { "QUALIFIZIERT NACH PRE-QUALIFYING - Anmeldungen dieser Saison", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+                    "", "", "", "", "", "" };
+                rows.Add(values);
+                pos = 0;
                 for (int rowNr = 0; rowNr < PreQualiResultLine.Statics.List.Count; rowNr++)
                 {
+                    pos++;
                     values = new List<object>();
                     PreQualiResultLine _resultsLine = PreQualiResultLine.Statics.List[rowNr];
                     int _id = _resultsLine.EntryID;
@@ -249,12 +297,12 @@ namespace Scripts
                     driverText = driverText.Substring(0, Math.Max(0, driverText.Length - 2));
                     int average = _resultsLine.Average;
                     int average1 = PreQualiResultLine.Statics.List[Math.Max(0, rowNr - 1)].Average;
-                    values.Add((rowNr + 1).ToString() + ".");
+                    values.Add(pos.ToString() + ".");
                     values.Add(driverText);
                     values.Add(_entry.RaceNumber.ToString());
                     Team _team = Team.Statics.GetByID(_entry.TeamID);
                     if (_team.ReadyForList) { values.Add(_team.Name); } else { values.Add("Gaststarter"); }
-                    values.Add(Car.Statics.GetByID(EventsEntries.GetLatestEventsEntries(_entry, DateTime.Now).CarID).Name);
+                    values.Add(Car.Statics.GetByID(_entry.GetEntriesDatetimesByDate(DateTime.Now).CarID).Name);
                     if (average < int.MaxValue)
                     {
                         values.Add(Basics.Ms2Laptime(average));
@@ -288,18 +336,32 @@ namespace Scripts
                     else { values.Add(""); }
                     if (_resultsLine.ValidStintsCount2 > 0) { values.Add(_resultsLine.ValidStintsCount2.ToString() + "x"); }
                     else { values.Add(""); }
-                    rows.Add(values);
+                    bool isFixPreQ = false;
+                    List<DriversEntries> _driversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), PreQualiResultLine.Statics.List[rowNr].EntryID);
+                    foreach (DriversEntries _driverEntry in _driversEntries)
+                    {
+                        for (int _fixPreQNr = 0; _fixPreQNr < PreQualiResultLine.SteamIDsFixPreQ.Count; _fixPreQNr++)
+                        {
+                            if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == PreQualiResultLine.SteamIDsFixPreQ[_fixPreQNr])
+                            {
+                                for (int valueNr = 1; valueNr < values.Count; valueNr++) { rows[_fixPreQNr + 3][valueNr] = values[valueNr]; }
+                                isFixPreQ = true; break;
+                            }
+                        }
+                        if (isFixPreQ) { break; }
+                    }
+                    if (isFixPreQ) { pos--; } else { rows.Add(values); }
                 }
-                string range = "A1:W";
-                ClearRange(docID, sheetID, range);
-                range += (PreQualiResultLine.Statics.List.Count + 2).ToString();
-                UpdateRange(docID, sheetID, range, rows);
             }
+            string range = "A1:W";
+            ClearRange(docID, sheetID, range);
+            range += rows.Count.ToString();
+            UpdateRange(docID, sheetID, range, rows);
         }
 
         public static void UpdateBoPStandings(Event currentEvent, string docID, string sheetID)
         {
-            List<EventsCars> eventsCars = EventsCars.GetAnyBy(nameof(EventsCars.EventID), currentEvent.ID);
+            List<EventsCars> eventsCars = EventsCars.SortByCount(EventsCars.GetAnyBy(nameof(EventsCars.EventID), currentEvent.ID));
             List<List<object>> rows = new();
             List<object> values = new() { "Pos", "Fahrzeug", "Jahr", "Anz.", "Ballast", "Restr." };
             rows.Add(values);
@@ -331,7 +393,7 @@ namespace Scripts
             {
                 string range = "A1:F";
                 ClearRange(docID, sheetID, range);
-                range += (rows.Count).ToString();
+                range += rows.Count.ToString();
                 UpdateRange(docID, sheetID, range, rows);
             }
         }
@@ -353,7 +415,7 @@ namespace Scripts
                     values.Add(_driverEntries[0].ObjDriver.FirstName);
                     values.Add(_driverEntries[0].ObjDriver.LastName);
                     values.Add("S" + _driverEntries[0].ObjDriver.SteamID.ToString());
-                    values.Add(_eventsEntries.ObjCar.Name_GTRC);
+                    values.Add(_entry.GetEntriesDatetimesByDate(_event.Date).ObjCar.Name_GTRC);
                     values.Add(_entry.ObjTeam?.Name ?? "");
                     values.Add(_entry.RaceNumber.ToString());
                     if (_eventsEntries.ScorePoints) { values.Add("Stammfahrer"); } else { values.Add("Gaststarter"); }
@@ -370,8 +432,10 @@ namespace Scripts
             }
         }
 
-        public static void UpdateCarChanges(string docID, string sheetID, int seasonID)
+        public static void UpdatePointsResets(string docID, string sheetID, int seasonID)
         {
+            Season season = Season.Statics.GetByID(seasonID);
+            bool groupCarLimits = season.GroupCarLimits;
             List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), seasonID);
             List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), seasonID));
             List<List<object>> rows = new();
@@ -388,13 +452,9 @@ namespace Scripts
                     {
                         Event _event0 = listEvents[eventNr - 1];
                         Event _event1 = listEvents[eventNr];
-                        EventsEntries _eventsEntries0 = EventsEntries.GetAnyByUniqProp(_entry.ID, _event0.ID);
-                        EventsEntries _eventsEntries1 = EventsEntries.GetAnyByUniqProp(_entry.ID, _event1.ID);
-                        if (_eventsEntries1.CarID != _eventsEntries0.CarID)
+                        if (_entry.GetLatestCarChangeDate(_event1.Date) > _event0.Date)
                         {
-                            values = new List<object>();
-                            values.Add(_driverEntries[0].ObjDriver.FullName);
-                            values.Add(_event0.ObjTrack.Name_GTRC);
+                            values = new List<object> { _driverEntries[0].ObjDriver.FullName, _event0.ObjTrack.Name_GTRC };
                             rows.Add(values);
                         }
                     }

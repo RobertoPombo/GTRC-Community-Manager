@@ -36,8 +36,8 @@ namespace Database
         private int gridSlotsLimit = 0;
         private int carLimitBallast = 0;
         private int gainBallast = 0;
-        private int carLimitRestriktor = 0;
-        private int gainRestriktor = 0;
+        private int carLimitRestrictor = 0;
+        private int gainRestrictor = 0;
         private int carLimitRegisterLimit = 0;
         private DateTime dateRegisterLimit = DateTime.Now;
         private DateTime dateBoPFreeze = DateTime.Now;
@@ -45,7 +45,7 @@ namespace Database
         private int signOutLimit = 0;
         private int carChangeLimit = 0;
         private DateTime dateCarChangeLimit = DateTime.Now;
-        private bool unlimitedCarVersionChanges = false;
+        private bool groupCarLimits = false;
         private int formationLapType = 0;
 
         public string Name
@@ -88,16 +88,16 @@ namespace Database
             set { if (value >= 0) { gainBallast = value; } }
         }
 
-        public int CarLimitRestriktor
+        public int CarLimitRestrictor
         {
-            get { return carLimitRestriktor; }
-            set { if (value >= 0) { carLimitRestriktor = value; } }
+            get { return carLimitRestrictor; }
+            set { if (value >= 0) { carLimitRestrictor = value; } }
         }
 
-        public int GainRestriktor
+        public int GainRestrictor
         {
-            get { return gainRestriktor; }
-            set { if (value >= 0) { gainRestriktor = value; } }
+            get { return gainRestrictor; }
+            set { if (value >= 0) { gainRestrictor = value; } }
         }
 
         public int CarLimitRegisterLimit
@@ -109,13 +109,13 @@ namespace Database
         public DateTime DateRegisterLimit
         {
             get { return dateRegisterLimit; }
-            set { if (value >= Event.DateTimeMinValue) { dateRegisterLimit = value; } }
+            set { if (value >= Basics.DateTimeMinValue) { dateRegisterLimit = value; } }
         }
 
         public DateTime DateBoPFreeze
         {
             get { return dateBoPFreeze; }
-            set { if (value >= Event.DateTimeMinValue) { dateBoPFreeze = value; } }
+            set { if (value >= Basics.DateTimeMinValue) { dateBoPFreeze = value; } }
         }
 
         public int NoShowLimit
@@ -133,44 +133,19 @@ namespace Database
         public int CarChangeLimit
         {
             get { return carChangeLimit; }
-            set
-            {
-                if (value >= 0 && carChangeLimit != value)
-                {
-                    carChangeLimit = value;
-                    if (carChangeLimit == int.MaxValue) { unlimitedCarVersionChanges = true; }
-                }
-            }
+            set { if (value >= 0) { carChangeLimit = value; } }
         }
 
         public DateTime DateCarChangeLimit
         {
             get { return dateCarChangeLimit; }
-            set
-            {
-                if (value >= Event.DateTimeMinValue && dateCarChangeLimit != value)
-                {
-                    dateCarChangeLimit = value;
-                    if (dateCarChangeLimit >= Event.DateTimeMaxValue) { unlimitedCarVersionChanges = true; }
-                }
-            }
+            set { if (value >= Basics.DateTimeMinValue) { dateCarChangeLimit = value; } }
         }
 
-        public bool UnlimitedCarVersionChanges
+        public bool GroupCarLimits
         {
-            get { return unlimitedCarVersionChanges; }
-            set
-            {
-                if (unlimitedCarVersionChanges != value)
-                {
-                    unlimitedCarVersionChanges = value;
-                    if (!unlimitedCarVersionChanges)
-                    {
-                        if (carChangeLimit == int.MaxValue) { carChangeLimit = 0; }
-                        if (dateCarChangeLimit >= Event.DateTimeMaxValue) { dateCarChangeLimit = DateTime.Now; }
-                    }
-                }
-            }
+            get { return groupCarLimits; }
+            set { groupCarLimits = value; }
         }
 
         public int FormationLapType

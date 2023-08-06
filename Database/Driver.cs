@@ -35,10 +35,11 @@ namespace Database
         private string firstName = "";
         private string lastName = "";
         private DateTime registerDate = DateTime.Now;
-        private DateTime banDate = Event.DateTimeMaxValue;
+        private DateTime banDate = Basics.DateTimeMaxValue;
         private string name3Digits = "";
         private int eloRating = 1500;
         private int safetyRating = 50;
+        private int warnings = 0;
 
         [NotMapped][JsonIgnore] public List<string> Name3DigitsOptions = new() { "" };
 
@@ -87,13 +88,13 @@ namespace Database
         public DateTime RegisterDate
         {
             get { return registerDate; }
-            set { if (value > DateTime.Now) { registerDate = DateTime.Now; } else { registerDate = value; } }
+            set { if (value >= Basics.DateTimeMinValue && value > DateTime.Now) { registerDate = DateTime.Now; } else { registerDate = value; } }
         }
 
         public DateTime BanDate
         {
             get { return banDate; }
-            set { if (value >= RegisterDate) { banDate = value; } }
+            set { if (value >= Basics.DateTimeMinValue && value >= RegisterDate) { banDate = value; } }
         }
 
         public string Name3Digits
@@ -118,6 +119,16 @@ namespace Database
         {
             get { return safetyRating; }
             set { if (value > 100) { safetyRating = 100; } else { safetyRating = value; } }
+        }
+
+        public int Warnings
+        {
+            get { return warnings; }
+            set
+            {
+                if (value < 0) { warnings = 0; }
+                else { warnings = value; }
+            }
         }
 
         public static void PublishList() { }

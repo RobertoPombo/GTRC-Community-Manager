@@ -8,13 +8,26 @@ namespace Database
 {
     public class PreQualiResultLine : DatabaseObject<PreQualiResultLine>
     {
+        [NotMapped][JsonIgnore] public static readonly List<long> SteamIDsFixPreQ = new()
+        {
+            76561197974380992,
+            76561198203881699,
+            76561198404497438,
+            76561198073693971,
+            76561199261458988,
+            76561198007124321,
+            76561198282429343,
+            76561199102253061,
+            76561199239196375,
+            76561198011698379
+        };
         [NotMapped][JsonIgnore] public static StaticDbField<PreQualiResultLine> Statics { get; set; }
         static PreQualiResultLine()
         {
             Statics = new StaticDbField<PreQualiResultLine>(true)
             {
                 Table = "PreQualiResultLines",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(Position) }, new List<string>() { nameof(EntryID) } },
+                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(EntryID) } },
                 ToStringPropertiesNames = new List<string>() { nameof(Position), nameof(EntryID) },
                 PublishList = () => PublishList()
             };
@@ -23,6 +36,7 @@ namespace Database
         public PreQualiResultLine(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }
         public PreQualiResultLine(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
+        private int position = 0;
         private int entryID = 0;
         private int average = int.MaxValue;
         private int average1 = int.MaxValue;
@@ -48,8 +62,8 @@ namespace Database
 
         public int Position
         {
-            get { if (List.Contains(this)) { return Statics.List.IndexOf(this) + 1; } else { return Basics.NoID; } }
-            set { }
+            get { if (List.Contains(this)) { return position; } else { return Basics.NoID; } }
+            set { if (value > 0) { position = value; } }
         }
 
         public int EntryID
@@ -160,7 +174,7 @@ namespace Database
         {
             int entryNr = 0;
             List<Entry> _idList = Entry.Statics.IDList;
-            if (_idList.Count == 0) { new Entry() { ID = 1 }; _idList = Entry.Statics.IDList; }
+            if (_idList.Count == 0) { _ = new Entry() { ID = 1 }; _idList = Entry.Statics.IDList; }
             Entry _entry = Entry.Statics.GetByID(entryID);
             if (_entry.ReadyForList) { entryNr = Entry.Statics.IDList.IndexOf(_entry); } else { entryID = _idList[0].ID; }
             int startValue = entryNr;

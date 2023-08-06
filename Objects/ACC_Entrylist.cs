@@ -65,6 +65,7 @@ namespace GTRC_Community_Manager
                     bool isAdmin = false;
                     ACC_Entry accEntry = new();
                     entries.Add(accEntry);
+                    EntriesDatetimes entryDatetime = _eventsEntries.ObjEntry.GetEntriesDatetimesByDate(_event.Date);
                     accEntry.drivers = new List<ACC_Driver>();
                     List<DriversEntries> ListDriverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _eventsEntries.ObjEntry.ID);
                     foreach (DriversEntries _driverEntries in ListDriverEntries)
@@ -79,7 +80,7 @@ namespace GTRC_Community_Manager
                         accDriver.playerID = "S" + _driverEntries.ObjDriver.SteamID.ToString();
                     }
                     accEntry.raceNumber = _eventsEntries.ObjEntry.RaceNumber;
-                    if (_forceCarModel && _eventsEntries.ObjCar.ID != Basics.NoID) { accEntry.forcedCarModel = _eventsEntries.ObjCar.AccCarID; }
+                    if (_forceCarModel && entryDatetime.ObjCar.ID != Basics.NoID) { accEntry.forcedCarModel = entryDatetime.ObjCar.AccCarID; }
                     else { accEntry.forcedCarModel = -1; }
                     accEntry.overrideDriverInfo = 1;
                     accEntry.defaultGridPosition = -1;

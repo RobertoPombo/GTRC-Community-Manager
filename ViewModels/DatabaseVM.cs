@@ -1,6 +1,7 @@
 ﻿using Core;
 using Database;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Scripts;
 using System;
 using System.Collections;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Windows.Controls;
 
 namespace GTRC_Community_Manager
 {
@@ -49,6 +51,8 @@ namespace GTRC_Community_Manager
             ListDataTypes.Add(new KeyValuePair<string, Type>(Event.Statics.Table, typeof(Event)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(DriversEntries.Statics.Table, typeof(DriversEntries)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(DriversTeams.Statics.Table, typeof(DriversTeams)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(DriversDatetimes.Statics.Table, typeof(DriversDatetimes)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(EntriesDatetimes.Statics.Table, typeof(EntriesDatetimes)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(EventsEntries.Statics.Table, typeof(EventsEntries)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(EventsCars.Statics.Table, typeof(EventsCars)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(ResultsFile.Statics.Table, typeof(ResultsFile)));
@@ -56,6 +60,7 @@ namespace GTRC_Community_Manager
             ListDataTypes.Add(new KeyValuePair<string, Type>(LeaderboardLinePractice.Statics.Table, typeof(LeaderboardLinePractice)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Incident.Statics.Table, typeof(Incident)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(IncidentsEntries.Statics.Table, typeof(IncidentsEntries)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(PreQualiResultLine.Statics.Table, typeof(PreQualiResultLine)));
             if (!File.Exists(PathFilter)) { File.WriteAllText(PathFilter, "", Encoding.Unicode); }
             RestoreFilter();
             DataType = ListDataTypes[0].Value;

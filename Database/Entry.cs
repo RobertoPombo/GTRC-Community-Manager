@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Scripts;
-using Newtonsoft.Json.Linq;
 
 namespace Database
 {
@@ -39,13 +38,12 @@ namespace Database
         private int teamID = Basics.NoID;
         private int carID = Basics.ID0;
         private DateTime registerDate = DateTime.Now;
-        private DateTime signOutDate = Event.DateTimeMaxValue;
+        private DateTime signOutDate = Basics.DateTimeMaxValue;
         private int ballast = 0;
         private int restrictor = 0;
         private int category = 3;
         private bool scorePoints = true;
         private bool permanent = true;
-        private int warnings = 0;
 
         public int SeasonID
         {
@@ -84,29 +82,13 @@ namespace Database
                 if (Car.Statics.IDList.Count == 0) { objCar = new Car() { ID = 1 }; }
                 if (!Car.Statics.ExistsID(value)) { objCar = Car.Statics.IDList[0]; carID = objCar.ID; }
                 else { carID = value; objCar = Car.Statics.GetByID(carID); }
-                if (!Statics.DelayPL)
-                {
-                    List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                    foreach (EventsEntries _eventEntry in listEventsEntries) { if (_eventEntry.CarChangeDate == registerDate) { _eventEntry.CarID = carID; } }
-                }
             }
         }
 
         public DateTime RegisterDate
         {
             get { return registerDate; }
-            set
-            {
-                registerDate = value;
-                if (!Statics.DelayPL)
-                {
-                    List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                    foreach (EventsEntries _eventEntry in listEventsEntries)
-                    {
-                        if (_eventEntry.CarChangeDate <= registerDate) { _eventEntry.CarChangeDate = value; _eventEntry.CarID = CarID; }
-                    }
-                }
-            }
+            set { if (value >= Basics.DateTimeMinValue) { registerDate = value; } }
         }
 
         public DateTime SignOutDate
@@ -114,7 +96,7 @@ namespace Database
             get { return signOutDate; }
             set
             {
-                if (value >= RegisterDate)
+                if (value >= Basics.DateTimeMinValue && value >= RegisterDate)
                 {
                     DateTime previousSignOutDate = signOutDate;
                     signOutDate = value;
@@ -124,10 +106,10 @@ namespace Database
                         foreach (EventsEntries _eventEntry in listEventsEntries)
                         {
                             Event _event = _eventEntry.ObjEvent;
-                            if (_event.Date > signOutDate) { _eventEntry.SignInDate = Event.DateTimeMaxValue; }
+                            if (_event.Date > signOutDate) { _eventEntry.SignInDate = Basics.DateTimeMaxValue; }
                             else if (_event.Date > DateTime.Now && _event.Date > previousSignOutDate && _event.Date < signOutDate && Permanent)
                             {
-                                _eventEntry.SignInDate = Event.DateTimeMinValue;
+                                _eventEntry.SignInDate = Basics.DateTimeMinValue;
                             }
                         }
                     }
@@ -160,69 +142,19 @@ namespace Database
         public int Category
         {
             get { return category; }
-            set
-            {
-                if (value >= 0 && value <= 4 && category != value)
-                {
-                    category = value;
-                    if (category == 3) { ScorePoints = true; } else if (category == 1) { ScorePoints = false; }
-                }
-            }
+            set { if (value >= 0 && value <= 4 && category != value) { category = value; if (category == 3) { ScorePoints = true; } else if (category == 1) { ScorePoints = false; } } }
         }
 
         public bool ScorePoints
         {
             get { return scorePoints; }
-            set
-            {
-                if (scorePoints != value)
-                {
-                    if (!Statics.DelayPL)
-                    {
-                        List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                        foreach (EventsEntries _eventEntry in listEventsEntries)
-                        {
-                            if (_eventEntry.ObjEvent.Date > DateTime.Now) { _eventEntry.ScorePoints = value; }
-                        }
-                    }
-                    scorePoints = value;
-                    if (scorePoints) { Category = 3; } else { Category = 1; }
-                }
-            }
+            set { if (scorePoints != value) { scorePoints = value; if (scorePoints) { Category = 3; } else { Category = 1; } } }
         }
 
         public bool Permanent
         {
             get { return permanent; }
-            set
-            {
-                if (permanent != value)
-                {
-                    if (!Statics.DelayPL)
-                    {
-                        List<EventsEntries> listEventsEntries = EventsEntries.Statics.GetBy(nameof(EventsEntries.EntryID), ID);
-                        foreach (EventsEntries _eventEntry in listEventsEntries)
-                        {
-                            if (_eventEntry.RegisterState && _eventEntry.ObjEvent.Date > DateTime.Now)
-                            {
-                                if (value) { _eventEntry.SignInDate = Event.DateTimeMinValue; }
-                                else if (_eventEntry.SignInDate <= Event.DateTimeMinValue) { _eventEntry.SignInDate = Event.DateTimeMaxValue; }
-                            }
-                        }
-                    }
-                    permanent = value;
-                }
-            }
-        }
-
-        public int Warnings
-        {
-            get { return warnings; }
-            set
-            {
-                if (value < 0) { warnings = 0; }
-                else { warnings = value; }
-            }
+            set { if (permanent != value) { permanent = value; } }
         }
 
         public static void PublishList() { }
@@ -273,7 +205,6 @@ namespace Database
 
         public int CountNoShow(Event nextEvent, bool includeNextEvent)
         {
-            int e = raceNumber;
             int noShowCount = 0;
             if (nextEvent.SeasonID != SeasonID) { return noShowCount; }
             List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), SeasonID));
@@ -290,6 +221,63 @@ namespace Database
                 }
             }
             return noShowCount;
+        }
+
+        public List<EntriesDatetimes> GetAnyEntriesDatetimes()
+        {
+            List<EntriesDatetimes> _list = EntriesDatetimes.SortByDate(EntriesDatetimes.Statics.GetBy(nameof(EntriesDatetimes.EntryID), ID));
+            if (_list.Count == 0) { _list.Add(new(false) { EntryID = ID, Date = RegisterDate, CarID = CarID, ScorePoints = ScorePoints, Permanent = Permanent }); }
+            return _list;
+        }
+
+        public EntriesDatetimes GetEntriesDatetimesByDate(DateTime _limit)
+        {
+            List<EntriesDatetimes> _list = GetAnyEntriesDatetimes();
+            for (int index = 0; index < _list.Count - 1; index++) { if (_list[index + 1].Date > _limit) { return _list[index]; } }
+            return _list[^1];
+        }
+
+        public int CarChangeCount(DateTime limitDate)
+        {
+            int carChangeCount = 0;
+            DateTime minDate = ObjSeason.DateCarChangeLimit;
+            List<EntriesDatetimes> _list = GetAnyEntriesDatetimes();
+            List<Event> _events = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), SeasonID));
+            Car car0 = ObjCar;
+            for (int index = 0; index < _list.Count; index++)
+            {
+                if (_list[index].Date > limitDate) { return carChangeCount; }
+                Car car1 = _list[index].ObjCar;
+                if (car1.ID != car0.ID && _list[index].Date > minDate)
+                {
+                    if (!ObjSeason.GroupCarLimits || car1.Category != car0.Category || car1.Manufacturer != car0.Manufacturer)
+                    {
+                        carChangeCount++;
+                        minDate = Event.GetNextEvent(SeasonID, _list[index].Date).Date;
+                    }
+                }
+                car0 = car1;
+            }
+            return carChangeCount;
+        }
+
+        public DateTime GetLatestCarChangeDate(DateTime limitDate, bool IgnoreGroupCarLimits=false)
+        {
+            bool GroupCarLimits = ObjSeason.GroupCarLimits && !IgnoreGroupCarLimits;
+            DateTime latestCarChangeDate = RegisterDate;
+            List<EntriesDatetimes> _list = GetAnyEntriesDatetimes();
+            Car car0 = ObjCar;
+            for (int index = 0; index < _list.Count; index++)
+            {
+                if (_list[index].Date > limitDate) { return latestCarChangeDate; }
+                Car car1 = _list[index].ObjCar;
+                if (car1.ID != car0.ID && (!GroupCarLimits || car1.Category != car0.Category || car1.Manufacturer != car0.Manufacturer))
+                {
+                    latestCarChangeDate = _list[index].Date;
+                }
+                car0 = car1;
+            }
+            return latestCarChangeDate;
         }
     }
 }

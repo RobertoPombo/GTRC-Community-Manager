@@ -16,6 +16,7 @@ namespace Database
         public static readonly string NoPath = MainWindow.currentDirectory;
         public static readonly string ForbiddenPath = MainWindow.dataDirectory;
         public static readonly string DefaultName = "Server #1";
+        public static readonly string FileNameAccServerExe = "accServer.exe";
         [NotMapped][JsonIgnore] public static StaticDbField<Server> Statics { get; set; }
         static Server()
         {
@@ -65,15 +66,15 @@ namespace Database
             }
         }
 
-        [NotMapped][JsonIgnore] public string AbsolutePath { get { return Basics.RelativePath2AbsolutePath(NoPath, Basics.ValidatedPath(NoPath, Path)); } }
+        [NotMapped][JsonIgnore] public string AbsolutePath { get { return Basics.RelativePath2AbsolutePath(NoPath, Basics.ValidatedPath(NoPath, Path)); } set { } }
 
-        [NotMapped][JsonIgnore] public string PathServer { get { return AbsolutePath + "server\\"; } }
+        [NotMapped][JsonIgnore] public string PathServer { get { return AbsolutePath + "server\\"; } set { } }
 
-        [NotMapped][JsonIgnore] public string PathCfg { get { return PathServer + "cfg\\"; } }
+        [NotMapped][JsonIgnore] public string PathCfg { get { return PathServer + "cfg\\"; } set { } }
 
-        [NotMapped][JsonIgnore] public string PathResults { get { return PathServer + "results\\"; } }
+        [NotMapped][JsonIgnore] public string PathResults { get { return PathServer + "results\\"; } set { } }
 
-        [NotMapped][JsonIgnore] public string PathExe { get { return PathServer + "accServer.exe"; } }
+        public string PathExe { get { return PathServer + FileNameAccServerExe; } set { } }
 
         public int SeasonID
         {
@@ -161,24 +162,26 @@ namespace Database
             }
         }
 
+        public bool PathIsForbidden()
+        {
+            foreach (string currentPath in new List<string>() { AbsolutePath, PathServer, PathCfg, PathResults, PathExe })
+            {
+                if (Basics.PathIsParentOf(NoPath, ForbiddenPath, currentPath)) { return true; }
+            }
+            return false;
+        }
+
         public bool PathExists()
         {
-            bool isValid = true;
-            foreach (string currentPath in new List<string>() { AbsolutePath, PathCfg, PathResults })
-            {
-                if (!Directory.Exists(currentPath)) { isValid = false; break; }
-                if (Basics.PathIsParentOf(NoPath, ForbiddenPath, currentPath)) { isValid = false; break; }
-            }
-            foreach (Server _server in List) { if (_server != this && _server.Path == path) { isValid = false; } }
-            if (isValid) { return true; } else { return false; }
+            foreach (string currentPath in new List<string>() { PathCfg, PathResults }) { if (!Directory.Exists(currentPath)) { return false; } }
+            foreach (Server _server in List) { if (_server != this && _server.Path == path) { return false; } }
+            return !PathIsForbidden();
         }
 
         public bool PathExistsExe()
         {
-            bool isValid = PathExists();
-            if (!File.Exists(PathExe)) { isValid = false; }
-            if (Basics.PathIsParentOf(NoPath, ForbiddenPath, PathExe)) { isValid = false; }
-            if (isValid) { return true; } else { return false; }
+            if (!File.Exists(PathExe)) { return false; }
+            return PathExists();
         }
     }
 }
