@@ -595,6 +595,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="5">
@@ -635,6 +636,9 @@
                                 <CheckBox Grid.Row="9" Grid.Column="0"
                                           IsChecked="{Binding CurrentSeasonM.IsCheckedGroupCarLimits}"
                                           Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
+                                <CheckBox Grid.Row="10" Grid.Column="0"
+                                          IsChecked="{Binding CurrentSeasonM.IsCheckedBopLatestModelOnly}"
+                                          Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
                                 <Label Grid.Row="1" Grid.Column="1" Content="Grid Slots"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
                                 <Label Grid.Row="2" Grid.Column="1" Content="Ballast"
@@ -653,6 +657,9 @@
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
                                 <Label Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="6"
                                        Content="Group car limits by manufacturer and category"
+                                       Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
+                                <Label Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="6"
+                                       Content="Apply BoP to latest car model only"
                                        Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
                                 <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding CurrentSeasonM.GridSlotsLimit}"
                                          IsEnabled="{Binding CurrentSeasonM.IsCheckedGridSlotsLimit}"

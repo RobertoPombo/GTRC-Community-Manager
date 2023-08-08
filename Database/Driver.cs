@@ -40,6 +40,9 @@ namespace Database
         private int eloRating = 1500;
         private int safetyRating = 50;
         private int warnings = 0;
+        /*private string discordName = "";
+        private bool isOnDiscordServer = false;
+        private string accessToken = "";*/
 
         [NotMapped][JsonIgnore] public List<string> Name3DigitsOptions = new() { "" };
 
@@ -131,6 +134,24 @@ namespace Database
             }
         }
 
+        /*public string DiscordName
+        {
+            get { return discordName; }
+            set { discordName = value; }
+        }
+
+        public bool IsOnDiscordServer
+        {
+            get { return isOnDiscordServer; }
+            set { isOnDiscordServer = value; }
+        }
+
+        public string AccessToken
+        {
+            get { return accessToken; }
+            set { accessToken = value; }
+        }*/
+
         public static void PublishList() { }
 
         public override void SetNextAvailable()
@@ -163,7 +184,7 @@ namespace Database
         {
             long _steamID = Basics.NoID;
             _strSteamID = new string(_strSteamID?.Where(Char.IsNumber).ToArray());
-            Int64.TryParse(_strSteamID, out _steamID);
+            _ = long.TryParse(_strSteamID, out _steamID);
             if (IsValidSteamID(_steamID)) { return _steamID; }
             else { return Basics.NoID; }
         }

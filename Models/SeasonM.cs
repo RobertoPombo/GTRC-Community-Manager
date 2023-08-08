@@ -289,6 +289,12 @@ namespace GTRC_Community_Manager
             set { if (season.GroupCarLimits != value) { season.GroupCarLimits = value; RaisePropertyChanged(); } }
         }
 
+        public bool IsCheckedBopLatestModelOnly
+        {
+            get { return season.BopLatestModelOnly; }
+            set { if (season.BopLatestModelOnly != value) { season.BopLatestModelOnly = value; RaisePropertyChanged(); } }
+        }
+
         public string ExplanationStintAnalisisSettings { get { return ExplainStintAnalisisSettings(); } set { } }
 
         public string ExplainStintAnalisisSettings()

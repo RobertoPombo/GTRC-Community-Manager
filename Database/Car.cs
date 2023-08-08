@@ -76,14 +76,12 @@ namespace Database
             set { name_GTRC = Basics.RemoveSpaceStartEnd(value ?? name_GTRC); }
         }
 
-        [JsonIgnore]
-        public string Logo
+        [JsonIgnore] public string Logo
         {
             get { return "\\Logos\\" + manufacturer + ".png"; }
         }
 
-        [JsonIgnore]
-        public bool IsLatestVersion
+        [JsonIgnore] public bool IsLatestModel
         {
             get { foreach (Car _car in Statics.List) { if (_car.Manufacturer == Manufacturer && _car.Category == Category && _car.Year > Year) { return false; } } return true; }
         }

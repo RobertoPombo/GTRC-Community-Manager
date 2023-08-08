@@ -827,7 +827,7 @@ namespace Scripts
                 {
                     EventsCars? eventCar = null;
                     if (EventID != Basics.NoID) { eventCar = EventsCars.GetAnyByUniqProp(_car.ID, EventID); }
-                    if (_car.Category == "GT3" && (_car.IsLatestVersion || IsAdmin))
+                    if (_car.Category == "GT3" && (_car.IsLatestModel || IsAdmin))
                     {
                         text += _car.AccCarID.ToString() + "\t";
                         text += _car.Name;
@@ -1011,10 +1011,10 @@ namespace Scripts
                     List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), _entry.SeasonID));
                     bool notScorePointsFirstEvent = listEvents.Count > 0 && !EventsEntries.GetAnyByUniqProp(_entry.ID, listEvents[0].ID).ScorePoints;
                     bool exceedsNoShowLimit = _entry.CountNoShow(eventEntry.ObjEvent, false) > _entry.ObjSeason.NoShowLimit;
-                    if (!notScorePointsFirstEvent && exceedsNoShowLimit) { text += " | *Gaststarter (wg. Abw. trotz Anm.)*"; }
-                    else { text += " | *Gaststarter*"; }
+                    if (!notScorePointsFirstEvent && exceedsNoShowLimit) { text += " | *außer Wertung (wg. Abw. trotz Anm.)*"; }
+                    else { text += " | *außer Wertung*"; }
                 }
-                else { text += " | *Gaststarter (wg. Fzglimit)*"; }
+                else { text += " | *außer Wertung (wg. Fzglimit)*"; }
             }
             bool eventBan = false; foreach (Driver _driver in listDrivers) { if (_driver.SafetyRating <= 0) { eventBan = true; } } //Von Event abhängig!!!
             if (eventBan) { text += " | **GESPERRT**"; }

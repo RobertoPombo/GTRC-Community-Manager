@@ -510,8 +510,16 @@ namespace Scripts
                         }
                     }
                 }
-                _eventCar.Ballast = Math.Max(0, carCount - _event.ObjSeason.CarLimitBallast) * _event.ObjSeason.GainBallast;
-                _eventCar.Restrictor = Math.Max(0, carCount - _event.ObjSeason.CarLimitRestrictor) * _event.ObjSeason.GainRestrictor;
+                if (!_event.ObjSeason.BopLatestModelOnly || _eventCar.ObjCar.IsLatestModel)
+                {
+                    _eventCar.Ballast = Math.Max(0, carCount - _event.ObjSeason.CarLimitBallast) * _event.ObjSeason.GainBallast;
+                    _eventCar.Restrictor = Math.Max(0, carCount - _event.ObjSeason.CarLimitRestrictor) * _event.ObjSeason.GainRestrictor;
+                }
+                else
+                {
+                    _eventCar.Ballast = new Entry(false).Ballast;
+                    _eventCar.Restrictor = new Entry(false).Restrictor;
+                }
             }
             EventsCars.Statics.WriteSQL();
         }

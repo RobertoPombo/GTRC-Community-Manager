@@ -46,6 +46,7 @@ namespace Database
         private int carChangeLimit = 0;
         private DateTime dateCarChangeLimit = DateTime.Now;
         private bool groupCarLimits = false;
+        private bool bopLatestModelOnly = false;
         private int formationLapType = 0;
 
         public string Name
@@ -146,6 +147,12 @@ namespace Database
         {
             get { return groupCarLimits; }
             set { groupCarLimits = value; }
+        }
+
+        public bool BopLatestModelOnly
+        {
+            get { return bopLatestModelOnly; }
+            set { bopLatestModelOnly = value; }
         }
 
         public int FormationLapType

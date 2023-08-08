@@ -95,7 +95,7 @@ namespace Scripts
                 ["LastName"] = new Driver(false).LastName,
                 ["TeamName"] = Team.DefaultName,
                 ["CarID"] = Basics.NoID,
-                ["ScorePoints"] = new Entry(false).ScorePoints,
+                ["Permanent"] = new Entry(false).Permanent,
                 ["RegisterDate"] = DateTime.Now
             };
             if (int.TryParse(ReadValueFromColumn(VarMap, row, "Startnummer"), out int raceNumber)) { values["RaceNumber"] = raceNumber; }
@@ -107,8 +107,8 @@ namespace Scripts
             values["TeamName"] = ReadValueFromColumn(VarMap, row, "Teamname") ?? values["TeamName"];
             List<Car> cars = Car.Statics.GetBy(nameof(Car.Name_GTRC), ReadValueFromColumn(VarMap, row, "Fahrzeug"));
             if (cars.Count > 0) { values["CarID"] = cars[0].ID; }
-            string? scorePoints = ReadValueFromColumn(VarMap, row, "Stammfahrer oder Gaststarter");
-            if (scorePoints == "Stammfahrer") { values["ScorePoints"] = true; } else { values["ScorePoints"] = false; }
+            string? permanent = ReadValueFromColumn(VarMap, row, "Stammfahrer oder Gaststarter");
+            if (permanent == "Stammfahrer") { values["Permanent"] = true; } else { values["Permanent"] = false; }
             if (DateTime.TryParse(ReadValueFromColumn(VarMap, row, "Zeitstempel"), out DateTime registerDate)) { values["RegisterDate"] = registerDate; }
             return values;
         }
@@ -166,7 +166,7 @@ namespace Scripts
             DriversTeams driverTeam = SyncTeam(values, seasonID);
             int RaceNumber = values["RaceNumber"];
             int CarID = values["CarID"];
-            bool ScorePoints = values["ScorePoints"];
+            bool Permanent = values["Permanent"];
             DateTime RegisterDate = values["RegisterDate"];
             if (driverTeam.ID != Basics.NoID && RaceNumber != Basics.NoID)
             {
@@ -208,7 +208,7 @@ namespace Scripts
                 }*/
                 entry.TeamID = driverTeam.TeamID;
                 if ((newEntry || entry.CarID == Basics.NoID) && CarID != Basics.NoID) { entry.CarID = CarID; }
-                if (newEntry) { entry.ScorePoints = ScorePoints; entry.Permanent = ScorePoints; }
+                if (newEntry) { entry.Permanent = Permanent; entry.Permanent = Permanent; }
                 if (RegisterDate < entry.RegisterDate) { entry.RegisterDate = RegisterDate; }
             }
             return newEntry || _newEntry;
@@ -294,14 +294,14 @@ namespace Scripts
                     List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
                     string driverText = "";
                     foreach (DriversEntries _driverEntry in _driverEntries) { driverText += Driver.Statics.GetByID(_driverEntry.DriverID).FullName + ", "; }
-                    driverText = driverText.Substring(0, Math.Max(0, driverText.Length - 2));
+                    driverText = driverText[..Math.Max(0, driverText.Length - 2)];
                     int average = _resultsLine.Average;
                     int average1 = PreQualiResultLine.Statics.List[Math.Max(0, rowNr - 1)].Average;
                     values.Add(pos.ToString() + ".");
                     values.Add(driverText);
                     values.Add(_entry.RaceNumber.ToString());
                     Team _team = Team.Statics.GetByID(_entry.TeamID);
-                    if (_team.ReadyForList) { values.Add(_team.Name); } else { values.Add("Gaststarter"); }
+                    if (_team.ReadyForList) { values.Add(_team.Name); } else { values.Add(""); }
                     values.Add(Car.Statics.GetByID(_entry.GetEntriesDatetimesByDate(DateTime.Now).CarID).Name);
                     if (average < int.MaxValue)
                     {
@@ -371,7 +371,7 @@ namespace Scripts
             int count0 = int.MaxValue;
             foreach (EventsCars eventCar in eventsCars)
             {
-                if (eventCar.ObjCar.Category == "GT3" && eventCar.ObjCar.IsLatestVersion)
+                if (eventCar.ObjCar.Category == "GT3" && eventCar.ObjCar.IsLatestModel)
                 {
                     values = new List<object>();
                     if (eventCar.CountBoP == count0) { values.Add("'="); }
