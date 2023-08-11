@@ -175,37 +175,6 @@ namespace Scripts
                 DriversEntries driverEntry = DriversEntries.GetByDriverIDSeasonID(driverTeam.DriverID, entry.SeasonID);
                 if (driverEntry.ID == Basics.NoID) { driverEntry = DriversEntries.Statics.WriteSQL(new DriversEntries { DriverID = driverTeam.DriverID }); }
                 driverEntry.EntryID = entry.ID;
-                /*if (MaxDriversPerCar == 1)
-                {
-                    List<DriversEntries> driversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), entry.ID);
-                    int curSeriesID = Season.Statics.GetByID(seasonID).SeriesID;
-                    List<int> _seasonIDs = new() { seasonID };
-                    List<Event> _events = Event.SortByDate(Event.Statics.List);
-                    foreach (Event _event in _events) { if (_event.ObjSeason.SeriesID == curSeriesID && !_seasonIDs.Contains(_event.SeasonID)) { _seasonIDs.Add(_event.SeasonID); } }
-                    foreach (Event _event in _events) { if (!_seasonIDs.Contains(_event.SeasonID)) { _seasonIDs.Add(_event.SeasonID); } }
-                    _seasonIDs.RemoveAt(0);
-                    List<int> matchDriverIDs = new();
-                    foreach (int _seasonID in _seasonIDs)
-                    {
-                        Entry _entry = Entry.Statics.GetByUniqProp(new List<dynamic>() { _seasonID, RaceNumber });
-                        List<DriversEntries> _driversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
-                        matchDriverIDs = new();
-                        foreach (DriversEntries _driversEntries1 in driversEntries)
-                        {
-                            foreach (DriversEntries _driversEntries2 in _driversEntries)
-                            {
-                                if (_driversEntries1.DriverID == _driversEntries2.DriverID) { matchDriverIDs.Add(_driversEntries1.DriverID); }
-                            }
-                        }
-                        if (matchDriverIDs.Count == 1) { break; }
-                    }
-                    int prefDriverID = driverTeam.DriverID;
-                    if (matchDriverIDs.Count == 1) { prefDriverID = matchDriverIDs[0]; }
-                    foreach (DriversEntries _driversEntries in driversEntries)
-                    {
-                        Entry entry2 = Entry.Statics.WriteSQL(new Entry { SeasonID = seasonID });
-                    }
-                }*/
                 entry.TeamID = driverTeam.TeamID;
                 if ((newEntry || entry.CarID == Basics.NoID) && CarID != Basics.NoID) { entry.CarID = CarID; }
                 if (newEntry) { entry.Permanent = Permanent; entry.Permanent = Permanent; }

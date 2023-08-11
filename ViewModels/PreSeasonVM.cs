@@ -405,12 +405,13 @@ namespace GTRC_Community_Manager
 
         public int ThreadUpdateEntrylistBoP_Int(Event _event)
         {
+            int _slotsAvailable = GetSlotsAvalable(_event.ObjTrack, _event.SeasonID);
             PreSeason.UpdateName3Digits(_event.SeasonID);
             PreSeason.SetEntry_NotScorePoints_NotPermanent(_event);
             UpdateBoPForEvent(_event);
-            (List<EventsEntries> SignedIn, List<EventsEntries> SignedOut) = PreSeason.DetermineEntrylist(_event, SlotsAvailable);
+            (List<EventsEntries> SignedIn, List<EventsEntries> SignedOut) = PreSeason.DetermineEntrylist(_event, _slotsAvailable);
             int tempSlotsTaken = SignedIn.Count;
-            (SignedIn, SignedOut) = PreSeason.FillUpEntrylist(SlotsAvailable, SignedIn, SignedOut);
+            (SignedIn, SignedOut) = PreSeason.FillUpEntrylist(_slotsAvailable, SignedIn, SignedOut);
             GSheets.UpdateEntriesCurrentEvent(GSheet.ListIDs[6].DocID, GSheet.ListIDs[6].SheetID, CurrentEvent);
             GSheets.UpdatePointsResets(GSheet.ListIDs[7].DocID, GSheet.ListIDs[7].SheetID, _event.SeasonID);
             if (_event.ID == CurrentEvent.ID)
