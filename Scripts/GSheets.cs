@@ -8,6 +8,7 @@ using System.IO;
 
 using GTRC_Community_Manager;
 using System.Linq;
+using Discord;
 
 namespace Scripts
 {
@@ -69,6 +70,60 @@ namespace Scripts
                 var updateResponse = updateRequest.Execute();
             }
             catch { MainVM.List[0].LogCurrentText = "Update Google-Sheets range failed! [sheetID: " + sheetID + " | range: " + range + "]"; }
+        }
+
+        public static void UpdateFontColor(string docID, string sheetID, List<GSheetRange> ranges, int colorID)
+        {
+            try
+            {
+                Initialize();
+                Spreadsheet spreadsheet = GSheetService.Spreadsheets.Get(docID).Execute();
+                Sheet sheet = spreadsheet.Sheets.Where(s => s.Properties.Title == sheetID).FirstOrDefault();
+                int sheetId = (int)sheet.Properties.SheetId;
+                ThemeColor color = ThemeColor.Statics.GetByID(colorID);
+                var userEnteredFormat = new CellFormat()
+                {
+                    TextFormat = new TextFormat()
+                    {
+                        ForegroundColor = new Google.Apis.Sheets.v4.Data.Color()
+                        {
+                            Blue = (float)color.Blue / 255,
+                            Red = (float)color.Red / 255,
+                            Green = (float)color.Green / 255,
+                            Alpha = (float)color.Alpha / 255
+                        }
+                    }
+                };
+                BatchUpdateSpreadsheetRequest bussr = new()
+                {
+                    Requests = new List<Request>()
+                };
+                foreach (GSheetRange range in ranges)
+                {
+                    var updateCellsRequest = new Request()
+                    {
+                        RepeatCell = new RepeatCellRequest()
+                        {
+                            Range = new GridRange()
+                            {
+                                SheetId = sheetId,
+                                StartColumnIndex = range.Col0,
+                                StartRowIndex = range.Row0,
+                                EndColumnIndex = range.Col1,
+                                EndRowIndex = range.Row1
+                            },
+                            Cell = new CellData()
+                            {
+                                UserEnteredFormat = userEnteredFormat
+                            },
+                            Fields = "userEnteredFormat.textFormat.foregroundColor"
+                        }
+                    };
+                    bussr.Requests.Add(updateCellsRequest);
+                }
+                var response = GSheetService.Spreadsheets.BatchUpdate(bussr, docID).Execute();
+            }
+            catch { MainVM.List[0].LogCurrentText = "Update Google-Sheets font color failed! [sheetID: " + sheetID + "]"; }
         }
 
         public static Dictionary<string, int> CreateVarMap(dynamic? firstRow, List<string> VarList)
@@ -235,8 +290,14 @@ namespace Scripts
             values = new List<object>() { "Pos", "Fahrer", "Nr", "Team", "Fahrzeug", "Schnitt", "Abstand", "Intervall", "Barcelona", "Snetterton", "Differenz", "Gesamt",
                 "Barcelona", "Snetterton", "Gesamt", "Barcelona", "Snetterton", "Barcelona", "Snetterton", "Differenz", "Gesamt", "Barcelona", "Snetterton" };
             rows.Add(values);
+            List<GSheetRange> rangesCol3 = new();
+            List<GSheetRange> rangesCol5 = new();
             if (PreQualiResultLine.Statics.List.Count > 0)
             {
+                int seasonID = Entry.Statics.GetByID(PreQualiResultLine.Statics.List[0].EntryID).SeasonID;
+                int minEntrySlots = Season.Statics.GetByID(seasonID).GridSlotsLimit;
+                List<Event> listEvents = Event.Statics.GetBy(nameof(Event.SeasonID), seasonID);
+                foreach (Event _event in listEvents) { minEntrySlots = Math.Min(minEntrySlots, Track.Statics.GetByID(_event.TrackID).ServerSlotsCount); }
                 values = new List<object>() { "FIX QUALIFIZIERT - Top 10 Fahrerwertung letzter Saison", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
                     "", "", "", "", "" };
                 rows.Add(values);
@@ -253,6 +314,7 @@ namespace Scripts
                     "", "", "", "", "", "" };
                 rows.Add(values);
                 pos = 0;
+                int priorityPos = 0;
                 for (int rowNr = 0; rowNr < PreQualiResultLine.Statics.List.Count; rowNr++)
                 {
                     pos++;
@@ -307,6 +369,7 @@ namespace Scripts
                     else { values.Add(""); }
                     bool isFixPreQ = false;
                     List<DriversEntries> _driversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), PreQualiResultLine.Statics.List[rowNr].EntryID);
+                    int lineGSheet = 1;
                     foreach (DriversEntries _driverEntry in _driversEntries)
                     {
                         for (int _fixPreQNr = 0; _fixPreQNr < PreQualiResultLine.SteamIDsFixPreQ.Count; _fixPreQNr++)
@@ -314,18 +377,39 @@ namespace Scripts
                             if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == PreQualiResultLine.SteamIDsFixPreQ[_fixPreQNr])
                             {
                                 for (int valueNr = 1; valueNr < values.Count; valueNr++) { rows[_fixPreQNr + 3][valueNr] = values[valueNr]; }
-                                isFixPreQ = true; break;
+                                isFixPreQ = true; lineGSheet = _fixPreQNr + 4; break;
                             }
                         }
                         if (isFixPreQ) { break; }
                     }
-                    if (isFixPreQ) { pos--; } else { rows.Add(values); }
+                    if (isFixPreQ) { pos--; } else { rows.Add(values); lineGSheet = rows.Count; }
+                    if (_entry.Permanent && _entry.ScorePoints && _entry.SignOutDate > DateTime.Now)
+                    {
+                        priorityPos++;
+                        if (priorityPos <= minEntrySlots) { rangesCol3.Add(new GSheetRange() { Col1 = 1, Row1 = lineGSheet }); }
+                    }
+                    bool isBest = true;
+                    foreach (PreQualiResultLine _preQLine in PreQualiResultLine.Statics.List) { if (_preQLine.Average < _resultsLine.Average) { isBest = false; break; } }
+                    if (isBest) { rangesCol5.Add(new GSheetRange() { Col1 = 6, Row1 = lineGSheet }); } else { isBest = true; }
+                    foreach (PreQualiResultLine _preQLine in PreQualiResultLine.Statics.List) { if (_preQLine.Average1 < _resultsLine.Average1) { isBest = false; break; } }
+                    if (isBest) { rangesCol5.Add(new GSheetRange() { Col1 = 9, Row1 = lineGSheet }); } else { isBest = true; }
+                    foreach (PreQualiResultLine _preQLine in PreQualiResultLine.Statics.List) { if (_preQLine.Average2 < _resultsLine.Average2) { isBest = false; break; } }
+                    if (isBest) { rangesCol5.Add(new GSheetRange() { Col1 = 10, Row1 = lineGSheet }); } else { isBest = true; }
+                    foreach (PreQualiResultLine _preQLine in PreQualiResultLine.Statics.List) { if (_preQLine.BestLap1 < _resultsLine.BestLap1) { isBest = false; break; } }
+                    if (isBest) { rangesCol5.Add(new GSheetRange() { Col1 = 18, Row1 = lineGSheet }); } else { isBest = true; }
+                    foreach (PreQualiResultLine _preQLine in PreQualiResultLine.Statics.List) { if (_preQLine.BestLap2 < _resultsLine.BestLap2) { isBest = false; break; } }
+                    if (isBest) { rangesCol5.Add(new GSheetRange() { Col1 = 19, Row1 = lineGSheet }); } else { isBest = true; }
                 }
             }
             string range = "A1:W";
             ClearRange(docID, sheetID, range);
             range += rows.Count.ToString();
             UpdateRange(docID, sheetID, range, rows);
+            List<GSheetRange> rangesCol4 = new() { new GSheetRange() { Col1 = 1, Row0 = 2, Row1 = rows.Count } };
+            UpdateFontColor(docID, sheetID, rangesCol4, 4);
+            rangesCol3.Add(new GSheetRange() { Col0 = 1, Col1 = 23, Row0 = 2, Row1 = rows.Count });
+            if (rangesCol3.Count > 0) { UpdateFontColor(docID, sheetID, rangesCol3, 3); }
+            if (rangesCol5.Count > 0) { UpdateFontColor(docID, sheetID, rangesCol5, 4); }
         }
 
         public static void UpdateBoPStandings(Event currentEvent, string docID, string sheetID)
@@ -437,5 +521,20 @@ namespace Scripts
                 UpdateRange(docID, sheetID, range, rows);
             }
         }
+    }
+
+
+
+    public class GSheetRange
+    {
+        private int col0 = Basics.NoID;
+        private int row0 = Basics.NoID;
+        private int col1 = Basics.NoID;
+        private int row1 = Basics.NoID;
+
+        public int Col0 { get { return col0; } set { if (value > 0) { col0 = value; } } }
+        public int Row0 { get { return row0; } set { if (value > 0) { row0 = value; } } }
+        public int Col1 { get { return col1; } set { if (value > 0) { col1 = value; if (col0 == Basics.NoID) { col0 = col1 - 1; } } } }
+        public int Row1 { get { return row1; } set { if (value > 0) { row1 = value; if (row0 == Basics.NoID) { row0 = row1 - 1; } } } }
     }
 }

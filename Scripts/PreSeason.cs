@@ -679,7 +679,6 @@ namespace Scripts
                 }
             }
             for (int index = 0; index < listEventsEntries.Count; index++) { listEventsEntries[index].Priority = index + 1; }
-            Entry.Statics.WriteSQL();
         }
     }
 }
