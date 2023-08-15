@@ -20,7 +20,7 @@ namespace Scripts
         private static GoogleCredential Crendentials;
         private static SheetsService GSheetService;
 
-        public static readonly List<string> VarListEntries = new List<string> { "Startnummer", "SteamID64", "DiscordID", "Vorname", "Nachname", "Teamname", "Fahrzeug", "Stammfahrer oder Gaststarter", "Zeitstempel" };
+        public static readonly List<string> VarListEntries = new() { "Startnummer", "SteamID64", "DiscordID", "Vorname", "Nachname", "Teamname", "Fahrzeug", "Stammfahrer oder Gaststarter", "Zeitstempel" };
 
         public static void Initialize()
         {
@@ -186,15 +186,16 @@ namespace Scripts
             string FirstName = values["FirstName"];
             string LastName = values["LastName"];
             DateTime RegisterDate = values["RegisterDate"];
-            if (Driver.IsValidSteamID(SteamID))
+            if (Driver.IsValidSteamID(SteamID) && FirstName.Length > 0 && LastName.Length > 0)
             {
                 Driver driver = Driver.Statics.GetByUniqProp(SteamID);
-                if (driver.ID == Basics.NoID) { driver = Driver.Statics.WriteSQL(new Driver { SteamID = SteamID }); }
+                if (driver.ID == Basics.NoID) { driver = new() { SteamID = SteamID }; }
                 if (driver.SteamID == Driver.SteamIDMinValue) { driver.SteamID = SteamID; }
                 if (driver.DiscordID == Basics.NoID) { driver.DiscordID = DiscordID; }
                 if (driver.FirstName == "") { driver.FirstName = FirstName; }
                 if (driver.LastName == "") { driver.LastName = LastName; }
                 if (RegisterDate < driver.RegisterDate) { driver.RegisterDate = RegisterDate; }
+                driver = Driver.Statics.WriteSQL(driver);
                 return driver;
             }
             else { return new Driver(false); }
@@ -238,44 +239,41 @@ namespace Scripts
             return newEntry || _newEntry;
         }
 
+        public static bool SyncEntryByDriver(Dictionary<string, dynamic> values, int seasonID, bool _newEntry)
+        {
+            Driver driver = SyncDriver(values);
+            int RaceNumber = values["RaceNumber"];
+            string TeamName = values["TeamName"];
+            int CarID = values["CarID"];
+            DateTime RegisterDate = values["RegisterDate"];
+            bool Permanent = values["Permanent"];
+            if (driver.ID != Basics.NoID && RegisterDate < driver.BanDate && RaceNumber != Basics.NoID && TeamName.Length > 0 && Car.Statics.ExistsID(CarID) &&
+                DriversEntries.GetListByDriverIDSeasonID(driver.ID, seasonID).Count == 0 && !Entry.Statics.ExistsUniqProp(new List<dynamic>() { seasonID, RaceNumber }))
+            {
+                Team team = Team.Statics.GetByUniqProp(new List<dynamic>() { seasonID, TeamName });
+                if (team.ID == Basics.NoID) { team = Team.Statics.WriteSQL(new Team { SeasonID = seasonID, Name = TeamName }); }
+                DriversTeams driverTeam = DriversTeams.Statics.GetByUniqProp(new List<dynamic>() { driver.ID, team.ID });
+                if (driverTeam.ID == Basics.NoID) { driverTeam = DriversTeams.Statics.WriteSQL(new DriversTeams { DriverID = driver.ID, TeamID = team.ID }); }
+                Entry entry = new() { SeasonID = seasonID, RaceNumber = RaceNumber, TeamID = driverTeam.TeamID, CarID = CarID, RegisterDate = RegisterDate, Permanent = Permanent };
+                entry = Entry.Statics.WriteSQL(entry);
+                _ = DriversEntries.Statics.WriteSQL(new DriversEntries { DriverID = driverTeam.DriverID, EntryID = entry.ID });
+                return true;
+            }
+            return _newEntry;
+        }
+
         public static void SyncFormsEntries(int seasonID, string docID, string sheetID, string range)
         {
             dynamic rows = LoadRange(docID, sheetID, range);
             if (rows?.Count > 1)
             {
-                Dictionary<string, int> VarMap = CreateVarMap(rows[0], new List<string> { "Startnummer" });
-                List<Entry> iterateListEntry = Entry.Statics.GetBy(nameof(Entry.SeasonID), seasonID);
-                foreach (Entry entry in iterateListEntry)
-                {
-                    for (int rowNr = 1; rowNr < rows.Count; rowNr++)
-                    {
-                        if (ReadValuesFromRow(VarMap, rows[rowNr])["RaceNumber"] == entry.RaceNumber) { break; }
-                        if (rowNr == rows.Count - 1) { entry.ListRemove(true); }
-                    }
-                }
-                VarMap = CreateVarMap(rows[0], new List<string> { "Teamname" });
-                List<Team> iterateListTeam = Team.Statics.GetBy(nameof(Team.SeasonID), seasonID);
-                foreach (Team team in iterateListTeam)
-                {
-                    for (int rowNr = 1; rowNr < rows.Count; rowNr++)
-                    {
-                        if (ReadValuesFromRow(VarMap, rows[rowNr])["TeamName"] == team.Name) { break; }
-                        if (rowNr == rows.Count - 1) { team.ListRemove(true); }
-                    }
-                }
                 bool newEntry = false;
-                VarMap = CreateVarMap(rows[0], VarListEntries);
+                Dictionary<string, int> VarMap = CreateVarMap(rows[0], VarListEntries);
                 for (int rowNr = 1; rowNr < rows.Count; rowNr++)
                 {
                     Dictionary<string, dynamic> values = ReadValuesFromRow(VarMap, rows[rowNr]);
-                    newEntry = SyncEntry(values, seasonID, newEntry);
+                    newEntry = SyncEntryByDriver(values, seasonID, newEntry);
                 }
-                EventsEntries.Statics.WriteSQL();
-                DriversTeams.Statics.WriteSQL();
-                DriversEntries.Statics.WriteSQL();
-                Entry.Statics.WriteSQL();
-                Team.Statics.WriteSQL();
-                Driver.Statics.WriteSQL();
                 if (newEntry) { _ = Commands.CreateStartingGridMessage(Event.GetNextEvent(seasonID, DateTime.Now).ID, false, false); }
             }
         }

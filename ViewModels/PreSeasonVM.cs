@@ -37,6 +37,7 @@ namespace GTRC_Community_Manager
         private bool isRunningEntries = false;
         private int waitQueueEntries = 0;
         private bool isCheckedLapRange = false;
+        private int chanceOfRain = 101;
         private int lapRange = 0;
         private bool isCheckedMaxInvalidInRange = false;
         private int maxInvalidInRange = 0;
@@ -198,6 +199,8 @@ namespace GTRC_Community_Manager
             get { return waitQueueEntries; }
             set { if (value >= 0) { waitQueueEntries = value; SetStateEntries(); } }
         }
+
+        public int ChanceOfRain { get { return chanceOfRain; } set { if (value >= 0 && value <= 100) { chanceOfRain = value; } } }
 
         public bool IsCheckedLapRange
         {
@@ -433,7 +436,13 @@ namespace GTRC_Community_Manager
 
         public void PublishTrackReport()
         {
-
+            if (chanceOfRain >= 0 && chanceOfRain <= 100)
+            {
+                _ = Commands.CreateTrackReportMessage(CurrentEvent.ID, ChanceOfRain);
+                chanceOfRain = 101;
+            }
+            else { chanceOfRain += 1; }
+            RaisePropertyChanged(nameof(ChanceOfRain));
         }
 
         public void RestoreSettings()

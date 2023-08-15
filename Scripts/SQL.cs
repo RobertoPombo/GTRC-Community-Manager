@@ -26,7 +26,8 @@ namespace Scripts
             { typeof(double), SqlDbType.Float },
             { typeof(float), SqlDbType.Float },
             { typeof(bool), SqlDbType.Bit },
-            { typeof(DateTime), SqlDbType.DateTime } };
+            { typeof(DateTime), SqlDbType.DateTime },
+            { typeof(TimeSpan), SqlDbType.Time } };
 
         public static string ConVal(DBConnection dBCon)
         {
@@ -51,6 +52,7 @@ namespace Scripts
                 case TypeCode.Int64: return SqlDbType.BigInt;
                 case TypeCode.Boolean: return SqlDbType.Bit;
                 case TypeCode.DateTime: return SqlDbType.DateTime;
+                case TypeCode.Object: return SqlDbType.Time;
                 default: return SqlDbType.NVarChar;
             }
         }

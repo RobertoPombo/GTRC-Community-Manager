@@ -32,6 +32,7 @@ namespace Database
         private string model = "";
         private string category = "";
         private int year = DateTime.Now.Year;
+        private DateTime releaseDate = DateOnly.FromDateTime(DateTime.Now).ToDateTime(TimeOnly.MinValue);
         private string name_GTRC = "";
 
         public int AccCarID
@@ -68,6 +69,12 @@ namespace Database
         {
             get { return year; }
             set { year = value; }
+        }
+
+        public DateTime ReleaseDate
+        {
+            get { return releaseDate; }
+            set { releaseDate = DateOnly.FromDateTime(value).ToDateTime(TimeOnly.MinValue); }
         }
 
         public string Name_GTRC

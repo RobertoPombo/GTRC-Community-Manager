@@ -28,7 +28,9 @@ namespace Database
         public Incident(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
         private Event objEvent = new(false);
+        private Session objSession = new(false);
         [JsonIgnore][NotMapped] public Event ObjEvent { get { return objEvent; } }
+        [JsonIgnore][NotMapped] public Session ObjSession { get { return objSession; } }
 
         private int eventID = 0;
         private int sessionID = -1;
@@ -47,13 +49,13 @@ namespace Database
         public int EventID
         {
             get { return eventID; }
-            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } objEvent = Event.Statics.GetByID(EventID); }
+            set { eventID = value; if (ReadyForList) { SetNextAvailable(); } objEvent = Event.Statics.GetByID(eventID); }
         }
 
         public int SessionID
         {
             get { return sessionID; }
-            set { sessionID = value; if (ReadyForList) { SetNextAvailable(); } }
+            set { sessionID = value; if (ReadyForList) { SetNextAvailable(); } objSession = Session.Statics.GetByID(sessionID); }
         }
 
         public string RaceNumbers
@@ -203,8 +205,6 @@ namespace Database
                 if (timeStamp + 1 < int.MaxValue) { timeStamp += 1; } else { timeStamp = 0; }
                 if (timeStamp == startValueReplayTime) { break; }
             }
-
-            objEvent = Event.Statics.GetByID(EventID);
         }
     }
 }

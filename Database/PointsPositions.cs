@@ -25,7 +25,7 @@ namespace Database
         public PointsPositions(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
         private PointsSystem objPointsSystem = new(false);
-        [JsonIgnore][NotMapped] public PointsSystem ObjPointsSystem { get { return objPointsSystem; } }
+        [JsonIgnore][NotMapped] public PointsSystem ObjPointsSystem { get { return PointsSystem.Statics.GetByID(pointsSystemID); } }
 
         private int pointsSystemID = 0;
         private int position = 1;

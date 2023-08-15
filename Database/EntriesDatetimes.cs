@@ -87,7 +87,7 @@ namespace Database
 
             while (!IsUnique())
             {
-                if (date < Basics.DateTimeMaxValue) { date = date.AddDays(1); } else { date = Basics.DateTimeMinValue; }
+                if (date < Basics.DateTimeMaxValue) { date = date.AddSeconds(1); } else { date = Basics.DateTimeMinValue; }
                 if (date == startValue)
                 {
                     if (entryNr + 1 < _idListEntry.Count) { entryNr += 1; } else { entryNr = 0; }

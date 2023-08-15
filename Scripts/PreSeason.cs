@@ -470,7 +470,7 @@ namespace Scripts
 
             foreach (EventsEntries _eventEntry in listSortPriority)
             {
-                if (_eventEntry.SignInState && SignedIn.Count < SlotsAvailable) { _eventEntry.IsOnEntrylist = true; SignedIn.Add(_eventEntry); }
+                if (!_eventEntry.IsBanned && _eventEntry.SignInState && SignedIn.Count < SlotsAvailable) { _eventEntry.IsOnEntrylist = true; SignedIn.Add(_eventEntry); }
                 else { _eventEntry.IsOnEntrylist = false; SignedOut.Add(_eventEntry); }
             }
             EventsEntries.Statics.WriteSQL();
@@ -482,7 +482,7 @@ namespace Scripts
             List<EventsEntries> _iterateList = new(); foreach(EventsEntries _eventEntry in SignedOut) { _iterateList.Add(_eventEntry); }
             foreach (EventsEntries _eventEntry in _iterateList)
             {
-                if (!SignedIn.Contains(_eventEntry) && SignedIn.Count < SlotsAvailable)
+                if (!_eventEntry.IsBanned && !SignedIn.Contains(_eventEntry) && SignedIn.Count < SlotsAvailable)
                 {
                     SignedOut.Remove(_eventEntry);
                     SignedIn.Add(_eventEntry);
@@ -625,49 +625,56 @@ namespace Scripts
                     }
                     if (_eventEntry1.RegisterState == _eventEntry2.RegisterState)
                     {
-                        if (_eventEntry1.ScorePoints == _eventEntry2.ScorePoints)
+                        if (_eventEntry1.IsBanned == _eventEntry2.IsBanned)
                         {
-                            if (_eventEntry1.ObjEntry.Permanent == _eventEntry2.ObjEntry.Permanent)
+                            if (_eventEntry1.ScorePoints == _eventEntry2.ScorePoints)
                             {
-                                if (_eventEntry1.SignInDate == _eventEntry2.SignInDate || _eventEntry1.ObjEntry.Permanent)
+                                if (_eventEntry1.ObjEntry.Permanent == _eventEntry2.ObjEntry.Permanent)
                                 {
-                                    if (fixPosPreQ1 == fixPosPreQ2)
+                                    if (_eventEntry1.SignInDate == _eventEntry2.SignInDate || _eventEntry1.ObjEntry.Permanent)
                                     {
-                                        if (posPreQ1 == posPreQ2)
+                                        if (fixPosPreQ1 == fixPosPreQ2)
                                         {
-                                            if (_eventEntry1.ObjEntry.RegisterDate == _eventEntry2.ObjEntry.RegisterDate)
+                                            if (posPreQ1 == posPreQ2)
                                             {
-                                                if (_eventEntry1.ObjEntry.RaceNumber > _eventEntry2.ObjEntry.RaceNumber)
+                                                if (_eventEntry1.ObjEntry.RegisterDate == _eventEntry2.ObjEntry.RegisterDate)
+                                                {
+                                                    if (_eventEntry1.ObjEntry.RaceNumber > _eventEntry2.ObjEntry.RaceNumber)
+                                                    {
+                                                        (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
+                                                    }
+                                                }
+                                                else if (_eventEntry1.ObjEntry.RegisterDate > _eventEntry2.ObjEntry.RegisterDate)
                                                 {
                                                     (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
                                                 }
                                             }
-                                            else if (_eventEntry1.ObjEntry.RegisterDate > _eventEntry2.ObjEntry.RegisterDate)
+                                            else if (posPreQ1 > posPreQ2)
                                             {
                                                 (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
                                             }
                                         }
-                                        else if (posPreQ1 > posPreQ2)
+                                        else if (fixPosPreQ1 > fixPosPreQ2)
                                         {
                                             (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
                                         }
                                     }
-                                    else if (fixPosPreQ1 > fixPosPreQ2)
+                                    else if (_eventEntry1.SignInDate > _eventEntry2.SignInDate && !_eventEntry1.ObjEntry.Permanent)
                                     {
                                         (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
                                     }
                                 }
-                                else if (_eventEntry1.SignInDate > _eventEntry2.SignInDate && !_eventEntry1.ObjEntry.Permanent)
+                                else if (_eventEntry2.ObjEntry.Permanent)
                                 {
                                     (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
                                 }
                             }
-                            else if (_eventEntry2.ObjEntry.Permanent)
+                            else if (_eventEntry2.ScorePoints)
                             {
                                 (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
                             }
                         }
-                        else if (_eventEntry2.ScorePoints)
+                        else if (_eventEntry1.IsBanned)
                         {
                             (listEventsEntries[index1], listEventsEntries[index2]) = (listEventsEntries[index2], listEventsEntries[index1]);
                         }

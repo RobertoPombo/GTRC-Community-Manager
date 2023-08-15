@@ -70,14 +70,17 @@ namespace GTRC_Community_Manager
                     List<DriversEntries> ListDriverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _eventsEntries.ObjEntry.ID);
                     foreach (DriversEntries _driverEntries in ListDriverEntries)
                     {
-                        ACC_Driver accDriver = new();
-                        accEntry.drivers.Add(accDriver);
-                        if (RaceControl.Statics.ExistsUniqProp(_driverEntries.ObjDriver.ID)) { isAdmin = true;}
-                        accDriver.firstName = _driverEntries.ObjDriver.FirstName;
-                        accDriver.lastName = _driverEntries.ObjDriver.LastName;
-                        accDriver.shortName = _driverEntries.Name3Digits;
-                        accDriver.driverCategory = _eventsEntries.Category;
-                        accDriver.playerID = "S" + _driverEntries.ObjDriver.SteamID.ToString();
+                        if (!_driverEntries.ObjDriver.IsBanned(_event))
+                        {
+                            ACC_Driver accDriver = new();
+                            accEntry.drivers.Add(accDriver);
+                            if (RaceControl.Statics.ExistsUniqProp(_driverEntries.ObjDriver.ID)) { isAdmin = true; }
+                            accDriver.firstName = _driverEntries.ObjDriver.FirstName;
+                            accDriver.lastName = _driverEntries.ObjDriver.LastName;
+                            accDriver.shortName = _driverEntries.Name3Digits;
+                            accDriver.driverCategory = _eventsEntries.Category;
+                            accDriver.playerID = "S" + _driverEntries.ObjDriver.SteamID.ToString();
+                        }
                     }
                     accEntry.raceNumber = _eventsEntries.ObjEntry.RaceNumber;
                     if (_forceCarModel && entryDatetime.ObjCar.ID != Basics.NoID) { accEntry.forcedCarModel = entryDatetime.ObjCar.AccCarID; }
@@ -95,7 +98,7 @@ namespace GTRC_Community_Manager
             {
                 DriversEntries _driverEntriesAdmin = DriversEntries.GetByDriverIDSeasonID(admin.ObjDriver.ID, _event.SeasonID);
                 EventsEntries _eventsEntriesAdmin = EventsEntries.GetAnyByUniqProp(_driverEntriesAdmin.EntryID, _event.ID);
-                if (!_eventsEntriesAdmin.IsOnEntrylist)
+                if (!admin.ObjDriver.IsBanned(_event) && !_eventsEntriesAdmin.IsOnEntrylist)
                 {
                     adminNr++;
                     raceNumber++;
@@ -130,56 +133,62 @@ namespace GTRC_Community_Manager
             if (_forceEntrylist) { forceEntryList = 1; } else { forceEntryList = 0; }
         }
 
-        public void CreateRaceControl(bool _forceEntrylist)
+        public void CreateRaceControl(bool _forceEntrylist, Event _event)
         {
             entries = new List<ACC_Entry>();
             int adminNr = 0;
             foreach (RaceControl admin in RaceControl.Statics.List)
             {
-                adminNr++;
-                ACC_Entry accEntry = new();
-                entries.Add(accEntry);
-                accEntry.drivers = new List<ACC_Driver>();
-                ACC_Driver accDriver = new();
-                accEntry.drivers.Add(accDriver);
-                accDriver.firstName = admin.FirstName;
-                accDriver.lastName = admin.LastName;
-                accDriver.shortName = "SC" + adminNr.ToString();
-                accDriver.driverCategory = new Entry(false).Category;
-                accDriver.playerID = "S" + admin.ObjDriver.SteamID.ToString();
-                accEntry.raceNumber = -1;
-                accEntry.forcedCarModel = -1;
-                accEntry.overrideDriverInfo = 1;
-                accEntry.defaultGridPosition = -1;
-                accEntry.ballastKg = 0;
-                accEntry.restrictor = 0;
-                accEntry.isServerAdmin = 1;
+                if (!admin.ObjDriver.IsBanned(_event))
+                {
+                    adminNr++;
+                    ACC_Entry accEntry = new();
+                    entries.Add(accEntry);
+                    accEntry.drivers = new List<ACC_Driver>();
+                    ACC_Driver accDriver = new();
+                    accEntry.drivers.Add(accDriver);
+                    accDriver.firstName = admin.FirstName;
+                    accDriver.lastName = admin.LastName;
+                    accDriver.shortName = "SC" + adminNr.ToString();
+                    accDriver.driverCategory = new Entry(false).Category;
+                    accDriver.playerID = "S" + admin.ObjDriver.SteamID.ToString();
+                    accEntry.raceNumber = -1;
+                    accEntry.forcedCarModel = -1;
+                    accEntry.overrideDriverInfo = 1;
+                    accEntry.defaultGridPosition = -1;
+                    accEntry.ballastKg = 0;
+                    accEntry.restrictor = 0;
+                    accEntry.isServerAdmin = 1;
+                }
             }
             if (_forceEntrylist) { forceEntryList = 1; } else { forceEntryList = 0; }
         }
 
-        public void CreateDrivers(bool _forceEntrylist)
+        public void CreateDrivers(bool _forceEntrylist, Event _event)
         {
             entries = new List<ACC_Entry>();
             foreach (Driver driver in Driver.Statics.List)
             {
-                ACC_Entry accEntry = new();
-                entries.Add(accEntry);
-                accEntry.drivers = new List<ACC_Driver>();
-                ACC_Driver accDriver = new();
-                accEntry.drivers.Add(accDriver);
-                accDriver.firstName = driver.FirstName;
-                accDriver.lastName = driver.LastName;
-                accDriver.shortName = driver.Name3Digits;
-                accDriver.driverCategory = new Entry(false).Category;
-                accDriver.playerID = "S" + driver.SteamID.ToString();
-                accEntry.raceNumber = -1;
-                accEntry.forcedCarModel = -1;
-                accEntry.overrideDriverInfo = 1;
-                accEntry.defaultGridPosition = -1;
-                accEntry.ballastKg = 0;
-                accEntry.restrictor = 0;
-                if (RaceControl.Statics.ExistsUniqProp(driver.ID)) { accEntry.isServerAdmin = 1; } else { accEntry.isServerAdmin = 0; }
+                if (!driver.IsBanned(_event))
+                {
+                    ACC_Entry accEntry = new();
+                    entries.Add(accEntry);
+                    accEntry.drivers = new List<ACC_Driver>();
+                    ACC_Driver accDriver = new();
+                    accEntry.drivers.Add(accDriver);
+                    accDriver.firstName = driver.FirstName;
+                    accDriver.lastName = driver.LastName;
+                    accDriver.shortName = driver.Name3Digits;
+                    accDriver.driverCategory = new Entry(false).Category;
+                    accDriver.playerID = "S" + driver.SteamID.ToString();
+                    accEntry.raceNumber = -1;
+                    accEntry.forcedCarModel = -1;
+                    accEntry.overrideDriverInfo = 1;
+                    accEntry.defaultGridPosition = -1;
+                    accEntry.ballastKg = 0;
+                    accEntry.restrictor = 0;
+                    if (RaceControl.Statics.ExistsUniqProp(driver.ID)) { accEntry.isServerAdmin = 1; } else { accEntry.isServerAdmin = 0; }
+                }
             }
             if (_forceEntrylist) { forceEntryList = 1; } else { forceEntryList = 0; }
         }

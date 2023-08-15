@@ -29,11 +29,11 @@ namespace Database
         private Entry objEntry = new(false);
         private Driver? objDriver = new(false);
         private Car? objCar = new(false);
-        [JsonIgnore][NotMapped] public Server? ObjServer { get { return objServer; } }
-        [JsonIgnore][NotMapped] public Event ObjEvent { get { return objEvent; } }
-        [JsonIgnore][NotMapped] public Entry ObjEntry { get { return objEntry; } }
-        [JsonIgnore][NotMapped] public Driver? ObjDriver { get { return objDriver; } }
-        [JsonIgnore][NotMapped] public Car? ObjCar { get { return objCar; } }
+        [JsonIgnore][NotMapped] public Server? ObjServer { get { return Server.Statics.GetByID(serverID); } }
+        [JsonIgnore][NotMapped] public Event ObjEvent { get { return Event.Statics.GetByID(eventID); } }
+        [JsonIgnore][NotMapped] public Entry ObjEntry { get { return Entry.Statics.GetByID(entryID); } }
+        [JsonIgnore][NotMapped] public Driver? ObjDriver { get { return Driver.Statics.GetByID(driverID); } }
+        [JsonIgnore][NotMapped] public Car? ObjCar { get { return Car.Statics.GetByID(carID); } }
 
         private int serverID = 0;
         private int eventID = 0;

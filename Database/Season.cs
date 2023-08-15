@@ -29,7 +29,7 @@ namespace Database
         public Season(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
         private Series objSeries = new(false);
-        [JsonIgnore][NotMapped] public Series ObjSeries { get { return objSeries; } }
+        [JsonIgnore][NotMapped] public Series ObjSeries { get { return Series.Statics.GetByID(seriesID); } }
 
         private string name = DefaultName;
         private int seriesID = 0;
@@ -47,6 +47,7 @@ namespace Database
         private DateTime dateCarChangeLimit = DateTime.Now;
         private bool groupCarLimits = false;
         private bool bopLatestModelOnly = false;
+        private int daysIgnoreCarLimits = 0;
         private int formationLapType = 0;
 
         public string Name
@@ -153,6 +154,12 @@ namespace Database
         {
             get { return bopLatestModelOnly; }
             set { bopLatestModelOnly = value; }
+        }
+
+        public int DaysIgnoreCarLimits
+        {
+            get { return daysIgnoreCarLimits; }
+            set { if (value >= 0) { daysIgnoreCarLimits = value; } }
         }
 
         public int FormationLapType

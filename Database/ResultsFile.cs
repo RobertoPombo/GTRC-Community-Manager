@@ -27,9 +27,9 @@ namespace Database
         private Server objServer = new(false);
         private Track objTrack = new(false);
         private Season objSeason = new(false);
-        [JsonIgnore][NotMapped] public Server ObjServer { get { return objServer; } }
-        [JsonIgnore][NotMapped] public Track ObjTrack { get { return objTrack; } }
-        [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
+        [JsonIgnore][NotMapped] public Server ObjServer { get { return Server.Statics.GetByID(serverID); } }
+        [JsonIgnore][NotMapped] public Track ObjTrack { get { return Track.Statics.GetByID(trackID); } }
+        [JsonIgnore][NotMapped] public Season ObjSeason { get { return Season.Statics.GetByID(seasonID); } }
 
         private int serverID = 0;
         private DateTime date = Basics.DateTimeMinValue;

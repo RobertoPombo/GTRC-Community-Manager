@@ -90,7 +90,7 @@ namespace Database
             objEntry = Entry.Statics.GetByID(entryID);
         }
 
-        private static List<DriversEntries> GetListByDriverIDSeasonID(int driverID, int seasonID)
+        public static List<DriversEntries> GetListByDriverIDSeasonID(int driverID, int seasonID)
         {
             List<DriversEntries> driversEntries = new();
             List<DriversEntries> _driversEntries = Statics.GetBy(nameof(DriverID), driverID);

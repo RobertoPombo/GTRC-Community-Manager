@@ -200,12 +200,12 @@ namespace GTRC_Community_Manager
                 }
                 else if (_server.EntrylistTypeEnum == EntrylistTypeEnum.RaceControl)
                 {
-                    Entrylist.CreateRaceControl(_server.ForceEntrylist);
+                    Entrylist.CreateRaceControl(_server.ForceEntrylist, PreSeasonVM.Instance.CurrentEvent);
                     Entrylist.WriteJson(_server.PathCfg);
                 }
                 else if (_server.EntrylistTypeEnum == EntrylistTypeEnum.AllDrivers)
                 {
-                    Entrylist.CreateDrivers(_server.ForceEntrylist);
+                    Entrylist.CreateDrivers(_server.ForceEntrylist, PreSeasonVM.Instance.CurrentEvent);
                     Entrylist.WriteJson(_server.PathCfg);
                 }
                 else if (_server.EntrylistTypeEnum == EntrylistTypeEnum.Season && PreSeasonVM.Instance is not null)

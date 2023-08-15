@@ -376,6 +376,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
                                     <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5">
@@ -412,10 +413,11 @@
                                     <Label Grid.Row="1" Grid.Column="0" Content="Preset Name" Style="{StaticResource LabelStyle}" Margin="5"/>
                                     <Label Grid.Row="2" Grid.Column="0" Content="Bot" Style="{StaticResource LabelStyle}" Margin="5"/>
                                     <Label Grid.Row="3" Grid.Column="0" Content="Server ID" Style="{StaticResource LabelStyle}" Margin="5"/>
-                                    <Label Grid.Row="4" Grid.Column="0" Content="Channel ID" Style="{StaticResource LabelStyle}" Margin="5"/>
-                                    <Label Grid.Row="5" Grid.Column="0" Content="Admin Role ID" Style="{StaticResource LabelStyle}" Margin="5"/>
-                                    <Label Grid.Row="6" Grid.Column="0" Content="Max Message Size" Style="{StaticResource LabelStyle}" Margin="5"/>
-                                    <Label Grid.Row="7" Grid.Column="0" Content="Season" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    <Label Grid.Row="4" Grid.Column="0" Content="Channel ID Entrylist" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    <Label Grid.Row="5" Grid.Column="0" Content="Channel ID Track Report" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    <Label Grid.Row="6" Grid.Column="0" Content="Admin Role ID" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    <Label Grid.Row="7" Grid.Column="0" Content="Max Message Size" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    <Label Grid.Row="8" Grid.Column="0" Content="Season" Style="{StaticResource LabelStyle}" Margin="5"/>
 
                                     <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDisBotPreset.PresetName}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
                                     <ComboBox Grid.Row="2" Grid.Column="1" Margin="10,5"
@@ -423,10 +425,11 @@
                                               SelectedValue="{Binding SelectedDisBotPreset.DisBot, UpdateSourceTrigger=PropertyChanged}"
                                               DisplayMemberPath="Name" Style="{StaticResource ComboBoxStyle}" Cursor="Hand"/>
                                     <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding SelectedDisBotPreset.ServerID}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
-                                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding SelectedDisBotPreset.ChannelID}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
-                                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding SelectedDisBotPreset.AdminRoleID}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
-                                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SelectedDisBotPreset.CharLimit}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
-                                    <ComboBox Grid.Row="7" Grid.Column="1" Margin="10,5"
+                                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding SelectedDisBotPreset.ChannelIDEntrylist}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
+                                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding SelectedDisBotPreset.ChannelIDTrackreport}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
+                                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SelectedDisBotPreset.AdminRoleID}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
+                                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding SelectedDisBotPreset.CharLimit}" Style="{StaticResource TextBoxStyle}" Margin="10,5"/>
+                                    <ComboBox Grid.Row="8" Grid.Column="1" Margin="10,5"
                                               ItemsSource="{Binding ListSeasons, UpdateSourceTrigger=PropertyChanged}"
                                               SelectedValue="{Binding SelectedDisBotPreset.CurrentSeasonM, UpdateSourceTrigger=PropertyChanged}"
                                               DisplayMemberPath="Name" Style="{StaticResource ComboBoxStyle}" Cursor="Hand"/>
@@ -513,6 +516,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5">
@@ -567,9 +571,16 @@
                                             Command="{Binding UpdateEntrylistBoPCmd}"
                                             Style="{StaticResource ExpTextButtonStyle}" Padding="7" Margin="5,0"/>
                                     <Label Content="{Binding SlotsTakenText}" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Height="30" HorizontalAlignment="Stretch" Margin="0,5,0,0">
                                     <Button Content="Publish track report"
                                             Command="{Binding PublishTrackReportCmd}"
                                             Style="{StaticResource ExpTextButtonStyle}" Padding="7" Margin="5,0"/>
+                                    <Label Content="Chance of rain" Style="{StaticResource LabelStyle}" Margin="5"/>
+                                    <TextBox Text="{Binding ChanceOfRain}"
+                                             Style="{StaticResource TextBoxStyle}" Margin="0"
+                                             Width="35" HorizontalContentAlignment="Right" Padding="5,5,1,3"/>
+                                    <Label Content="%" Style="{StaticResource LabelStyle}"/>
                                 </StackPanel>
                             </Grid>
                             
@@ -582,9 +593,10 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -705,12 +717,12 @@
                                        Style="{StaticResource LabelStyle}"/>
                                 <TextBox Grid.Row="2" Grid.Column="4" Text="{Binding CurrentSeasonM.GainBallast}"
                                          IsEnabled="{Binding CurrentSeasonM.IsCheckedBallast}"
-                                         Style="{StaticResource TextBoxStyle}" Margin="5,0,0,0"
-                                         Width="20" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
+                                         Style="{StaticResource TextBoxStyle}" Margin="3,0,0,0"
+                                         Width="22" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
                                 <TextBox Grid.Row="3" Grid.Column="4" Text="{Binding CurrentSeasonM.GainRestrictor}"
                                          IsEnabled="{Binding CurrentSeasonM.IsCheckedRestrictor}"
-                                         Style="{StaticResource TextBoxStyle}" Margin="5,0,0,0"
-                                         Width="20" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
+                                         Style="{StaticResource TextBoxStyle}" Margin="3,0,0,0"
+                                         Width="22" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
                                 <Label Grid.Row="2" Grid.Column="5" Content="kg"
                                        Style="{StaticResource LabelStyle}"/>
                                 <Label Grid.Row="3" Grid.Column="5" Content="%"
@@ -727,6 +739,23 @@
                                          IsEnabled="{Binding CurrentSeasonM.IsCheckedCarChangeLimit}"
                                          Style="{StaticResource TextBoxStyle}" Margin="5,0,0,0"
                                          Width="175" HorizontalContentAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="8">
+                                    <CheckBox Grid.Row="11" Grid.Column="0"
+                                              IsChecked="{Binding CurrentSeasonM.IsCheckedIgnoreCarLimits}"
+                                              Style="{StaticResource CheckBoxStyle}" Margin="5,5,0,5"/>
+                                    <Label Content="Ignore limits for"
+                                           Style="{StaticResource LabelStyle}" Margin="0,0,5,0"/>
+                                    <TextBox Text="{Binding CurrentSeasonM.TimeIgnoreCarLimits}"
+                                             IsEnabled="{Binding CurrentSeasonM.IsCheckedIgnoreCarLimits}"
+                                             Style="{StaticResource TextBoxStyle}"
+                                             Width="30" HorizontalContentAlignment="Right" Padding="1,5,1,3"/>
+                                    <ComboBox ItemsSource="{Binding CurrentSeasonM.ListTimeTypeEnums, UpdateSourceTrigger=PropertyChanged}"
+                                              SelectedValue="{Binding CurrentSeasonM.TimeTypeEnum, UpdateSourceTrigger=PropertyChanged}"
+                                              IsEnabled="{Binding CurrentSeasonM.IsCheckedIgnoreCarLimits}"
+                                              Style="{StaticResource ComboBoxStyle}" Margin="5" Width="85" HorizontalAlignment="Left" Cursor="Hand"/>
+                                    <Label Content="after car release date"
+                                           Style="{StaticResource LabelStyle}" Margin="0,0,10,0"/>
+                                </StackPanel>
                             </Grid>
                             <!--Grid>
                                 <Grid.ColumnDefinitions>

@@ -242,7 +242,6 @@ namespace Database
             int carChangeCount = 0;
             DateTime minDate = ObjSeason.DateCarChangeLimit;
             List<EntriesDatetimes> _list = GetAnyEntriesDatetimes();
-            List<Event> _events = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), SeasonID));
             Car car0 = ObjCar;
             for (int index = 0; index < _list.Count; index++)
             {

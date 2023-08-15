@@ -49,6 +49,7 @@ namespace GTRC_Community_Manager
             ListDataTypes.Add(new KeyValuePair<string, Type>(Team.Statics.Table, typeof(Team)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Entry.Statics.Table, typeof(Entry)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Event.Statics.Table, typeof(Event)));
+            ListDataTypes.Add(new KeyValuePair<string, Type>(Session.Statics.Table, typeof(Session)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(DriversEntries.Statics.Table, typeof(DriversEntries)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(DriversTeams.Statics.Table, typeof(DriversTeams)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(DriversDatetimes.Statics.Table, typeof(DriversDatetimes)));
@@ -230,12 +231,15 @@ namespace GTRC_Community_Manager
 
         public void Update()
         {
-            DataRowVM backupSelected = new(Selected.Object, false, false);
-            List<dynamic> backupValues = Current.Values;
-            DataRow2Object(Selected.Object, Current);
-            Current = new DataRowVM(Selected.Object, false, false);
-            if (CompareLists(backupValues, Current.Values)) { Selected = new DataRowVM(Selected.Object, true, true); ResetList(); }
-            else { DataRow2Object(Selected.Object, backupSelected); }
+            if (Current is not null && Selected is not null)
+            {
+                DataRowVM backupSelected = new(Selected.Object, false, false);
+                List<dynamic> backupValues = Current.Values;
+                DataRow2Object(Selected.Object, Current);
+                Current = new DataRowVM(Selected.Object, false, false);
+                if (CompareLists(backupValues, Current.Values)) { Selected = new DataRowVM(Selected.Object, true, true); ResetList(); }
+                else { DataRow2Object(Selected.Object, backupSelected); }
+            }
         }
 
         public void ReadJson()

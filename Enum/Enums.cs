@@ -2,6 +2,18 @@
 
 namespace Enums
 {
+    public enum TimeTypeEnum
+    {
+        Miliseconds = 0,
+        Seconds = 1,
+        Minutes = 2,
+        Hours = 3,
+        Days = 4,
+        Weeks = 5,
+        Months = 6,
+        Years = 7
+    }
+
     public enum SessionTypeEnum
     {
         Practice = 0,
@@ -60,5 +72,12 @@ namespace Enums
         ControlledShort = 3,
         Limiter = 4,
         LimiterShort = 5
+    }
+
+    public enum DayOfWeekendEnum
+    {
+        Friday = 1,
+        Saturday = 2,
+        Sunday = 3
     }
 }

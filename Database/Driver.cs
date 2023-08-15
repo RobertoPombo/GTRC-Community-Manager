@@ -61,21 +61,13 @@ namespace Database
         public string FirstName
         {
             get { return firstName; }
-            set
-            {
-                firstName = Basics.RemoveSpaceStartEnd(value ?? firstName);
-                UpdateName3DigitsOptions();
-            }
+            set { firstName = Basics.RemoveSpaceStartEnd(value ?? firstName); UpdateName3DigitsOptions(); }
         }
 
         public string LastName
         {
             get { return lastName; }
-            set
-            {
-                lastName = Basics.RemoveSpaceStartEnd(value ?? lastName);
-                UpdateName3DigitsOptions();
-            }
+            set { lastName = Basics.RemoveSpaceStartEnd(value ?? lastName); UpdateName3DigitsOptions(); }
         }
 
         [JsonIgnore] public string FullName
@@ -350,5 +342,7 @@ namespace Database
             foreach (string _name in name.Split(' ')) { if (_name.Length > 0) { nameList.Add(_name); } }
             return nameList;
         }
+
+        public bool IsBanned(Event _event) { if (BanDate > _event.Date) { return false; } else { return true; } }
     }
 }

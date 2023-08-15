@@ -92,8 +92,6 @@ namespace Database
                     if (driverNr == startValueDriver) { break; }
                 }
             }
-
-            objDriver = _driver;
         }
 
         public void SetParentProps()

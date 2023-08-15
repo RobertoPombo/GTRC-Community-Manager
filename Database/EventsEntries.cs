@@ -137,6 +137,16 @@ namespace Database
             }
         }
 
+        [JsonIgnore] public bool IsBanned
+        {
+            get
+            {
+                List<DriversEntries> _driversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), EntryID);
+                foreach (DriversEntries _driverEntry in _driversEntries) { if (!_driverEntry.ObjDriver.IsBanned(ObjEvent)) { return false; } }
+                return true;
+            }
+        }
+
         [JsonIgnore] public int EventNr
         {
             get { return ObjEvent.EventNr; }

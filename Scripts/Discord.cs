@@ -81,7 +81,7 @@ namespace Scripts
                     var result = await _commands.ExecuteAsync(context, argPos, _services);
                     if (!result.IsSuccess && UserMessage is not null && Commands.Instance is not null)
                     {
-                        Commands.Channel = UserMessage.Channel;
+                        Commands.ChannelEntrylist = UserMessage.Channel;
                         Commands.Instance.IsAdmin = RaceControl.Statics.ExistsUniqProp(Driver.Statics.GetByUniqProp((long)UserMessage.Author.Id, 1).ID);
                         await Commands.Instance.Help();
                         await UserMessage.DeleteAsync();
@@ -107,7 +107,8 @@ namespace Scripts
         public static SignInOutBot? iSioBot;
         public static DisBotPreset? Settings;
         public static PreSeasonVM? iPreSVM = PreSeasonVM.Instance;
-        public static ISocketMessageChannel? Channel;
+        public static ISocketMessageChannel? ChannelEntrylist;
+        public static ISocketMessageChannel? ChannelTrackreport;
         public static DiscordMessages discordMessages = new(true);
         public static Emoji emojiSuccess = new("✅");
         public static Emoji emojiFail = new("❌");
@@ -142,7 +143,11 @@ namespace Scripts
             if (SignInOutBot.Instance is not null) { iSioBot = SignInOutBot.Instance; Settings = iSioBot.Settings; }
             if (PreSeasonVM.Instance is not null) { iPreSVM = PreSeasonVM.Instance; }
             adminRoleTag = "<@&" + Settings?.AdminRoleID.ToString() + ">";
-            if (Settings is not null) { Channel = iSioBot?._client.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelID); }
+            if (Settings is not null)
+            {
+                ChannelEntrylist = iSioBot?._client.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelIDEntrylist);
+                ChannelTrackreport = iSioBot?._client.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelIDTrackreport);
+            }
         }
 
 
@@ -462,7 +467,7 @@ namespace Scripts
         public void SetDefaultProperties()
         {
             isError = false;
-            Channel = Context.Channel;
+            ChannelEntrylist = Context.Channel;
             UserMessage = Context.Message;
             DiscordID_Author = (long)Context.Message.Author.Id;
             DiscordID_Driver = (long)Context.Message.Author.Id;
@@ -1022,13 +1027,55 @@ namespace Scripts
             return (text, pos);
         }
 
+        public static async Task CreateTrackReportMessage(int _eventID, int chanceOfRain)
+        {
+            if (ChannelTrackreport is null && Settings is not null)
+            {
+                ChannelTrackreport = iSioBot?._client?.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelIDTrackreport);
+            }
+            if (ChannelTrackreport is not null)
+            {
+                while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); }
+                IsRunning = true;
+                Event _event = Event.Statics.GetByID(_eventID);
+                List<Session> sesList = _event.GetSessions();
+                string text = "**Trackreport " + _event.Name + "**\n";
+                text += "\nMittwoch, " + Basics.Date2String(_event.Date, "DD.MM.YY - hh:mm") + " Uhr\n";
+                text += "Regenwahrscheinlichkeit: ~" + chanceOfRain.ToString() + "%\n";
+                text += "\n**Virtuelle Tageszeiten der Sessions**\n";
+                for (int sesNr1 = 0; sesNr1 < sesList.Count; sesNr1++)
+                {
+                    if (sesList[sesNr1].SessionTypeEnum == Enums.SessionTypeEnum.Practice) { text += "Freies Training"; }
+                    else if (sesList[sesNr1].SessionTypeEnum == Enums.SessionTypeEnum.Qualifying) { text += "Qualifying"; }
+                    else if (sesList[sesNr1].SessionTypeEnum == Enums.SessionTypeEnum.Race) { text += "Rennen"; }
+                    bool showSesNr = false;
+                    for (int sesNr2 = 0; sesNr2 < sesList.Count; sesNr2++)
+                    {
+                        if (sesNr1 != sesNr2 && sesList[sesNr1].SessionType == sesList[sesNr2].SessionType) { showSesNr = true; break; }
+                    }
+                    if (showSesNr) { text += " " + sesList[sesNr1].SessionNrOfThisType.ToString(); }
+                    if (sesList[sesNr1].DayOfWeekendEnum == Enums.DayOfWeekendEnum.Friday) { text += " - Fr, "; }
+                    else if (sesList[sesNr1].DayOfWeekendEnum == Enums.DayOfWeekendEnum.Saturday) { text += " - Sa, "; }
+                    else if (sesList[sesNr1].DayOfWeekendEnum == Enums.DayOfWeekendEnum.Sunday) { text += " - So, "; }
+                    text += sesList[sesNr1].IngameStartTime.ToString() + " Uhr\n";
+                }
+                text += "\n**Servereinstellungen**\n";
+                text += "Temperatur: " + _event.AmbientTemp.ToString() + "°C\n";
+                text += "Wolken: " + _event.CloudLevel.ToString() + "%\n";
+                text += "Regen: " + _event.RainLevel.ToString() + "%\n";
+                text += "Zufälligkeit: " + _event.WeatherRandomness.ToString() + "\n";
+                await ChannelTrackreport.SendMessageAsync(text);
+                IsRunning = false;
+            }
+        }
+
         public static async Task SendMessage(string newMessageContent, bool isStartingGrid, bool deleteLater = true)
         {
-            if (Channel is null && Settings is not null)
+            if (ChannelEntrylist is null && Settings is not null)
             {
-                Channel = iSioBot?._client?.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelID);
+                ChannelEntrylist = iSioBot?._client?.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelIDEntrylist);
             }
-            if (Channel is not null)
+            if (ChannelEntrylist is not null)
             {
                 if (deleteLater)
                 {
@@ -1048,7 +1095,7 @@ namespace Scripts
         public static async Task DeleteMessage(ulong messageID)
         {
             IMessage? oldMessage = null;
-            if (Channel is not null) { try { oldMessage = await Channel.GetMessageAsync(messageID); } catch { } }
+            if (ChannelEntrylist is not null) { try { oldMessage = await ChannelEntrylist.GetMessageAsync(messageID); } catch { } }
             if (oldMessage is not null) { await oldMessage.DeleteAsync(); }
         }
 
@@ -1096,7 +1143,7 @@ namespace Scripts
         public static async Task SendMessageRecursiveEnding(string MessageContent, bool isStartingGrid, bool deleteLater = true)
         {
             IUserMessage? newMessage = null;
-            if (Channel is not null) { newMessage = await Channel.SendMessageAsync(MessageContent); }
+            if (ChannelEntrylist is not null) { newMessage = await ChannelEntrylist.SendMessageAsync(MessageContent); }
             if (newMessage is not null && deleteLater)
             {
                 if (isStartingGrid) { discordMessages.latestStartingGridID.Add(newMessage.Id); }

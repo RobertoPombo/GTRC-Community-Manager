@@ -141,12 +141,12 @@ namespace Database
             int startValueSeason = seasonNr;
 
             if (date < Basics.DateTimeMinValue) { date = Basics.DateTimeMinValue; }
-            else if (date > Basics.DateTimeMaxValue) { date = Basics.DateTimeMaxValue; }
+            else if (date > Basics.DateTimeMaxValue.AddDays(-1)) { date = Basics.DateTimeMaxValue; }
             DateTime startValue = date;
 
             while (!IsUnique(0))
             {
-                if (date < Basics.DateTimeMaxValue) { date = date.AddDays(1); } else { date = Basics.DateTimeMinValue; }
+                if (date < Basics.DateTimeMaxValue.AddDays(-1)) { date = date.AddDays(1); } else { date = Basics.DateTimeMinValue.AddDays(-1); }
                 if (date == startValue)
                 {
                     if (seasonNr + 1 < _idListSeason.Count) { seasonNr += 1; } else { seasonNr = 0; }
@@ -212,5 +212,8 @@ namespace Database
             foreach (Event _event in eventList) { nextEvent = _event; if (_event.Date > _date) { return nextEvent; } }
             return nextEvent;
         }
+
+        public List<Session> GetSessions() { return GetSessions(ID); }
+        public static List<Session> GetSessions(int _eventID) { return Session.SortByStartTime(Session.Statics.GetBy(nameof(Session.EventID), _eventID)); }
     }
 }

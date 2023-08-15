@@ -1,7 +1,10 @@
 ﻿using Core;
 using Database;
+using Enums;
 using Scripts;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GTRC_Community_Manager
 {
@@ -22,6 +25,9 @@ namespace GTRC_Community_Manager
         private int signOutLimit = 0;
         private int carChangeLimit = 0;
         private DateTime dateCarChangeLimit = DateTime.Now;
+        private int daysIgnoreCarLimits = 1;
+        private TimeTypeEnum timeTypeEnum = TimeTypeEnum.Days;
+        private int timeIgnoreCarLimits = -1;
 
         public Season Season
         {
@@ -293,6 +299,88 @@ namespace GTRC_Community_Manager
         {
             get { return season.BopLatestModelOnly; }
             set { if (season.BopLatestModelOnly != value) { season.BopLatestModelOnly = value; RaisePropertyChanged(); } }
+        }
+
+        public bool IsCheckedIgnoreCarLimits
+        {
+            get { return season.DaysIgnoreCarLimits > 0; }
+            set
+            {
+                if (value) { DaysIgnoreCarLimits = daysIgnoreCarLimits; }
+                else { DaysIgnoreCarLimits = 0; }
+                RaisePropertyChanged();
+            }
+        }
+
+        public IEnumerable<TimeTypeEnum> ListTimeTypeEnums
+        {
+            get
+            {
+                IEnumerable<TimeTypeEnum> list = new List<TimeTypeEnum>();
+                foreach (var timeType in Enum.GetValues<TimeTypeEnum>()) { if (timeType >= TimeTypeEnum.Days) { list = list.Append(timeType); } }
+                return list;
+            }
+            set { }
+        }
+
+        public int DaysIgnoreCarLimits
+        {
+            get { if (IsCheckedIgnoreCarLimits) { return season.DaysIgnoreCarLimits; } else { return daysIgnoreCarLimits; } }
+            set
+            {
+                if (season.DaysIgnoreCarLimits != value)
+                {
+                    season.DaysIgnoreCarLimits = value;
+                    if (value > 0) { daysIgnoreCarLimits = value; }
+                }
+                if (DaysIgnoreCarLimits == 0) { timeTypeEnum = TimeTypeEnum.Days; timeIgnoreCarLimits = DaysIgnoreCarLimits; }
+                else if (Math.Round((float)DaysIgnoreCarLimits / 365, 0) == (float)DaysIgnoreCarLimits / 365)
+                {
+                    timeTypeEnum = TimeTypeEnum.Years;
+                    timeIgnoreCarLimits = (int)Math.Round((float)DaysIgnoreCarLimits / 365, 0);
+                }
+                else if (Math.Round((float)DaysIgnoreCarLimits / 31, 0) == (float)DaysIgnoreCarLimits / 31)
+                {
+                    timeTypeEnum = TimeTypeEnum.Months;
+                    timeIgnoreCarLimits = (int)Math.Round((float)DaysIgnoreCarLimits / 31, 0);
+                }
+                else if (Math.Round((float)DaysIgnoreCarLimits / 14, 0) == (float)DaysIgnoreCarLimits / 14)
+                {
+                    timeTypeEnum = TimeTypeEnum.Weeks;
+                    timeIgnoreCarLimits = (int)Math.Round((float)DaysIgnoreCarLimits / 14, 0);
+                }
+                else { timeTypeEnum = TimeTypeEnum.Days; timeIgnoreCarLimits = DaysIgnoreCarLimits; }
+                RaisePropertyChanged(nameof(TimeTypeEnum));
+                RaisePropertyChanged(nameof(TimeIgnoreCarLimits));
+            }
+        }
+
+        public TimeTypeEnum TimeTypeEnum
+        {
+            get { return timeTypeEnum; }
+            set
+            {
+                timeTypeEnum = value;
+                if (value == TimeTypeEnum.Days) { DaysIgnoreCarLimits = TimeIgnoreCarLimits; }
+                else if (value == TimeTypeEnum.Weeks) { DaysIgnoreCarLimits = 14 * TimeIgnoreCarLimits; }
+                else if (value == TimeTypeEnum.Months) { DaysIgnoreCarLimits = 31 * TimeIgnoreCarLimits; }
+                else if (value == TimeTypeEnum.Years) { DaysIgnoreCarLimits = 365 * TimeIgnoreCarLimits; }
+                RaisePropertyChanged();
+            }
+        }
+
+        public int TimeIgnoreCarLimits
+        {
+            get { if (timeIgnoreCarLimits == -1) { DaysIgnoreCarLimits = season.DaysIgnoreCarLimits; } return timeIgnoreCarLimits; }
+            set
+            {
+                timeIgnoreCarLimits = value;
+                if (TimeTypeEnum == TimeTypeEnum.Days) { DaysIgnoreCarLimits = value; }
+                else if (TimeTypeEnum == TimeTypeEnum.Weeks) { DaysIgnoreCarLimits = value * 14; }
+                else if (TimeTypeEnum == TimeTypeEnum.Months) { DaysIgnoreCarLimits = value * 31; }
+                else if (TimeTypeEnum == TimeTypeEnum.Years) { DaysIgnoreCarLimits = value * 365; }
+                RaisePropertyChanged();
+            }
         }
 
         public string ExplanationStintAnalisisSettings { get { return ExplainStintAnalisisSettings(); } set { } }

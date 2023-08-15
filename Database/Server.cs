@@ -33,7 +33,7 @@ namespace Database
         public Server(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
         private Season objSeason = new(false);
-        [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
+        [JsonIgnore][NotMapped] public Season ObjSeason { get { return Season.Statics.GetByID(seasonID); } }
 
         private string name = DefaultName;
         private string path = NoPath;

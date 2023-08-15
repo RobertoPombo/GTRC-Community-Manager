@@ -424,7 +424,8 @@ namespace GTRC_Community_Manager
         private DiscordBot disBot = SettingsVM.discordBotList[0];
         private string disBotName = SettingsVM.discordBotList[0].Name;
         private long serverID = Driver.DiscordIDMinValue;
-        private long channelID = Driver.DiscordIDMinValue;
+        private long channelIDEntrylist = Driver.DiscordIDMinValue;
+        private long channelIDTrackreport = Driver.DiscordIDMinValue;
         private long adminRoleID = Driver.DiscordIDMinValue;
         private int charLimit = 2000;
         private SeasonM currentSeasonM = new(new Season(false));
@@ -467,10 +468,15 @@ namespace GTRC_Community_Manager
             get { return serverID; }
             set { if (!Driver.IsValidDiscordID(value)) { serverID = Driver.DiscordIDMinValue; } else { serverID = value; } }
         }
-        public long ChannelID
+        public long ChannelIDEntrylist
         {
-            get { return channelID; }
-            set { if (!Driver.IsValidDiscordID(value)) { channelID = Driver.DiscordIDMinValue; } else { channelID = value; } }
+            get { return channelIDEntrylist; }
+            set { if (!Driver.IsValidDiscordID(value)) { channelIDEntrylist = Driver.DiscordIDMinValue; } else { channelIDEntrylist = value; } }
+        }
+        public long ChannelIDTrackreport
+        {
+            get { return channelIDTrackreport; }
+            set { if (!Driver.IsValidDiscordID(value)) { channelIDTrackreport = Driver.DiscordIDMinValue; } else { channelIDTrackreport = value; } }
         }
         public long AdminRoleID
         {

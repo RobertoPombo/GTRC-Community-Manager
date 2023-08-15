@@ -37,6 +37,7 @@ namespace Scripts
                 case "System.Double": if (Double.TryParse(Value.ToString(), out double _double)) { return _double; } else { return (double)0; }
                 case "System.Decimal": if (Decimal.TryParse(Value.ToString(), out decimal _decimal)) { return _decimal; } else { return (decimal)0; }
                 case "System.DateTime": if (DateTime.TryParse(Value.ToString(), out DateTime _DateTime)) { return _DateTime; } else { return DateTime.MinValue; }
+                case "System.TimeSpan": if (TimeSpan.TryParse(Value.ToString(), out TimeSpan _TimeSpan)) { return _TimeSpan; } else { return TimeSpan.Zero; }
                 case "System.Object": if (Int32.TryParse(Value.ToString(), out Int32 _ID)) { return _ID; } else { return NoID; }
                 default: return null;
             }

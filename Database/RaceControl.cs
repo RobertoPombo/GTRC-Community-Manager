@@ -25,7 +25,7 @@ namespace Database
         public RaceControl(bool _readyForList, bool inList) { This = this; Initialize(_readyForList, inList); }
 
         private Driver objDriver = new(false);
-        [JsonIgnore][NotMapped] public Driver ObjDriver { get { return objDriver; } }
+        [JsonIgnore][NotMapped] public Driver ObjDriver { get { return Driver.Statics.GetByID(driverID); } }
 
         private int driverID = 0;
         private string firstName = "";
