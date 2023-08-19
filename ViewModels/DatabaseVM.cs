@@ -39,6 +39,7 @@ namespace GTRC_Community_Manager
             ListDataTypes.Add(new KeyValuePair<string, Type>(ThemeColor.Statics.Table, typeof(ThemeColor)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Car.Statics.Table, typeof(Car)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Track.Statics.Table, typeof(Track)));
+            //ListDataTypes.Add(new KeyValuePair<string, Type>(Organization.Statics.Table, typeof(Organization)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Driver.Statics.Table, typeof(Driver)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(RaceControl.Statics.Table, typeof(RaceControl)));
             ListDataTypes.Add(new KeyValuePair<string, Type>(Series.Statics.Table, typeof(Series)));
@@ -84,8 +85,18 @@ namespace GTRC_Community_Manager
         {
             Type backupDataType = DataType;
             foreach (KeyValuePair<string, Type> _dataType in ListDataTypes) { DataType = _dataType.Value; forceDel = true; ClearList(); }
-            foreach (KeyValuePair<string, Type> _dataType in ListDataTypes) { DataType = _dataType.Value; if (_dataType.Key == "EventsEntries") { } LoadSQL(); }
+            foreach (KeyValuePair<string, Type> _dataType in ListDataTypes) { DataType = _dataType.Value; LoadSQL(); }
             DataType = backupDataType;
+
+            /*TEMP Löschen Conv
+            while (MainWindow.CheckExistingSqlThreads()) { Thread.Sleep(200 + random.Next(100)); }
+            IsRunning = true; ForceDel = true;
+            Organization.Statics.ResetSQL(UseForceDel());
+            foreach (Team _team in Team.Statics.List)
+            {
+                if (!Organization.Statics.ExistsUniqProp(_team.OrganizationName)) { _ = Organization.Statics.WriteSQL(new Organization() { Name = _team.OrganizationName }); }
+            }
+            IsRunning = false;*/
         }
 
         public bool ForceDel

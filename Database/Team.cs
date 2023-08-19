@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Scripts;
+using Newtonsoft.Json.Linq;
 
 namespace Database
 {
@@ -46,6 +47,36 @@ namespace Database
                 if (ReadyForList) { SetNextAvailable(); }
             }
         }
+        /*[JsonIgnore] public string OrganizationName
+        {
+            get
+            {
+                List<string> del = new() { " - ", " #", " | ", " (" };
+                List<string> apx = new() { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" };
+                List<string> rep = new() { " ", "-", "_", ".", "team", "simracing", "eracing", "racing", "motorsports", "motorsport", "esports", "esport", "sport", "performance", "junior" };
+                string orgaName = "";
+                string _name0 = Name;
+                foreach (string _del in del)
+                {
+                    string[] _names = _name0.Split(_del);
+                    if (_names.Length > 1)
+                    {
+                        string _name1 = _names[0];
+                        if (_name1.Length > orgaName.Length) { orgaName = _name1; }
+                    }
+                }
+                if (orgaName.Length == 0) { orgaName = _name0; }
+                foreach (string _apx in apx)
+                {
+                    string _name1 = Basics.SubStr(_name0, 0, _name0.Length - _apx.Length);
+                    string _name2 = Basics.SubStr(_name0, -_apx.Length);
+                    if (_name2 == _apx && _name1.Length > 0 && _name1.Length < orgaName.Length) { orgaName = _name1; }
+                }
+                orgaName = orgaName.ToLower();
+                foreach (string _rep in rep) { orgaName = orgaName.Replace(_rep.ToLower(), ""); }
+                return orgaName;
+            }
+        }*/
 
         public static void PublishList() { }
 

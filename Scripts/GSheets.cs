@@ -455,23 +455,27 @@ namespace Scripts
             List<object> values = new() { "Zeitstempel", "Vorname", "Nachname", "SteamID64", "Fahrzeug", "Teamname", "Startnummer", "Stammfahrer oder Gaststarter", "Angemeldet" };
             rows.Add(values);
             List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), _event.SeasonID);
+            List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), _event.SeasonID));
             foreach (Entry _entry in listEntries)
             {
-                values = new List<object>();
-                List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
-                if (_driverEntries.Count > 0)
+                if (listEvents.Count > 0 && _entry.SignOutDate > listEvents[0].Date)
                 {
-                    EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
-                    values.Add(_entry.RegisterDate.ToString());
-                    values.Add(_driverEntries[0].ObjDriver.FirstName);
-                    values.Add(_driverEntries[0].ObjDriver.LastName);
-                    values.Add("S" + _driverEntries[0].ObjDriver.SteamID.ToString());
-                    values.Add(_entry.GetEntriesDatetimesByDate(_event.Date).ObjCar.Name_GTRC);
-                    values.Add(_entry.ObjTeam?.Name ?? "");
-                    values.Add(_entry.RaceNumber.ToString());
-                    if (_eventsEntries.ScorePoints) { values.Add("Stammfahrer"); } else { values.Add("Gaststarter"); }
-                    values.Add("TRUE");
-                    rows.Add(values);
+                    values = new List<object>();
+                    List<DriversEntries> _driverEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _entry.ID);
+                    if (_driverEntries.Count > 0)
+                    {
+                        EventsEntries _eventsEntries = EventsEntries.GetAnyByUniqProp(_entry.ID, _event.ID);
+                        values.Add(_entry.RegisterDate.ToString());
+                        values.Add(_driverEntries[0].ObjDriver.FirstName);
+                        values.Add(_driverEntries[0].ObjDriver.LastName);
+                        values.Add("S" + _driverEntries[0].ObjDriver.SteamID.ToString());
+                        values.Add(_entry.GetEntriesDatetimesByDate(_event.Date).ObjCar.Name_GTRC);
+                        values.Add(_entry.ObjTeam?.Name ?? "");
+                        values.Add(_entry.RaceNumber.ToString());
+                        if (_eventsEntries.ScorePoints) { values.Add("Stammfahrer"); } else { values.Add("Gaststarter"); }
+                        values.Add("TRUE");
+                        rows.Add(values);
+                    }
                 }
             }
             if (rows.Count > 0)

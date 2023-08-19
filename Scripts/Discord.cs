@@ -979,9 +979,10 @@ namespace Scripts
 
                 textTemp = "";
                 pos = 1;
+                List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), _event.SeasonID));
                 foreach (EventsEntries eventEntry in listSortRaceNumber)
                 {
-                    if (!eventEntry.RegisterState)
+                    if (!eventEntry.RegisterState && listEvents.Count > 0 && eventEntry.ObjEntry.SignOutDate > listEvents[0].Date)
                     {
                         (textTemp, pos) = AddStartingGridLine(textTemp, pos, eventEntry, printCar, printCarChange, false);
                     }

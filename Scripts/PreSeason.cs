@@ -94,7 +94,8 @@ namespace Scripts
             PreQualiResultLine.Statics.ResetSQL(true);
             PreQualiResultLine.Statics.LoadSQL();
             List<Entry> listEntries = Entry.Statics.GetBy(nameof(Entry.SeasonID), seasonID);
-            foreach (Entry _entry in listEntries) { _ = new PreQualiResultLine { EntryID = _entry.ID }; }
+            List<Event> listEvents = Event.SortByDate(Event.Statics.GetBy(nameof(Event.SeasonID), seasonID));
+            foreach (Entry _entry in listEntries) { if (listEvents.Count > 0 && _entry.SignOutDate > listEvents[0].Date) { _ = new PreQualiResultLine { EntryID = _entry.ID }; } }
             PreQualiResultLine.Statics.WriteJson();
             PreQualiResultLine.Statics.WriteSQL();
         }
