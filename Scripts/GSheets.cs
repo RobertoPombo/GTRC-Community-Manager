@@ -239,7 +239,7 @@ namespace Scripts
             return newEntry || _newEntry;
         }
 
-        public static bool SyncEntryByDriver(Dictionary<string, dynamic> values, int seasonID, bool _newEntry)
+        public static int SyncEntryByDriver(Dictionary<string, dynamic> values, int seasonID)
         {
             Driver driver = SyncDriver(values);
             int RaceNumber = values["RaceNumber"];
@@ -257,9 +257,9 @@ namespace Scripts
                 Entry entry = new() { SeasonID = seasonID, RaceNumber = RaceNumber, TeamID = driverTeam.TeamID, CarID = CarID, RegisterDate = RegisterDate, Permanent = Permanent };
                 entry = Entry.Statics.WriteSQL(entry);
                 _ = DriversEntries.Statics.WriteSQL(new DriversEntries { DriverID = driverTeam.DriverID, EntryID = entry.ID });
-                return true;
+                return entry.RaceNumber;
             }
-            return _newEntry;
+            return Basics.NoID;
         }
 
         public static void SyncFormsEntries(int seasonID, string docID, string sheetID, string range)
@@ -267,14 +267,23 @@ namespace Scripts
             dynamic rows = LoadRange(docID, sheetID, range);
             if (rows?.Count > 1)
             {
-                bool newEntry = false;
+                List<int> newEntries = new();
                 Dictionary<string, int> VarMap = CreateVarMap(rows[0], VarListEntries);
                 for (int rowNr = 1; rowNr < rows.Count; rowNr++)
                 {
                     Dictionary<string, dynamic> values = ReadValuesFromRow(VarMap, rows[rowNr]);
-                    newEntry = SyncEntryByDriver(values, seasonID, newEntry);
+                    int newEntry = SyncEntryByDriver(values, seasonID);
+                    if (newEntry > Basics.NoID) { newEntries.Add(newEntry); }
                 }
-                if (newEntry) { _ = Commands.CreateStartingGridMessage(Event.GetNextEvent(seasonID, DateTime.Now).ID, false, false); }
+                if (newEntries.Count > 0)
+                {
+                    string message = "Neue Anmeldung";
+                    if (newEntries.Count > 1) { message += "en"; }
+                    message += ":";
+                    foreach (int _raceNumber in newEntries) { message += "\n- #" + _raceNumber.ToString(); }
+                    _ = Commands.NotifyAdmins(message);
+                    _ = Commands.CreateStartingGridMessage(Event.GetNextEvent(seasonID, DateTime.Now).ID, false, false);
+                }
             }
         }
 

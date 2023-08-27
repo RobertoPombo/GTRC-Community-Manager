@@ -352,7 +352,7 @@ namespace Scripts
                             string message = delimiter + "Da du das Limit von " + nextEvent.ObjSeason.SignOutLimit.ToString() +
                                 " Abmeldungen/Nichtteilnahmen pro Saison überschritten hast, musst du dich ab jetzt zu jedem Event einzeln anmelden." +
                                 " Startplätze werden bevorzugt an Teilnehmer vergeben, die für jedes Rennen automatisch angemeldet sind.";
-                            _ = Commands.NotifyEntry(_entry, message, "#!#");
+                            _ = Commands.NotifyEntry(_entry, message, delimiter);
                             EntriesDatetimes newEntryDate = EntriesDatetimes.GetAnyByUniqProp(_entry.ID, DateTime.Now);
                             newEntryDate.Permanent = false;
                         }
@@ -428,7 +428,7 @@ namespace Scripts
                             if (!_eventsEntries.ScorePoints)
                             {
                                 string message = delimiter + "Du fährst ab jetzt nicht mehr außerhalb der Wertung mit und sammelst Meisterschaftspunkte.";
-                                _ = Commands.NotifyEntry(_entry, message, "#!#");
+                                _ = Commands.NotifyEntry(_entry, message, delimiter);
                                 _eventsEntries.ScorePoints = true;
                             }
                         }
@@ -436,20 +436,8 @@ namespace Scripts
                         {
                             if (_eventsEntries.ScorePoints)
                             {
-                                string message = delimiter + "Aufgrund der Obergrenze von " + _season.CarLimitRegisterLimit.ToString() +
-                                    " Fahrzeugen fährst du das kommende Rennen mit dem " + _eventCar.ObjCar.Name +
-                                    " außerhalb der Wertung mit und sammelst keine Meisterschaftspunkte.";
-                                if (_season.DateBoPFreeze > DateTime.Now)
-                                {
-                                    message += " Sobald dieses Fahrzeug wieder weniger als " + _event.ObjSeason.CarLimitRegisterLimit.ToString() +
-                                        "x in der Meisterschaft vertreten ist, nimmst du an der Meisterschaftswertung teil.";
-                                }
-                                if (_season.CarChangeLimit > 0)
-                                {
-                                    message += " Solltest du beim kommenden Rennen gerne um Punkte fahren wollen," +
-                                    " kannst du dir die `!fahrzeugliste` anzeigen lassen und einen `!fahrzeugwechsel` versuchen.";
-                                }
-                                _ = Commands.NotifyEntry(_entry, message, "#!#");
+                                string message = delimiter + CreateNoScorePointsNotification(_season, _event, _eventCar.ObjCar);
+                                _ = Commands.NotifyEntry(_entry, message, delimiter);
                                 _eventsEntries.ScorePoints = false;
                             }
                         }
@@ -458,6 +446,24 @@ namespace Scripts
             }
             EventsCars.Statics.WriteSQL();
             EventsEntries.Statics.WriteSQL();
+        }
+
+        public static string CreateNoScorePointsNotification(Season _season, Event _event, Car _car)
+        {
+            string message = "Aufgrund der Obergrenze von " + _season.CarLimitRegisterLimit.ToString() +
+                " Fahrzeugen fährst du das kommende Rennen mit dem " + _car.Name +
+                " außerhalb der Wertung mit und sammelst keine Meisterschaftspunkte.";
+            if (_season.DateBoPFreeze > DateTime.Now)
+            {
+                message += " Sobald dieses Fahrzeug wieder weniger als " + _event.ObjSeason.CarLimitRegisterLimit.ToString() +
+                    "x in der Meisterschaft vertreten ist, nimmst du an der Meisterschaftswertung teil.";
+            }
+            if (_season.CarChangeLimit > 0)
+            {
+                message += " Solltest du beim kommenden Rennen gerne um Punkte fahren wollen," +
+                " kannst du dir die `!fahrzeugliste` anzeigen lassen und einen `!fahrzeugwechsel` versuchen.";
+            }
+            return message;
         }
 
         public static (List<EventsEntries>, List<EventsEntries>) DetermineEntrylist(Event _event, int SlotsAvailable)

@@ -28,8 +28,8 @@ namespace Database
 
         private Entry objEntry = new(false);
         private Event objEvent = new(false);
-        [JsonIgnore][NotMapped] public Entry ObjEntry { get { return objEntry; } }
-        [JsonIgnore][NotMapped] public Event ObjEvent { get { return objEvent; } }
+        [JsonIgnore][NotMapped] public Entry ObjEntry { get { return Entry.Statics.GetByID(entryID); } }
+        [JsonIgnore][NotMapped] public Event ObjEvent { get { return Event.Statics.GetByID(eventID); } }
 
         private int entryID = 0;
         private int eventID = 0;

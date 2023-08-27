@@ -344,10 +344,10 @@ namespace GTRC_Community_Manager
                     timeTypeEnum = TimeTypeEnum.Months;
                     timeIgnoreCarLimits = (int)Math.Round((float)DaysIgnoreCarLimits / 31, 0);
                 }
-                else if (Math.Round((float)DaysIgnoreCarLimits / 14, 0) == (float)DaysIgnoreCarLimits / 14)
+                else if (Math.Round((float)DaysIgnoreCarLimits / 7, 0) == (float)DaysIgnoreCarLimits / 7)
                 {
                     timeTypeEnum = TimeTypeEnum.Weeks;
-                    timeIgnoreCarLimits = (int)Math.Round((float)DaysIgnoreCarLimits / 14, 0);
+                    timeIgnoreCarLimits = (int)Math.Round((float)DaysIgnoreCarLimits / 7, 0);
                 }
                 else { timeTypeEnum = TimeTypeEnum.Days; timeIgnoreCarLimits = DaysIgnoreCarLimits; }
                 RaisePropertyChanged(nameof(TimeTypeEnum));
@@ -362,7 +362,7 @@ namespace GTRC_Community_Manager
             {
                 timeTypeEnum = value;
                 if (value == TimeTypeEnum.Days) { DaysIgnoreCarLimits = TimeIgnoreCarLimits; }
-                else if (value == TimeTypeEnum.Weeks) { DaysIgnoreCarLimits = 14 * TimeIgnoreCarLimits; }
+                else if (value == TimeTypeEnum.Weeks) { DaysIgnoreCarLimits = 7 * TimeIgnoreCarLimits; }
                 else if (value == TimeTypeEnum.Months) { DaysIgnoreCarLimits = 31 * TimeIgnoreCarLimits; }
                 else if (value == TimeTypeEnum.Years) { DaysIgnoreCarLimits = 365 * TimeIgnoreCarLimits; }
                 RaisePropertyChanged();
@@ -376,7 +376,7 @@ namespace GTRC_Community_Manager
             {
                 timeIgnoreCarLimits = value;
                 if (TimeTypeEnum == TimeTypeEnum.Days) { DaysIgnoreCarLimits = value; }
-                else if (TimeTypeEnum == TimeTypeEnum.Weeks) { DaysIgnoreCarLimits = value * 14; }
+                else if (TimeTypeEnum == TimeTypeEnum.Weeks) { DaysIgnoreCarLimits = value * 7; }
                 else if (TimeTypeEnum == TimeTypeEnum.Months) { DaysIgnoreCarLimits = value * 31; }
                 else if (TimeTypeEnum == TimeTypeEnum.Years) { DaysIgnoreCarLimits = value * 365; }
                 RaisePropertyChanged();

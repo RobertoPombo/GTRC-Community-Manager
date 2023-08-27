@@ -424,9 +424,10 @@ namespace GTRC_Community_Manager
         private DiscordBot disBot = SettingsVM.discordBotList[0];
         private string disBotName = SettingsVM.discordBotList[0].Name;
         private long serverID = Driver.DiscordIDMinValue;
+        private long adminRoleID = Driver.DiscordIDMinValue;
         private long channelIDEntrylist = Driver.DiscordIDMinValue;
         private long channelIDTrackreport = Driver.DiscordIDMinValue;
-        private long adminRoleID = Driver.DiscordIDMinValue;
+        private long channelIDNotifyAdmins = Driver.DiscordIDMinValue;
         private int charLimit = 2000;
         private SeasonM currentSeasonM = new(new Season(false));
         private bool isActive = false;
@@ -468,6 +469,11 @@ namespace GTRC_Community_Manager
             get { return serverID; }
             set { if (!Driver.IsValidDiscordID(value)) { serverID = Driver.DiscordIDMinValue; } else { serverID = value; } }
         }
+        public long AdminRoleID
+        {
+            get { return adminRoleID; }
+            set { if (!Driver.IsValidDiscordID(value)) { adminRoleID = Driver.DiscordIDMinValue; } else { adminRoleID = value; } }
+        }
         public long ChannelIDEntrylist
         {
             get { return channelIDEntrylist; }
@@ -478,10 +484,10 @@ namespace GTRC_Community_Manager
             get { return channelIDTrackreport; }
             set { if (!Driver.IsValidDiscordID(value)) { channelIDTrackreport = Driver.DiscordIDMinValue; } else { channelIDTrackreport = value; } }
         }
-        public long AdminRoleID
+        public long ChannelIDNotifyAdmins
         {
-            get { return adminRoleID; }
-            set { if (!Driver.IsValidDiscordID(value)) { adminRoleID = Driver.DiscordIDMinValue; } else { adminRoleID = value; } }
+            get { return channelIDNotifyAdmins; }
+            set { if (!Driver.IsValidDiscordID(value)) { channelIDNotifyAdmins = Driver.DiscordIDMinValue; } else { channelIDNotifyAdmins = value; } }
         }
         public int CharLimit
         {

@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Scripts;
 
 using GTRC_Community_Manager;
+using System.Windows.Controls;
 
 namespace Database
 {
@@ -29,8 +30,8 @@ namespace Database
 
         private Season objSeason = new(false);
         private Track objTrack = new(false);
-        [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
-        [JsonIgnore][NotMapped] public Track ObjTrack { get { return objTrack; } }
+        [JsonIgnore][NotMapped] public Season ObjSeason { get { return Season.Statics.GetByID(seasonID); } }
+        [JsonIgnore][NotMapped] public Track ObjTrack { get { return Track.Statics.GetByID(trackID); } }
 
         private int seasonID = 0;
         private DateTime date = DateTime.Now;
@@ -129,6 +130,7 @@ namespace Database
         {
             SortByDate();
             PreSeasonVM.UpdateListEvents();
+            SessionsVM.UpdateListEvents();
         }
 
         public override void SetNextAvailable()

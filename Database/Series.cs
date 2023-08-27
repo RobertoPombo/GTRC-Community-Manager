@@ -42,6 +42,7 @@ namespace Database
         public static void PublishList()
         {
             PreSeasonVM.UpdateListSeries();
+            SessionsVM.UpdateListSeries();
         }
 
         public override void SetNextAvailable()

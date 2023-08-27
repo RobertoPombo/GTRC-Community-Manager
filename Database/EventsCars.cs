@@ -66,8 +66,8 @@ namespace Database
             get { return ballast; }
             set
             {
-                if (value < 0) { ballast = 0; }
-                else if (value > 30) { ballast = 30; }
+                if (value < -40) { ballast = 0; }
+                else if (value > 40) { ballast = 40; }
                 else { ballast = value; }
             }
         }

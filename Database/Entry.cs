@@ -29,9 +29,9 @@ namespace Database
         private Season objSeason = new(false);
         private Team? objTeam = new(false);
         private Car objCar = new(false);
-        [JsonIgnore][NotMapped] public Season ObjSeason { get { return objSeason; } }
-        [JsonIgnore][NotMapped] public Team? ObjTeam { get { return objTeam; } }
-        [JsonIgnore][NotMapped] public Car ObjCar { get { return objCar; } }
+        [JsonIgnore][NotMapped] public Season ObjSeason { get { return Season.Statics.GetByID(seasonID); } }
+        [JsonIgnore][NotMapped] public Team? ObjTeam { get { return Team.Statics.GetByID(teamID); } }
+        [JsonIgnore][NotMapped] public Car ObjCar { get { return Car.Statics.GetByID(carID); } }
 
         private int seasonID = 0;
         private int raceNumber = DefaultRaceNumber;
@@ -122,8 +122,8 @@ namespace Database
             get { return ballast; }
             set
             {
-                if (value < 0) { ballast = 0; }
-                else if (value > 30) { ballast = 30; }
+                if (value < -40) { ballast = 0; }
+                else if (value > 40) { ballast = 40; }
                 else { ballast = value; }
             }
         }
@@ -249,7 +249,8 @@ namespace Database
                 Car car1 = _list[index].ObjCar;
                 if (car1.ID != car0.ID && _list[index].Date > minDate)
                 {
-                    if (!ObjSeason.GroupCarLimits || car1.Category != car0.Category || car1.Manufacturer != car0.Manufacturer)
+                    if ((!ObjSeason.GroupCarLimits && ObjSeason.DaysIgnoreCarLimits < (_list[index].Date - RegisterDate).Days) ||
+                        car1.Category != car0.Category || car1.Manufacturer != car0.Manufacturer)
                     {
                         carChangeCount++;
                         minDate = Event.GetNextEvent(SeasonID, _list[index].Date).Date;
@@ -270,7 +271,8 @@ namespace Database
             {
                 if (_list[index].Date > limitDate) { return latestCarChangeDate; }
                 Car car1 = _list[index].ObjCar;
-                if (car1.ID != car0.ID && (!GroupCarLimits || car1.Category != car0.Category || car1.Manufacturer != car0.Manufacturer))
+                bool IgnoreCarChange = ObjSeason.DaysIgnoreCarLimits > (_list[index].Date - car1.ReleaseDate).Days && !IgnoreGroupCarLimits;
+                if (car1.ID != car0.ID && ((!GroupCarLimits && !IgnoreCarChange) || car1.Category != car0.Category || car1.Manufacturer != car0.Manufacturer))
                 {
                     latestCarChangeDate = _list[index].Date;
                 }

@@ -178,6 +178,7 @@ namespace Database
         {
             PreSeasonVM.UpdateListSeasons();
             SettingsVM.UpdateListSeasons();
+            SessionsVM.UpdateListSeasons();
         }
 
         public override void SetNextAvailable()

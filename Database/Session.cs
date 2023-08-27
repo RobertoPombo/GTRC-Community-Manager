@@ -1,4 +1,5 @@
 ﻿using Enums;
+using GTRC_Community_Manager;
 using Newtonsoft.Json;
 using Scripts;
 using System;
@@ -284,7 +285,10 @@ namespace Database
             set { value = Basics.RemoveSpaceStartEnd(value); if (value.Length >= 3) { adminPassword = value; } }
         }
 
-        public static void PublishList() { }
+        public static void PublishList()
+        {
+            SessionsVM.UpdateListSessions();
+        }
 
         public override void SetNextAvailable()
         {

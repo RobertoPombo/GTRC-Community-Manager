@@ -16,6 +16,7 @@ using System.Threading;
 using System.Collections;
 
 using GTRC_Community_Manager;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Scripts
 {
@@ -109,7 +110,9 @@ namespace Scripts
         public static PreSeasonVM? iPreSVM = PreSeasonVM.Instance;
         public static ISocketMessageChannel? ChannelEntrylist;
         public static ISocketMessageChannel? ChannelTrackreport;
+        public static ISocketMessageChannel? ChannelNotifyAdmins;
         public static DiscordMessages discordMessages = new(true);
+        public static MissingDiscordIDs missingDiscordIDs = new(true);
         public static Emoji emojiSuccess = new("✅");
         public static Emoji emojiFail = new("❌");
         public static Emoji emojiWTF = new("🤷‍♀️");
@@ -147,6 +150,7 @@ namespace Scripts
             {
                 ChannelEntrylist = iSioBot?._client.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelIDEntrylist);
                 ChannelTrackreport = iSioBot?._client.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelIDTrackreport);
+                ChannelNotifyAdmins = iSioBot?._client.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelIDNotifyAdmins);
             }
         }
 
@@ -627,9 +631,29 @@ namespace Scripts
         public static async Task NotifyEntry(Entry entry, string message, string delimiter)
         {
             List<long> discordIDs_Drivers = GetDiscordIDs_Drivers(entry.ID);
-            if (discordIDs_Drivers.Count > 0) { message = message.Replace(delimiter, TagDiscordIDs(discordIDs_Drivers, false)); }
-            else { message = message.Replace(delimiter, adminRoleTag + " @Teilnehmer #" + entry.RaceNumber.ToString() + " (Discord-ID fehlt)\n "); }
-            await SendMessage(message, false, false);
+            if (discordIDs_Drivers.Count > 0)
+            {
+                message = message.Replace(delimiter, TagDiscordIDs(discordIDs_Drivers, false));
+                await SendMessage(message, false, false);
+                missingDiscordIDs.ListRemove(entry.ID);
+            }
+            else
+            {
+                message = message.Replace(delimiter, "@Teilnehmer #" + entry.RaceNumber.ToString() + " (Discord-ID fehlt)\n ");
+                await NotifyAdmins(message);
+                missingDiscordIDs.ListAdd(entry.ID);
+            }
+        }
+
+        public static async Task NotifyAdmins(string message)
+        {
+            IsRunning = true;
+            if (ChannelNotifyAdmins is null && Settings is not null)
+            {
+                ChannelNotifyAdmins = iSioBot?._client?.GetGuild((ulong)Settings.ServerID)?.GetTextChannel((ulong)Settings.ChannelIDNotifyAdmins);
+            }
+            if (ChannelNotifyAdmins is not null) { await ChannelNotifyAdmins.SendMessageAsync(message); }
+            IsRunning = false;
         }
 
         public async Task ChangeCar()
@@ -1020,7 +1044,16 @@ namespace Scripts
                     if (!notScorePointsFirstEvent && exceedsNoShowLimit) { text += " | *außer Wertung (wg. Abw. trotz Anm.)*"; }
                     else { text += " | *außer Wertung*"; }
                 }
-                else { text += " | *außer Wertung (wg. Fzglimit)*"; }
+                else
+                {
+                    text += " | *außer Wertung (wg. Fzglimit)*";
+                    if (missingDiscordIDs.entryIDs.Contains(_entry.ID) && GetDiscordIDs_Drivers(_entry.ID).Count > 0)
+                    {
+                        string delimiter = "#!#";
+                        string message = delimiter + PreSeason.CreateNoScorePointsNotification(eventEntry.ObjEvent.ObjSeason, eventEntry.ObjEvent, entryDatetime.ObjCar);
+                        _ = Commands.NotifyEntry(_entry, message, delimiter);
+                    }
+                }
             }
             bool eventBan = false; foreach (Driver _driver in listDrivers) { if (_driver.SafetyRating <= 0) { eventBan = true; } } //Von Event abhängig!!!
             if (eventBan) { text += " | **GESPERRT**"; }
@@ -1180,6 +1213,49 @@ namespace Scripts
                 DiscordMessages? tempInstance = JsonConvert.DeserializeObject<DiscordMessages>(File.ReadAllText(Path, Encoding.Unicode));
                 if (tempInstance?.latestMessageID is IList) { latestMessageID = tempInstance.latestMessageID; }
                 if (tempInstance?.latestStartingGridID is IList) { latestStartingGridID = tempInstance.latestStartingGridID; }
+            }
+            catch { return; }
+        }
+
+        public void WriteJson()
+        {
+            string text = JsonConvert.SerializeObject(this, Formatting.Indented);
+            File.WriteAllText(Path, text, Encoding.Unicode);
+        }
+    }
+
+
+
+    public class MissingDiscordIDs
+    {
+        public static string Path = MainWindow.dataDirectory + "discordmissingdiscordids.json";
+
+        public List<int> entryIDs = new();
+
+        public MissingDiscordIDs() { }
+
+        public MissingDiscordIDs(bool isFromBot)
+        {
+            if (!File.Exists(Path)) { WriteJson(); }
+            ReadJson();
+        }
+
+        public void ListAdd(int _entryId)
+        {
+            if (!entryIDs.Contains(_entryId)) { entryIDs.Add(_entryId); WriteJson(); }
+        }
+
+        public void ListRemove(int _entryId)
+        {
+            if (entryIDs.Contains(_entryId)) { entryIDs.Remove(_entryId); WriteJson(); }
+        }
+
+        public void ReadJson()
+        {
+            try
+            {
+                MissingDiscordIDs? tempInstance = JsonConvert.DeserializeObject<MissingDiscordIDs>(File.ReadAllText(Path, Encoding.Unicode));
+                if (tempInstance?.entryIDs is IList) { entryIDs = tempInstance.entryIDs; }
             }
             catch { return; }
         }
