@@ -40,6 +40,42 @@
         </Style.Triggers>
 
     </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="ButtonStyle2">
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="2" BorderThickness="1" BorderBrush="{StaticResource color3}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource color3}"/>
+        <Setter Property="Margin" Value="2,5"/>
+
+        <Style.Triggers>
+
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource color3}"/>
+                <Setter Property="Foreground" Value="{StaticResource color1}"/>
+            </Trigger>
+
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource color1}"/>
+                <Setter Property="Foreground" Value="{StaticResource color2}"/>
+            </Trigger>
+
+        </Style.Triggers>
+    </Style>
+
+
+
     <Style TargetType="{x:Type Button}" x:Key="TransparentButtonStyle">
 
         <Setter Property="Template">
@@ -344,6 +380,25 @@
                 <Setter Property="Background">
                     <Setter.Value>
                         <ImageBrush ImageSource="/Icons/icon_sho2.png" Stretch="Uniform" />
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+
+
+    <Style TargetType="{x:Type Button}" x:Key="SetButtonStyle" BasedOn="{StaticResource ResButtonStyle}">
+        <Setter Property="Background">
+            <Setter.Value>
+                <ImageBrush ImageSource="/Icons/icon_set1.png" Stretch="Uniform" />
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <ImageBrush ImageSource="/Icons/icon_set2.png" Stretch="Uniform" />
                     </Setter.Value>
                 </Setter>
             </Trigger>

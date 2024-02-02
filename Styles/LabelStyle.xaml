@@ -38,5 +38,23 @@
         </Setter>
 
     </Style>
-    
+
+
+
+    <Style TargetType="{x:Type Label}" x:Key="ConnectionStatusLabelStyle">
+
+        <Setter Property="Width" Value="Auto"/>
+        <Setter Property="Height" Value="Auto"/>
+        <Setter Property="Background" Value="{StaticResource color7}"/>
+        <Setter Property="Foreground" Value="{StaticResource color1}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="10,2,10,1"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Bottom"/>
+
+    </Style>
+
 </ResourceDictionary>

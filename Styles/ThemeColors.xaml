@@ -2,11 +2,14 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <SolidColorBrush x:Key="color0" Color="Transparent" />
-    <SolidColorBrush x:Key="color1" Color="#24272B" />
+    <SolidColorBrush x:Key="color1" Color="#1C1F21" />
     <SolidColorBrush x:Key="color2" Color="#F7F5FF" />
-    <SolidColorBrush x:Key="color3" Color="#F08700" />
-    <SolidColorBrush x:Key="color4" Color="#0F78FF" />
-    <SolidColorBrush x:Key="color5" Color="Green" />
-    <SolidColorBrush x:Key="color6" Color="Red" />
+    <SolidColorBrush x:Key="color3" Color="#FF970F" />
+    <SolidColorBrush x:Key="color4" Color="#10CAFE" />
+    <SolidColorBrush x:Key="color5" Color="#382BEE" />
+    <SolidColorBrush x:Key="color6" Color="Green" />
+    <SolidColorBrush x:Key="color7" Color="Red" />
+    <SolidColorBrush x:Key="color8" Color="#232729" />
+    <SolidColorBrush x:Key="color9" Color="#3b4145" />
     
 </ResourceDictionary>

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33414.496
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTRC Community Manager", "GTRC Community Manager.csproj", "{40DBFD03-BDA9-4797-B1EE-D73902132387}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GTRC_Community_Manager", "GTRC_Community_Manager.csproj", "{40DBFD03-BDA9-4797-B1EE-D73902132387}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

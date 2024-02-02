@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Scripts;
-using GTRC_Community_Manager;
 
 namespace Database
 {

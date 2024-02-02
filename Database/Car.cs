@@ -17,7 +17,7 @@ namespace Database
             Statics = new StaticDbField<Car>(true)
             {
                 Table = "Cars",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(AccCarID) } },
+                UniquePropertiesNames = new List<List<string>>() { new() { nameof(AccCarID) } },
                 ToStringPropertiesNames = new List<string>() { nameof(Name) },
                 PublishList = () => PublishList()
             };

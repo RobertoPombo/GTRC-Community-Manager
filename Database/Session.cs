@@ -1,11 +1,12 @@
 ﻿using Enums;
-using GTRC_Community_Manager;
 using Newtonsoft.Json;
 using Scripts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+
+using GTRC_Community_Manager;
 
 namespace Database
 {

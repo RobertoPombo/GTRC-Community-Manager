@@ -81,6 +81,9 @@
     <None Remove="Icons\icon_sav0.png" />
     <None Remove="Icons\icon_sav1.png" />
     <None Remove="Icons\icon_sav2.png" />
+    <None Remove="Icons\icon_set0.png" />
+    <None Remove="Icons\icon_set1.png" />
+    <None Remove="Icons\icon_set2.png" />
     <None Remove="Icons\icon_sho0.png" />
     <None Remove="Icons\icon_sho1.png" />
     <None Remove="Icons\icon_sho2.png" />
@@ -330,6 +333,15 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\icon_sav2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_set0.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_set1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\icon_set2.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Icons\icon_sho0.png">

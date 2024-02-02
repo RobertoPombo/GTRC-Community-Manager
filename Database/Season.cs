@@ -3,10 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Scripts;
+using Enums;
 
 using GTRC_Community_Manager;
-using Enums;
-using System.Windows.Controls.Primitives;
 
 namespace Database
 {
