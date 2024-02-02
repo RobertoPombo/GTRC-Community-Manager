@@ -294,8 +294,8 @@ namespace Scripts
                 "Anzahl Runden", "Anzahl Runden", "Anzahl Runden", "Anzahl gültige Runden", "Anzahl gültige Runden", "Anzahl gültige Runden", "Bestzeit", "Bestzeit",
                 "Bestzeit", "Anzahl Stints", "Anzahl Stints", "Anzahl Stints" };
             rows.Add(values);
-            values = new List<object>() { "Pos", "Fahrer", "Nr", "Team", "Fahrzeug", "Schnitt", "Abstand", "Intervall", "Barcelona", "Snetterton", "Differenz", "Gesamt",
-                "Barcelona", "Snetterton", "Gesamt", "Barcelona", "Snetterton", "Barcelona", "Snetterton", "Differenz", "Gesamt", "Barcelona", "Snetterton" };
+            values = new List<object>() { "Pos", "Fahrer", "Nr", "Team", "Fahrzeug", "Schnitt", "Abstand", "Intervall", "Kyalami", "Laguna Seca", "Differenz", "Gesamt",
+                "Kyalami", "Laguna Seca", "Gesamt", "Kyalami", "Laguna Seca", "Kyalami", "Laguna Seca", "Differenz", "Gesamt", "Kyalami", "Laguna Seca" };
             rows.Add(values);
             List<GSheetRange> rangesCol3 = new();
             List<GSheetRange> rangesCol5 = new();
@@ -305,7 +305,7 @@ namespace Scripts
                 int minEntrySlots = Season.Statics.GetByID(seasonID).GridSlotsLimit;
                 List<Event> listEvents = Event.Statics.GetBy(nameof(Event.SeasonID), seasonID);
                 foreach (Event _event in listEvents) { minEntrySlots = Math.Min(minEntrySlots, Track.Statics.GetByID(_event.TrackID).ServerSlotsCount); }
-                values = new List<object>() { "FIX QUALIFIZIERT - Top 10 Fahrerwertung letzter Saison", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+                values = new List<object>() { "FIX QUALIFIZIERT - Top 10 Fahrerwertung letzter Saison + Einladungen", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
                     "", "", "", "", "" };
                 rows.Add(values);
                 int pos = 0;

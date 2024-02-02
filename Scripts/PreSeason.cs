@@ -105,7 +105,7 @@ namespace Scripts
             //Sollte dynamisch sein:
             double timeFactorMax = 1.07;
             int lapsCountStintMin = 10;
-            List<int> listTracks = new() { 1, 17 };
+            List<int> listTracks = new() { 8, 9 };
 
             ResetPreQResults(seasonID);
 
