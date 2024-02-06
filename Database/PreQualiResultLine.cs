@@ -1,41 +1,47 @@
-﻿using Newtonsoft.Json;
+﻿using GTRC_Community_Manager;
+using Newtonsoft.Json;
 using Scripts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
+using System.IO;
+using System.Text;
 
 namespace Database
 {
     public class PreQualiResultLine : DatabaseObject<PreQualiResultLine>
     {
-        [NotMapped][JsonIgnore] public static readonly List<long> SteamIDsFixPreQ = new()
+        [NotMapped][JsonIgnore] private static readonly string pathSteamIDsFixPreQ = MainWindow.dataDirectory + "config steamIdsFixPreQ.json";
+        [NotMapped] [JsonIgnore] public static List<long> SteamIDsFixPreQ
         {
-            76561198066730696,
-            76561198352993084,
-            76561198849243599,
-            76561198110063440,
-            76561198205277455,
-            76561199134348715,
-            76561198105872844,
-            76561198985250811,
-            76561199212806616,
-            76561199102253061,
-            76561197974380992,
-            76561198203881699,
-            76561199218397707,
-            76561198051610114,
-            76561198130449737
-        };
+            get
+            {
+                long[]? _list = JsonConvert.DeserializeObject<long[]>(File.ReadAllText(pathSteamIDsFixPreQ, Encoding.Unicode));
+                if (_list is null) { return new List<long>(); }
+                else
+                {
+                    List<long> list = new();
+                    foreach (long steamId in  _list) { list.Add(steamId); }
+                    return list;
+                }
+            }
+        }
         [NotMapped][JsonIgnore] public static StaticDbField<PreQualiResultLine> Statics { get; set; }
         static PreQualiResultLine()
         {
             Statics = new StaticDbField<PreQualiResultLine>(true)
             {
                 Table = "PreQualiResultLines",
-                UniquePropertiesNames = new List<List<string>>() { new List<string>() { nameof(EntryID) } },
+                UniquePropertiesNames = new List<List<string>>() { new() { nameof(EntryID) } },
                 ToStringPropertiesNames = new List<string>() { nameof(Position), nameof(EntryID) },
                 PublishList = () => PublishList()
             };
+            if (!File.Exists(pathSteamIDsFixPreQ))
+            {
+                string text = JsonConvert.SerializeObject(new List<long>(), Formatting.Indented);
+                File.WriteAllText(pathSteamIDsFixPreQ, text, Encoding.Unicode);
+            }
         }
         public PreQualiResultLine() { This = this; Initialize(true, true); }
         public PreQualiResultLine(bool _readyForList) { This = this; Initialize(_readyForList, _readyForList); }

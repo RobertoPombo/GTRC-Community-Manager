@@ -299,6 +299,7 @@ namespace Scripts
             rows.Add(values);
             List<GSheetRange> rangesCol3 = new();
             List<GSheetRange> rangesCol5 = new();
+            List<long> steamIDsFixPreQ = PreQualiResultLine.SteamIDsFixPreQ;
             if (PreQualiResultLine.Statics.List.Count > 0)
             {
                 int seasonID = Entry.Statics.GetByID(PreQualiResultLine.Statics.List[0].EntryID).SeasonID;
@@ -310,7 +311,7 @@ namespace Scripts
                 rows.Add(values);
                 int pos = 0;
                 int average0 = PreQualiResultLine.Statics.List[0].Average;
-                foreach (long _steamIDfixPreQ in PreQualiResultLine.SteamIDsFixPreQ)
+                foreach (long _steamIDfixPreQ in steamIDsFixPreQ)
                 {
                     pos++;
                     string fullName = Driver.Statics.GetByUniqProp(_steamIDfixPreQ).FullName;
@@ -379,9 +380,9 @@ namespace Scripts
                     int lineGSheet = 1;
                     foreach (DriversEntries _driverEntry in _driversEntries)
                     {
-                        for (int _fixPreQNr = 0; _fixPreQNr < PreQualiResultLine.SteamIDsFixPreQ.Count; _fixPreQNr++)
+                        for (int _fixPreQNr = 0; _fixPreQNr < steamIDsFixPreQ.Count; _fixPreQNr++)
                         {
-                            if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == PreQualiResultLine.SteamIDsFixPreQ[_fixPreQNr])
+                            if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == steamIDsFixPreQ[_fixPreQNr])
                             {
                                 for (int valueNr = 1; valueNr < values.Count; valueNr++) { rows[_fixPreQNr + 3][valueNr] = values[valueNr]; }
                                 isFixPreQ = true; lineGSheet = _fixPreQNr + 4; break;

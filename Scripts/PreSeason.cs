@@ -600,6 +600,7 @@ namespace Scripts
 
         public static void UpdateEventEntriesPriority(Event _event)
         {
+            List<long> steamIDsFixPreQ = PreQualiResultLine.SteamIDsFixPreQ;
             List<EventsEntries> listEventsEntries = EventsEntries.GetAnyBy(nameof(EventsEntries.EventID), _event.ID);
             for (int index1 = 0; index1 < listEventsEntries.Count - 1; index1++)
             {
@@ -611,20 +612,20 @@ namespace Scripts
                     List<DriversEntries> _driversEntries2 = DriversEntries.Statics.GetBy(nameof(DriversEntries.EntryID), _eventEntry2.EntryID);
                     int posPreQ1 = PreQualiResultLine.Statics.GetByUniqProp(_eventEntry1.EntryID).Position;
                     int posPreQ2 = PreQualiResultLine.Statics.GetByUniqProp(_eventEntry2.EntryID).Position;
-                    int fixPosPreQ1 = PreQualiResultLine.SteamIDsFixPreQ.Count;
-                    int fixPosPreQ2 = PreQualiResultLine.SteamIDsFixPreQ.Count;
-                    for (int fixPosPreQ = 0; fixPosPreQ < PreQualiResultLine.SteamIDsFixPreQ.Count; fixPosPreQ++)
+                    int fixPosPreQ1 = steamIDsFixPreQ.Count;
+                    int fixPosPreQ2 = steamIDsFixPreQ.Count;
+                    for (int fixPosPreQ = 0; fixPosPreQ < steamIDsFixPreQ.Count; fixPosPreQ++)
                     {
                         foreach (DriversEntries _driverEntry in _driversEntries1)
                         {
-                            if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == PreQualiResultLine.SteamIDsFixPreQ[fixPosPreQ])
+                            if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == steamIDsFixPreQ[fixPosPreQ])
                             {
                                 fixPosPreQ1 = Math.Min(fixPosPreQ1, fixPosPreQ);
                             }
                         }
                         foreach (DriversEntries _driverEntry in _driversEntries2)
                         {
-                            if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == PreQualiResultLine.SteamIDsFixPreQ[fixPosPreQ])
+                            if (_driverEntry.ReadyForList && _driverEntry.ObjDriver.SteamID == steamIDsFixPreQ[fixPosPreQ])
                             {
                                 fixPosPreQ2 = Math.Min(fixPosPreQ2, fixPosPreQ);
                             }
