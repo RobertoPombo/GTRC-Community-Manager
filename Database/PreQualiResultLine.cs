@@ -21,7 +21,10 @@ namespace Database
             76561199212806616,
             76561199102253061,
             76561197974380992,
-            76561198203881699
+            76561198203881699,
+            76561199218397707,
+            76561198051610114,
+            76561198130449737
         };
         [NotMapped][JsonIgnore] public static StaticDbField<PreQualiResultLine> Statics { get; set; }
         static PreQualiResultLine()
