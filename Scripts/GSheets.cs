@@ -313,15 +313,24 @@ namespace Scripts
                 int average0 = PreQualiResultLine.Statics.List[0].Average;
                 foreach (long _steamIDfixPreQ in steamIDsFixPreQ)
                 {
-                    pos++;
-                    string fullName = Driver.Statics.GetByUniqProp(_steamIDfixPreQ).FullName;
-                    values = new List<object>() { pos.ToString() + ".", fullName, "-", "-", "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
+                    Driver _driver = Driver.Statics.GetByUniqProp(_steamIDfixPreQ);
+                    string fullName = _driver.FullName;
+                    values = new List<object>() { "-", fullName, "-", "-", "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
+                    List<DriversEntries> _driversEntries = DriversEntries.Statics.GetBy(nameof(DriversEntries.DriverID), _driver.ID);
+                    foreach (DriversEntries _driverEntry in _driversEntries)
+                    {
+                        if (_driverEntry.ObjEntry.SeasonID == seasonID && _driverEntry.ID != Basics.NoID) // Unterscheidung müsste es auch für ScorePoints geben
+                        {
+                            pos++;
+                            values[0] = pos.ToString() + ".";
+                            break;
+                        }
+                    }
                     rows.Add(values);
                 }
                 values = new List<object>() { "QUALIFIZIERT NACH PRE-QUALIFYING - Anmeldungen dieser Saison", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
                     "", "", "", "", "", "" };
                 rows.Add(values);
-                pos = 0;
                 int priorityPos = 0;
                 for (int rowNr = 0; rowNr < PreQualiResultLine.Statics.List.Count; rowNr++)
                 {
