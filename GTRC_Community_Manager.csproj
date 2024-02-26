@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Icons\icon_gtrc.ico</ApplicationIcon>
+    <AssemblyName>Community Manager</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -106,10 +107,6 @@
     <None Remove="Logos\Mercedes.png" />
     <None Remove="Logos\Nissan.png" />
     <None Remove="Logos\Porsche.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Icons\icon_gtrc.ico" />
   </ItemGroup>
 
   <ItemGroup>
