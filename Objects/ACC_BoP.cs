@@ -27,7 +27,7 @@ namespace GTRC_Community_Manager
             if (!Directory.Exists(absolutePath)) { Directory.CreateDirectory(absolutePath); }
             absolutePath += "bop.json";
             string text = JsonConvert.SerializeObject(this, Formatting.Indented);
-            File.WriteAllText(absolutePath, text, Encoding.Unicode);
+            //File.WriteAllText(absolutePath, text, Encoding.Unicode);
         }
 
         public void Create(Event _event)
