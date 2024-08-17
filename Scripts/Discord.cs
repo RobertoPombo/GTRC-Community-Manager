@@ -791,7 +791,7 @@ namespace Scripts
                 }
                 else if (RegisterType && !IsAdmin && DiscordID_Author == DiscordID_Driver)
                 {
-                    LogText = "Toll, dass du es dir anders überlegt hast. Aber leider kannst du dich selbst wieder anmelden. Frag doch bitte einen unserer " + adminRoleTag + ", die machen das bestimmt gerne.";
+                    LogText = "Toll, dass du es dir anders überlegt hast. Aber leider kannst du dich nicht selbst wieder anmelden. Frag doch bitte einen unserer " + adminRoleTag + ", die machen das bestimmt gerne.";
                     await ErrorResponse();
                 }
                 else if (RegisterType && !IsAdmin && DiscordID_Author != DiscordID_Driver)
